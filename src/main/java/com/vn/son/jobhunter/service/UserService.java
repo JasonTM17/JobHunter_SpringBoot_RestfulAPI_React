@@ -10,7 +10,6 @@ import com.vn.son.jobhunter.domain.Company;
 import com.vn.son.jobhunter.domain.Role;
 import com.vn.son.jobhunter.domain.User;
 import com.vn.son.jobhunter.domain.dto.UpdateUserDTO;
-import com.vn.son.jobhunter.domain.res.user.CompanyUser;
 import com.vn.son.jobhunter.domain.res.user.CreatedUserResponse;
 import com.vn.son.jobhunter.domain.res.ResultPaginationResponse;
 import com.vn.son.jobhunter.domain.res.user.UpdatedUserResponse;
@@ -18,7 +17,6 @@ import com.vn.son.jobhunter.repository.UserRepository;
 import com.vn.son.jobhunter.util.convert.UserConvert;
 import com.vn.son.jobhunter.util.error.BadRequestException;
 import com.vn.son.jobhunter.util.error.ConflictException;
-import com.vn.son.jobhunter.util.error.IdInvalidException;
 import com.vn.son.jobhunter.util.error.ResourceNotFoundException;
 import com.vn.son.jobhunter.util.response.FormatResultPagaination;
 

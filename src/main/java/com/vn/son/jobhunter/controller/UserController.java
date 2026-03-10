@@ -1,4 +1,4 @@
-package vn.datk.jobhunter.controller;
+package com.vn.son.jobhunter.controller;
 
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
@@ -8,14 +8,13 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import vn.datk.jobhunter.domain.User;
-import vn.datk.jobhunter.domain.dto.UpdateUserDTO;
-import vn.datk.jobhunter.domain.res.user.CreatedUserResponse;
-import vn.datk.jobhunter.domain.res.ResultPaginationResponse;
-import vn.datk.jobhunter.domain.res.user.UpdatedUserResponse;
-import vn.datk.jobhunter.service.UserService;
-import vn.datk.jobhunter.util.annotation.ApiMessage;
-import vn.datk.jobhunter.util.error.IdInvalidException;
+import com.vn.son.jobhunter.domain.User;
+import com.vn.son.jobhunter.domain.dto.UpdateUserDTO;
+import com.vn.son.jobhunter.domain.res.user.CreatedUserResponse;
+import com.vn.son.jobhunter.domain.res.ResultPaginationResponse;
+import com.vn.son.jobhunter.domain.res.user.UpdatedUserResponse;
+import com.vn.son.jobhunter.service.UserService;
+import com.vn.son.jobhunter.util.annotation.ApiMessage;
 
 @RequestMapping(path = "${apiPrefix}/users")
 @RequiredArgsConstructor
@@ -42,7 +41,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     @ApiMessage("Fetch user by id")
-    public ResponseEntity<CreatedUserResponse> fetchCompanyById(
+    public ResponseEntity<CreatedUserResponse> fetchUserById(
             @PathVariable("id") Long id
     ) throws Exception {
         return ResponseEntity.ok(this.userService.fetchUserById(id));
@@ -63,6 +62,6 @@ public class UserController {
             @PathVariable("id") Long id
     ) throws Exception {
         this.userService.deleteUser(id);
-        return ResponseEntity.ok(null);
+        return ResponseEntity.noContent().build();
     }
 }
