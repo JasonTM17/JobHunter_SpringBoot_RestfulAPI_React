@@ -1,14 +1,16 @@
-package vn.datk.jobhunter.domain;
+package com.vn.son.jobhunter.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-import vn.datk.jobhunter.util.constant.GenderEnum;
+import com.vn.son.jobhunter.util.constant.GenderEnum;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -24,9 +26,13 @@ public class User extends AbstractAuditingEntity<Long> {
     private Long id;
 
     @Column(name = "name" ,length = 100)
+    @NotBlank(message = "Name is required")
+    @Size(max = 100, message = "Name must be at most 100 characters")
     private String name;
 
     @Column(name = "age" ,length = 3)
+    @Min(value = 0, message = "Age must be greater than or equal to 0")
+    @Max(value = 150, message = "Age must be less than or equal to 150")
     private int age;
 
     @Column(name = "email" ,length = 50, nullable = false)
@@ -44,6 +50,7 @@ public class User extends AbstractAuditingEntity<Long> {
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "Gender cannot be null")
     private GenderEnum gender;
 
     @Column(name = "refresh_token", columnDefinition = "MEDIUMTEXT")
