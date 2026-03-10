@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class StaticResourcesWebConfiguration
         implements WebMvcConfigurer {
-    @Value("${datk.upload-file.base-uri}")
+    @Value("${son.upload-file.base-uri}")
     private String baseURI;
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
