@@ -9,9 +9,9 @@ import com.vn.son.jobhunter.domain.User;
 import java.util.List;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
-    boolean existsByEmail(String email);
-    User findByEmail(String email);
-    User findByRefreshTokenAndEmail(String token,String email);
-    List<User> findByCompany(Company company);
+public interface CompanyRepository
+        extends
+        JpaRepository<Company, Long>,
+        JpaSpecificationExecutor<Company>
+{
 }
