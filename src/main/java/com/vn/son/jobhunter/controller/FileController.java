@@ -25,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FileController {
     private final FileService fileService;
-    @Value("${datk.upload-file.base-uri}")
+    @Value("${son.upload-file.base-uri}")
     private String baseURI;
 
     @PostMapping("")

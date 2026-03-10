@@ -18,7 +18,7 @@ import java.time.Instant;
 
 @Service
 public class FileService {
-    @Value("${datk.upload-file.base-uri}")
+    @Value("${son.upload-file.base-uri}")
     private String baseURI;
     public void createUploadFolder(String folder) throws URISyntaxException {
         URI uri = new URI(folder);

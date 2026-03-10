@@ -32,7 +32,7 @@ public class AuthController {
     private final UserService userService;
     private final SecurityUtils securityUtils;
 
-    @Value("${datk.jwt.refresh-token-validity-in-seconds}")
+    @Value("${son.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
     @PostMapping("/register")

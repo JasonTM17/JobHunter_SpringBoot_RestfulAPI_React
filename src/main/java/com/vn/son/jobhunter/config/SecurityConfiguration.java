@@ -29,7 +29,7 @@ import javax.crypto.spec.SecretKeySpec;
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration {
-    @Value("${datk.jwt.base64-secret}")
+    @Value("${son.jwt.base64-secret}")
     private String jwtKey;
 
     @Bean

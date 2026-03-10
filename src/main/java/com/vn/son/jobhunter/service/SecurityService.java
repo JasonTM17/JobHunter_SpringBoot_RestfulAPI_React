@@ -26,13 +26,13 @@ public class SecurityService {
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
     private final JwtEncoder jwtEncoder;
 
-    @Value("${datk.jwt.base64-secret}")
+    @Value("${son.jwt.base64-secret}")
     private String jwtKey;
 
-    @Value("${datk.jwt.access-token-validity-in-seconds}")
+    @Value("${son.jwt.access-token-validity-in-seconds}")
     private long accessTokenExpiration;
 
-    @Value("${datk.jwt.refresh-token-validity-in-seconds}")
+    @Value("${son.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
     public String createAccessToken(String email, LoginResponse loginResponse) {
