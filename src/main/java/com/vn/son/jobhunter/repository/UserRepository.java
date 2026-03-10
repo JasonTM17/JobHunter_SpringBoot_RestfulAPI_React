@@ -1,10 +1,10 @@
-package vn.datk.jobhunter.repository;
+package com.vn.son.jobhunter.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-import vn.datk.jobhunter.domain.Company;
-import vn.datk.jobhunter.domain.User;
+import com.vn.son.jobhunter.domain.Company;
+import com.vn.son.jobhunter.domain.User;
 
 import java.util.List;
 
