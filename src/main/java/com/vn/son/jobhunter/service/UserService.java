@@ -1,24 +1,26 @@
-package vn.datk.jobhunter.service;
+package com.vn.son.jobhunter.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import vn.datk.jobhunter.domain.Company;
-import vn.datk.jobhunter.domain.Role;
-import vn.datk.jobhunter.domain.User;
-import vn.datk.jobhunter.domain.dto.UpdateUserDTO;
-import vn.datk.jobhunter.domain.res.user.CompanyUser;
-import vn.datk.jobhunter.domain.res.user.CreatedUserResponse;
-import vn.datk.jobhunter.domain.res.ResultPaginationResponse;
-import vn.datk.jobhunter.domain.res.user.UpdatedUserResponse;
-import vn.datk.jobhunter.repository.UserRepository;
-import vn.datk.jobhunter.util.convert.UserConvert;
-import vn.datk.jobhunter.util.error.IdInvalidException;
-import vn.datk.jobhunter.util.response.FormatResultPagaination;
+import com.vn.son.jobhunter.domain.Company;
+import com.vn.son.jobhunter.domain.Role;
+import com.vn.son.jobhunter.domain.User;
+import com.vn.son.jobhunter.domain.dto.UpdateUserDTO;
+import com.vn.son.jobhunter.domain.res.user.CompanyUser;
+import com.vn.son.jobhunter.domain.res.user.CreatedUserResponse;
+import com.vn.son.jobhunter.domain.res.ResultPaginationResponse;
+import com.vn.son.jobhunter.domain.res.user.UpdatedUserResponse;
+import com.vn.son.jobhunter.repository.UserRepository;
+import com.vn.son.jobhunter.util.convert.UserConvert;
+import com.vn.son.jobhunter.util.error.BadRequestException;
+import com.vn.son.jobhunter.util.error.ConflictException;
+import com.vn.son.jobhunter.util.error.IdInvalidException;
+import com.vn.son.jobhunter.util.error.ResourceNotFoundException;
+import com.vn.son.jobhunter.util.response.FormatResultPagaination;
 
 import java.util.Optional;
 
@@ -33,16 +35,19 @@ public class UserService {
     public CreatedUserResponse createUser(User user) throws Exception {
         String email = user.getEmail();
 
-        if(user.getCompany() != null){
+        if (this.userRepository.existsByEmail(email)) {
+            throw new ConflictException("Email already exists");
+        }
+
+        if (user.getCompany() != null) {
             Company company = this.companyService.findCompanyById(user.getCompany().getId());
+            if (company == null) {
+                throw new BadRequestException("Company ID is invalid");
+            }
             user.setCompany(company);
         }
 
-        if(userRepository.existsByEmail(email)) {
-            throw new DataIntegrityViolationException("Email already exists");
-        }
-
-        if(user.getRole() != null){
+        if (user.getRole() != null) {
             Role role = this.roleService.fetchRoleById(user.getRole().getId());
             user.setRole(role);
         }
@@ -54,19 +59,13 @@ public class UserService {
     }
 
     public CreatedUserResponse fetchUserById(Long id) throws Exception {
-        if(userRepository.existsById(id)){
-            return UserConvert.convertToResCreatedUserRes(this.userRepository.findById(id).get());
-        }else{
-            throw new IdInvalidException("The specified User ID is invalid");
-        }
+        User user = this.findUserByIdOrThrow(id);
+        return UserConvert.convertToResCreatedUserRes(user);
     }
 
     public void deleteUser(Long id) throws Exception {
-        if(this.userRepository.existsById(id)){
-            this.userRepository.deleteById(id);
-        }else{
-         throw new IdInvalidException("The specified User ID is invalid");
-        }
+        User user = this.findUserByIdOrThrow(id);
+        this.userRepository.delete(user);
     }
 
     public User handleGetUserByUsername(String username) {
@@ -80,30 +79,26 @@ public class UserService {
     }
 
     public UpdatedUserResponse updateUser(Long id, UpdateUserDTO user) throws Exception {
-        Optional<User> userOptional = this.userRepository.findById(id);
-        if(userOptional.isPresent()){
-            User currentUser = userOptional.get();
-            currentUser.setName(user.getName());
-            currentUser.setGender(user.getGender());
-            currentUser.setAge(user.getAge());
-            currentUser.setAddress(user.getAddress());
+        User currentUser = this.findUserByIdOrThrow(id);
+        currentUser.setName(user.getName());
+        currentUser.setGender(user.getGender());
+        currentUser.setAge(user.getAge());
+        currentUser.setAddress(user.getAddress());
 
-            if(user.getCompany() != null){
-                Company company = this.companyService.findCompanyById(user.getCompany().getId());
-                if(company == null){
-                    throw new IdInvalidException("Company Id is invalid");
-                }
-                currentUser.setCompany(company);
+        if (user.getCompany() != null) {
+            Company company = this.companyService.findCompanyById(user.getCompany().getId());
+            if (company == null) {
+                throw new BadRequestException("Company ID is invalid");
             }
-
-            if(user.getRole() != null){
-                Role role = this.roleService.fetchRoleById(user.getRole().getId());
-                user.setRole(role);
-            }
-
-            return UserConvert.convertToResUpdatedUserRes(this.userRepository.save(currentUser));
+            currentUser.setCompany(company);
         }
-        return null;
+
+        if (user.getRole() != null) {
+            Role role = this.roleService.fetchRoleById(user.getRole().getId());
+            currentUser.setRole(role);
+        }
+
+        return UserConvert.convertToResUpdatedUserRes(this.userRepository.save(currentUser));
     }
 
     public void updateUserToken(String token, String email){
@@ -116,5 +111,10 @@ public class UserService {
 
     public User getUserByRefreshTokenAndEmail(String token, String email){
         return this.userRepository.findByRefreshTokenAndEmail(token, email);
+    }
+
+    private User findUserByIdOrThrow(Long id) throws ResourceNotFoundException {
+        return this.userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
     }
 }
