@@ -9,6 +9,8 @@
 
 Open: `http://localhost:3000`
 
+AI chatbot page: `http://localhost:3000/chatbot`
+
 ## Logo path rule
 
 - API: `GET http://localhost:8080/api/v1/companies?page=1&size=100`
