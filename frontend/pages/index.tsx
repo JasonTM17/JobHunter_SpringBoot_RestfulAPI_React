@@ -109,6 +109,9 @@ export default function HomePage() {
           Logo rule: backend DB logo is mapped to <code>/storage/company/&lt;logoFile&gt;</code>.
           Put image files with exact same names.
         </p>
+        <p>
+          New: open <a href="/chatbot">/chatbot</a> to use AI chatbot.
+        </p>
         <p className={isError ? "status error" : "status"}>{status}</p>
       </div>
 
@@ -137,7 +140,6 @@ export default function HomePage() {
               <div className="logoWrap">
                 {logoUrl ? (
                   <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={logoUrl}
                       alt={`${company.name} logo`}
