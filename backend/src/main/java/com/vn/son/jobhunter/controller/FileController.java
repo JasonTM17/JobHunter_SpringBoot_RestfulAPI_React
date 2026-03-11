@@ -19,11 +19,14 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping(path = "${apiPrefix}/files")
 @RequiredArgsConstructor
 public class FileController {
+    private static final Pattern SAFE_FOLDER = Pattern.compile("^[a-zA-Z0-9/_-]+$");
     private final FileService fileService;
     @Value("${son.upload-file.base-uri}")
     private String baseURI;
@@ -34,13 +37,18 @@ public class FileController {
             @RequestParam(name = "file", required = false) MultipartFile file,
             @RequestParam("folder") String folder
     ) throws URISyntaxException, IOException, StorageException {
+        validateFolder(folder);
         if(file == null || file.isEmpty()){
             throw new StorageException("File is empty, please up load a file");
         }
         String fileName = file.getOriginalFilename();
-        List<String> allowedExtensions = Arrays.asList("pdf", "jpg", "jpeg", "png", "doc", "docx");
+        if (fileName == null || fileName.isBlank()) {
+            throw new StorageException("File name is invalid");
+        }
+        String lowerCaseName = fileName.toLowerCase(Locale.ROOT);
+        List<String> allowedExtensions = Arrays.asList(".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx");
         boolean isValid = allowedExtensions.stream().anyMatch(
-                item -> fileName.toLowerCase().endsWith(item)
+                lowerCaseName::endsWith
         );
 
         if(!isValid){
@@ -60,6 +68,10 @@ public class FileController {
         if (fileName == null || folder == null) {
             throw new StorageException("Missing required params : (fileName or folder) in query params.");
         }
+        validateFolder(folder);
+        if (fileName.contains("/") || fileName.contains("\\") || fileName.contains("..")) {
+            throw new StorageException("Invalid fileName");
+        }
 
         // check file exist (and not a directory)
         long fileLength = this.fileService.getFileLength(fileName, folder);
@@ -75,5 +87,17 @@ public class FileController {
                 .contentLength(fileLength)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource);
+    }
+
+    private void validateFolder(String folder) throws StorageException {
+        if (folder == null || folder.isBlank()) {
+            throw new StorageException("Folder is required");
+        }
+        if (folder.contains("..") || folder.startsWith("/") || folder.startsWith("\\")) {
+            throw new StorageException("Invalid folder value");
+        }
+        if (!SAFE_FOLDER.matcher(folder).matches()) {
+            throw new StorageException("Folder contains invalid characters");
+        }
     }
 }
