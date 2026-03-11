@@ -50,6 +50,7 @@ public class SecurityConfiguration {
                 "/api/v1/skills/**",
                 "/api/v1/files/**",
                 "/api/v1/email/**",
+                "/api/v1/ai/**",
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
                 "/swagger-ui.html"
