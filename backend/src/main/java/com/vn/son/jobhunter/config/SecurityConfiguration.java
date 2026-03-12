@@ -2,6 +2,8 @@ package com.vn.son.jobhunter.config;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.util.Base64;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,8 +20,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
-import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import com.vn.son.jobhunter.service.SecurityService;
 
@@ -29,6 +31,8 @@ import javax.crypto.spec.SecretKeySpec;
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration {
+    private static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
+
     @Value("${son.jwt.base64-secret}")
     private String jwtKey;
 
@@ -38,18 +42,18 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CustomAuthenticationEntryPoint caep) throws Exception {
+    public SecurityFilterChain filterChain(
+            HttpSecurity http,
+            CustomAuthenticationEntryPoint caep,
+            BearerTokenResolver bearerTokenResolver
+    ) throws Exception {
         String[] whiteList = {
                 "/",
                 "/api/v1/auth/login",
                 "/api/v1/auth/refresh",
                 "/api/v1/auth/register",
+                "/api/v1/auth/logout",
                 "/storage/**",
-                "/api/v1/companies/**",
-                "/api/v1/jobs/**",
-                "/api/v1/skills/**",
-                "/api/v1/files/**",
-                "/api/v1/email/**",
                 "/api/v1/ai/**",
                 "/v3/api-docs/**",
                 "/swagger-ui/**",
@@ -62,14 +66,18 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         authz -> authz
                                 .requestMatchers(whiteList).permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/companies/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/skills/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/v1/files/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/v1/subscribers").permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(
-                        (oauth2) -> oauth2.jwt(Customizer.withDefaults())
+                        (oauth2) -> oauth2
+                                .bearerTokenResolver(bearerTokenResolver)
+                                .jwt(Customizer.withDefaults())
                                 .authenticationEntryPoint(caep)
                 )
                 .formLogin(f -> f.disable())
@@ -86,13 +94,32 @@ public class SecurityConfiguration {
     public JwtDecoder jwtDecoder() {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
                 getSecretKey()).macAlgorithm(SecurityService.JWT_ALGORITHM).build();
-        return token -> {
-            try {
-                return jwtDecoder.decode(token);
-            } catch (Exception e) {
-                System.out.println(">>> JWT error: " + e.getMessage());
-                throw e;
+        return jwtDecoder::decode;
+    }
+
+    @Bean
+    public BearerTokenResolver bearerTokenResolver() {
+        DefaultBearerTokenResolver defaultBearerTokenResolver = new DefaultBearerTokenResolver();
+        return (HttpServletRequest request) -> {
+            String headerToken = defaultBearerTokenResolver.resolve(request);
+            if (headerToken != null && !headerToken.isBlank()) {
+                return headerToken;
             }
+
+            Cookie[] cookies = request.getCookies();
+            if (cookies == null) {
+                return null;
+            }
+
+            for (Cookie cookie : cookies) {
+                if (ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
+                    String cookieToken = cookie.getValue();
+                    if (cookieToken != null && !cookieToken.isBlank()) {
+                        return cookieToken;
+                    }
+                }
+            }
+            return null;
         };
     }
 

@@ -1,6 +1,5 @@
 package com.vn.son.jobhunter.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -19,7 +18,6 @@ import java.util.List;
 @Entity
 @Table(name="users")
 @Getter @Setter @AllArgsConstructor @NoArgsConstructor
-@JsonIgnoreProperties(value = { "refreshToken"}, allowGetters = true)
 public class User extends AbstractAuditingEntity<Long> {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,6 +45,7 @@ public class User extends AbstractAuditingEntity<Long> {
     @Column(name = "password" ,length = 200)
     @NotBlank(message = "Password cannot be blank")
     @NotNull(message = "Password cannot be null")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -54,7 +53,7 @@ public class User extends AbstractAuditingEntity<Long> {
     private GenderEnum gender;
 
     @Column(name = "refresh_token", columnDefinition = "MEDIUMTEXT")
-    @JsonProperty("refresh_token")
+    @JsonIgnore
     private String refreshToken;
 
     @ManyToOne

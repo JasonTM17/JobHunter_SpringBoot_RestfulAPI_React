@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import com.vn.son.jobhunter.domain.res.RestResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.util.List;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalException {
+    private static final Logger logger = LoggerFactory.getLogger(GlobalException.class);
+
     @ExceptionHandler(value = {
             UsernameNotFoundException.class,
             BadCredentialsException.class,
@@ -55,6 +59,21 @@ public class GlobalException {
         res.setError("404 Not Found. URL may not exist...");
         res.setMessage(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND.value()).body(res);
+    }
+
+    @ExceptionHandler(value = {
+            AiServiceException.class
+    })
+    public ResponseEntity<Object> handleAiServiceException(AiServiceException ex){
+        HttpStatus status = "AI_NOT_CONFIGURED".equalsIgnoreCase(ex.getErrorCode())
+                ? HttpStatus.SERVICE_UNAVAILABLE
+                : HttpStatus.BAD_GATEWAY;
+
+        RestResponse<Object> res = new RestResponse<Object>();
+        res.setStatusCode(status.value());
+        res.setError(ex.getErrorCode());
+        res.setMessage(ex.getMessage());
+        return ResponseEntity.status(status).body(res);
     }
 
     @ExceptionHandler(value = {
@@ -124,9 +143,10 @@ public class GlobalException {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RestResponse<Object>> handleAllException(Exception ex) {
+        logger.error("Unhandled exception", ex);
         RestResponse<Object> res = new RestResponse<Object>();
         res.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        res.setMessage(ex.getMessage());
+        res.setMessage("Máy chủ đang gặp lỗi. Vui lòng thử lại sau.");
         res.setError("Internal Server Error");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(res);
     }
