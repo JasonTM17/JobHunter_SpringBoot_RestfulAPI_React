@@ -1,6 +1,7 @@
 package com.vn.son.jobhunter.service;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -11,7 +12,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import com.vn.son.jobhunter.domain.Company;
+import com.vn.son.jobhunter.domain.Permission;
 import com.vn.son.jobhunter.domain.Role;
 import com.vn.son.jobhunter.domain.User;
 import com.vn.son.jobhunter.domain.dto.UpdateUserDTO;
@@ -23,12 +27,14 @@ import com.vn.son.jobhunter.util.constant.GenderEnum;
 import com.vn.son.jobhunter.util.error.ConflictException;
 import com.vn.son.jobhunter.util.error.ResourceNotFoundException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.verify;
@@ -52,21 +58,20 @@ class UserServiceTest {
     @InjectMocks
     private UserService userService;
 
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     void createUserShouldEncodePasswordAndReturnCreatedResponse() throws Exception {
         User request = buildUser(0L, "new.user@mail.com");
         request.setPassword("plain-password");
-        request.setCompany(buildCompany(10L, "ACME"));
-        request.setRole(buildRole(20L, "ADMIN"));
 
         User saved = buildUser(1L, "new.user@mail.com");
         saved.setPassword("encoded-password");
-        saved.setCompany(buildCompany(10L, "ACME"));
-        saved.setRole(buildRole(20L, "ADMIN"));
 
         when(userRepository.existsByEmail("new.user@mail.com")).thenReturn(false);
-        when(companyService.findCompanyById(10L)).thenReturn(buildCompany(10L, "ACME"));
-        when(roleService.fetchRoleById(20L)).thenReturn(buildRole(20L, "ADMIN"));
         when(passwordEncoder.encode("plain-password")).thenReturn("encoded-password");
         when(userRepository.save(any(User.class))).thenReturn(saved);
 
@@ -74,8 +79,8 @@ class UserServiceTest {
 
         assertEquals(1L, response.getId());
         assertEquals("new.user@mail.com", response.getEmail());
-        assertEquals("ACME", response.getCompany().getName());
-        assertEquals("ADMIN", response.getRole().getName());
+        assertNull(response.getCompany());
+        assertNull(response.getRole());
         verify(passwordEncoder).encode("plain-password");
         verify(userRepository).save(any(User.class));
     }
@@ -97,9 +102,23 @@ class UserServiceTest {
 
     @Test
     void updateUserShouldUpdateFieldsAndRelations() throws Exception {
+        String actorEmail = "super.admin@mail.com";
+        authenticate(actorEmail);
+
+        Role superAdminRole = buildRole(100L, "SUPER_ADMIN");
+        superAdminRole.setPermissions(List.of(new Permission("Update a user", "/api/v1/users/{id}", "PUT", "USERS")));
+
+        User actor = buildUser(1L, actorEmail);
+        actor.setRole(superAdminRole);
+
         User existing = buildUser(7L, "old@mail.com");
         existing.setCompany(buildCompany(1L, "Old Co"));
         existing.setRole(buildRole(1L, "USER"));
+
+        Role managerRole = buildRole(2L, "MANAGER");
+        managerRole.setActive(true);
+        Role userRole = buildRole(1L, "USER");
+        userRole.setActive(true);
 
         UpdateUserDTO request = new UpdateUserDTO();
         request.setName("Updated Name");
@@ -107,11 +126,13 @@ class UserServiceTest {
         request.setAddress("New Address");
         request.setGender(GenderEnum.OTHER);
         request.setCompany(buildCompany(2L, "New Co"));
-        request.setRole(buildRole(2L, "MANAGER"));
+        request.setRole(managerRole);
 
+        when(userRepository.findOneByEmail(actorEmail)).thenReturn(Optional.of(actor));
         when(userRepository.findById(7L)).thenReturn(Optional.of(existing));
         when(companyService.findCompanyById(2L)).thenReturn(buildCompany(2L, "New Co"));
-        when(roleService.fetchRoleById(2L)).thenReturn(buildRole(2L, "MANAGER"));
+        when(roleService.fetchRoleById(2L)).thenReturn(managerRole);
+        when(roleService.fetchActiveRoles()).thenReturn(List.of(userRole, managerRole));
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         UpdatedUserResponse response = userService.updateUser(7L, request);
@@ -123,6 +144,16 @@ class UserServiceTest {
 
     @Test
     void deleteUserShouldThrowWhenUserMissing() {
+        String actorEmail = "super.admin@mail.com";
+        authenticate(actorEmail);
+
+        Role superAdminRole = buildRole(100L, "SUPER_ADMIN");
+        superAdminRole.setPermissions(List.of(new Permission("Delete a user", "/api/v1/users/{id}", "DELETE", "USERS")));
+
+        User actor = buildUser(1L, actorEmail);
+        actor.setRole(superAdminRole);
+
+        when(userRepository.findOneByEmail(actorEmail)).thenReturn(Optional.of(actor));
         when(userRepository.findById(88L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> userService.deleteUser(88L));
@@ -166,5 +197,11 @@ class UserServiceTest {
         role.setId(id);
         role.setName(name);
         return role;
+    }
+
+    private static void authenticate(String email) {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(email, "n/a", new ArrayList<>())
+        );
     }
 }

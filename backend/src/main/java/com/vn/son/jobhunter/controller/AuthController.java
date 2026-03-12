@@ -13,9 +13,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import com.vn.son.jobhunter.domain.Role;
 import com.vn.son.jobhunter.domain.User;
 import com.vn.son.jobhunter.domain.dto.LoginDTO;
+import com.vn.son.jobhunter.domain.dto.RegisterDTO;
+import com.vn.son.jobhunter.domain.res.auth.AuthCapabilityResponse;
 import com.vn.son.jobhunter.domain.res.auth.LoginResponse;
+import com.vn.son.jobhunter.domain.res.auth.UserActionCapabilityResponse;
 import com.vn.son.jobhunter.domain.res.user.CreatedUserResponse;
 import com.vn.son.jobhunter.util.error.IdInvalidException;
 import com.vn.son.jobhunter.util.security.SecurityUtils;
@@ -23,28 +27,42 @@ import com.vn.son.jobhunter.service.SecurityService;
 import com.vn.son.jobhunter.service.UserService;
 import com.vn.son.jobhunter.util.annotation.ApiMessage;
 
+import java.util.List;
+
 @RequestMapping(path = "${apiPrefix}/auth")
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
+    private static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
+    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
+
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final SecurityService securityService;
     private final UserService userService;
     private final SecurityUtils securityUtils;
 
+    @Value("${son.jwt.access-token-validity-in-seconds}")
+    private long accessTokenExpiration;
+
     @Value("${son.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
+    @Value("${son.jwt.cookie.secure:false}")
+    private boolean secureCookie;
+
+    @Value("${son.jwt.cookie.same-site:Lax}")
+    private String sameSitePolicy;
+
     @PostMapping("/register")
     @ApiMessage("Register a new user")
-    public ResponseEntity<CreatedUserResponse> createUser(@Valid @RequestBody User user) throws Exception {
-        CreatedUserResponse newUser = this.userService.createUser(user);
+    public ResponseEntity<CreatedUserResponse> createUser(@Valid @RequestBody RegisterDTO registerDTO) throws Exception {
+        CreatedUserResponse newUser = this.userService.createUser(this.toRegisterUser(registerDTO));
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }
 
     @PostMapping(path = "/login")
     @ApiMessage("Login by credential")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginDTO loginDTO){
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginDTO loginDTO){
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
 
@@ -56,33 +74,23 @@ public class AuthController {
 
         LoginResponse loginResponse = new LoginResponse();
 
-        User currentUserDB = this.userService.handleGetUserByUsername(loginDTO.getUsername());
+        User currentUserDB = this.userService.handleGetUserByUsernameWithRolePermissions(loginDTO.getUsername());
         if(currentUserDB != null){
-            LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin(
-                    currentUserDB.getId(),
-                    currentUserDB.getEmail(),
-                    currentUserDB.getName(),
-                    currentUserDB.getRole()
-            );
+            LoginResponse.UserLogin userLogin = this.toUserLogin(currentUserDB);
             loginResponse.setUser(userLogin);
         }
 
-        //set access token
-        loginResponse.setAccessToken(this.securityService.createAccessToken(authentication.getName(), loginResponse));
-        //create refresh token
-        String refreshToken = this.securityService.createRefreshToken(authentication.getName(), loginResponse);
+        String accessToken = this.securityService.createAccessToken(authentication.getName());
+        String refreshToken = this.securityService.createRefreshToken(authentication.getName());
         //update user
         this.userService.updateUserToken(refreshToken, loginDTO.getUsername());
-        //set cookies
-        ResponseCookie responseCookie = ResponseCookie
-                .from("refresh_token", refreshToken)
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(this.refreshTokenExpiration)
-                .build();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, buildCookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, this.accessTokenExpiration).toString());
+        headers.add(HttpHeaders.SET_COOKIE, buildCookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, this.refreshTokenExpiration).toString());
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                .headers(headers)
                 .body(loginResponse);
     }
 
@@ -92,17 +100,29 @@ public class AuthController {
         String email = SecurityUtils.getCurrentUserLogin().isPresent()
                 ? SecurityUtils.getCurrentUserLogin().get()
                 : "";
-        User currentUserDB = this.userService.handleGetUserByUsername(email);
-        LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin();
+        User currentUserDB = this.userService.handleGetUserByUsernameWithRolePermissions(email);
         LoginResponse.UserGetAccout userGetAccout = new LoginResponse.UserGetAccout();
         if(currentUserDB != null){
-            userLogin.setId(currentUserDB.getId());
-            userLogin.setEmail(currentUserDB.getEmail());
-            userLogin.setName(currentUserDB.getName());
-            userLogin.setRole(currentUserDB.getRole());
-            userGetAccout.setUser(userLogin);
+            userGetAccout.setUser(this.toUserLogin(currentUserDB));
         }
         return ResponseEntity.ok().body(userGetAccout);
+    }
+
+    @GetMapping("/capabilities")
+    @ApiMessage("Get current account capabilities")
+    public ResponseEntity<AuthCapabilityResponse> getCapabilities() {
+        List<String> actionKeys = this.userService.getCurrentPermissionKeys();
+        List<AuthCapabilityResponse.RoleOption> assignableRoles = this.userService.getAssignableRoleOptionsForCurrentUser();
+        boolean canAccessManagement = this.userService.canAccessManagement(actionKeys);
+        return ResponseEntity.ok(new AuthCapabilityResponse(actionKeys, canAccessManagement, assignableRoles));
+    }
+
+    @GetMapping("/capabilities/users/{id}")
+    @ApiMessage("Get current account capability on a target user")
+    public ResponseEntity<UserActionCapabilityResponse> getUserActionCapability(
+            @PathVariable("id") Long id
+    ) throws Exception {
+        return ResponseEntity.ok(this.userService.getUserActionCapability(id));
     }
 
     @GetMapping("/refresh")
@@ -115,30 +135,23 @@ public class AuthController {
         User user = this.userService.getUserByRefreshTokenAndEmail(refreshToken, email);
         if(user != null){
             LoginResponse loginResponse = new LoginResponse();
-            LoginResponse.UserLogin userLogin = new LoginResponse.UserLogin(
-                    user.getId(),
-                    user.getEmail(),
-                    user.getName(),
-                    user.getRole()
+            User userWithRole = this.userService.handleGetUserByUsernameWithRolePermissions(email);
+            LoginResponse.UserLogin userLogin = this.toUserLogin(
+                    userWithRole != null ? userWithRole : user
             );
             loginResponse.setUser(userLogin);
 
-            //set access token
-            loginResponse.setAccessToken(this.securityService.createAccessToken(email, loginResponse));
-            //create refresh token
-            String new_refresh_token = this.securityService.createRefreshToken(email, loginResponse);
+            String accessToken = this.securityService.createAccessToken(email);
+            String new_refresh_token = this.securityService.createRefreshToken(email);
             //update user
             this.userService.updateUserToken(new_refresh_token, email);
-            //set cookies
-            ResponseCookie responseCookie = ResponseCookie
-                    .from("refresh_token", new_refresh_token)
-                    .httpOnly(true)
-                    .secure(true)
-                    .path("/")
-                    .maxAge(refreshTokenExpiration)
-                    .build();
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.SET_COOKIE, buildCookie(ACCESS_TOKEN_COOKIE_NAME, accessToken, this.accessTokenExpiration).toString());
+            headers.add(HttpHeaders.SET_COOKIE, buildCookie(REFRESH_TOKEN_COOKIE_NAME, new_refresh_token, this.refreshTokenExpiration).toString());
+
             return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, responseCookie.toString())
+                    .headers(headers)
                     .body(loginResponse);
         }else{
             throw new IdInvalidException("Refresh token is not valid");
@@ -147,24 +160,83 @@ public class AuthController {
 
     @PostMapping("/logout")
     @ApiMessage("Logout user")
-    public ResponseEntity<Void> logout() throws IdInvalidException{
+    public ResponseEntity<Void> logout(
+            @CookieValue(value = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken
+    ){
         String email = SecurityUtils.getCurrentUserLogin().isPresent()
                 ? SecurityUtils.getCurrentUserLogin().get()
                 : "";
-        if(email.equals("")){
-            throw new IdInvalidException("Access token is not valid");
-        }
-        this.userService.updateUserToken(null, email);
 
-        ResponseCookie deleteSpringCookie = ResponseCookie
-                .from("refresh_token", null)
+        if (email.isBlank() && refreshToken != null && !refreshToken.isBlank()) {
+            try {
+                Jwt decodedToken = this.securityUtils.checkValidRefreshToken(refreshToken);
+                email = decodedToken.getSubject();
+            } catch (Exception ignored) {
+                // Ignore invalid refresh token on logout; still clear cookies.
+            }
+        }
+
+        if (!email.isBlank()) {
+            this.userService.updateUserToken(null, email);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, clearCookie(ACCESS_TOKEN_COOKIE_NAME).toString());
+        headers.add(HttpHeaders.SET_COOKIE, clearCookie(REFRESH_TOKEN_COOKIE_NAME).toString());
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(null);
+    }
+
+    private ResponseCookie buildCookie(String name, String value, long maxAgeSeconds) {
+        return ResponseCookie
+                .from(name, value)
                 .httpOnly(true)
-                .secure(true)
+                .secure(this.secureCookie)
+                .sameSite(this.sameSitePolicy)
+                .path("/")
+                .maxAge(maxAgeSeconds)
+                .build();
+    }
+
+    private ResponseCookie clearCookie(String name) {
+        return ResponseCookie
+                .from(name, "")
+                .httpOnly(true)
+                .secure(this.secureCookie)
+                .sameSite(this.sameSitePolicy)
                 .path("/")
                 .maxAge(0)
                 .build();
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, deleteSpringCookie.toString())
-                .body(null);
+    }
+
+    private LoginResponse.UserLogin toUserLogin(User user) {
+        LoginResponse.RoleLogin roleLogin = null;
+        Role role = user.getRole();
+
+        if (role != null) {
+            roleLogin = new LoginResponse.RoleLogin(
+                    role.getName()
+            );
+        }
+
+        return new LoginResponse.UserLogin(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                roleLogin
+        );
+    }
+
+    private User toRegisterUser(RegisterDTO dto) {
+        User user = new User();
+        user.setName(dto.getName() == null ? null : dto.getName().trim());
+        user.setAge(dto.getAge());
+        user.setEmail(dto.getEmail() == null ? null : dto.getEmail().trim().toLowerCase());
+        user.setPassword(dto.getPassword());
+        user.setAddress(dto.getAddress() == null ? null : dto.getAddress().trim());
+        user.setGender(dto.getGender());
+        return user;
     }
 }
