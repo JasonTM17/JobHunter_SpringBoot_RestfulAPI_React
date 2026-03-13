@@ -3,6 +3,7 @@ import {
   AuthAccountResponse,
   AuthCapabilityResponse,
   AuthLoginResponse,
+  EmailPreferenceSetting,
   PaginatedData,
   Permission,
   RegisterPayload,
@@ -76,6 +77,19 @@ export async function registerAccount(payload: RegisterPayload): Promise<void> {
 export async function fetchCurrentAccount(): Promise<AuthAccountResponse> {
   return apiRequest<AuthAccountResponse>(`${API_PREFIX}/auth/account`, {
     method: "GET"
+  });
+}
+
+export async function fetchEmailPreferences(): Promise<EmailPreferenceSetting> {
+  return apiRequest<EmailPreferenceSetting>(`${API_PREFIX}/auth/preferences/email`, {
+    method: "GET"
+  });
+}
+
+export async function updateEmailPreferences(weeklyJobRecommendationEnabled: boolean): Promise<EmailPreferenceSetting> {
+  return apiRequest<EmailPreferenceSetting>(`${API_PREFIX}/auth/preferences/email`, {
+    method: "PATCH",
+    body: JSON.stringify({ weeklyJobRecommendationEnabled })
   });
 }
 
