@@ -1,316 +1,227 @@
-import { FormEvent, KeyboardEvent, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { fetchAiAvailability, sendChat } from "../services/jobhunter-api";
+import { ChatMessage } from "../types/models";
+import { createId } from "../utils/format";
 
-type ChatRole = "user" | "assistant";
+const AI_NOT_CONFIGURED_MESSAGE = "Tính năng AI hiện chưa được cấu hình trên máy chủ. Vui lòng thử lại sau.";
+const AI_EMPTY_REPLY_MESSAGE = "Trợ lý AI chưa phản hồi được ở thời điểm này.";
+const AI_UNAVAILABLE_FRIENDLY = "Trợ lý AI hiện chưa sẵn sàng. Vui lòng thử lại sau.";
+const CHAT_PLACEHOLDER_DEFAULT = "Nhập câu hỏi của bạn...";
+const CHAT_PLACEHOLDER_CHECKING = "Đang kiểm tra trạng thái trợ lý AI...";
+const CHAT_PLACEHOLDER_UNAVAILABLE = "Trợ lý AI hiện chưa sẵn sàng.";
+const GREETING = "Xin chào, mình là trợ lý Jobhunter. Bạn muốn tối ưu CV hay chuẩn bị phỏng vấn?";
 
-type ChatMessage = {
-  id: string;
-  role: ChatRole;
-  text: string;
-  isError?: boolean;
-};
-
-type ChatApiSuccess = {
-  data?: {
-    reply?: string;
-    model?: string;
-  };
-  reply?: string;
-  model?: string;
-};
-
-type ChatApiError = {
-  message?: string | string[];
-  error?: string;
-};
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
-const CHAT_API = `${API_BASE_URL}/api/v1/ai/chat`;
-
-function createId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-}
-
-function extractReply(payload: ChatApiSuccess): { reply: string; model: string } {
-  const reply = payload?.data?.reply ?? payload?.reply ?? "";
-  const model = payload?.data?.model ?? payload?.model ?? "unknown-model";
-  return {
-    reply: typeof reply === "string" ? reply : "",
-    model: typeof model === "string" ? model : "unknown-model"
-  };
-}
-
-function extractErrorMessage(payload: ChatApiError): string {
-  if (Array.isArray(payload?.message)) {
-    return payload.message.join(", ");
-  }
-  if (typeof payload?.message === "string" && payload.message.trim().length > 0) {
-    return payload.message;
-  }
-  if (typeof payload?.error === "string" && payload.error.trim().length > 0) {
-    return payload.error;
-  }
-  return "Unknown server error";
-}
+type AiStatus = "checking" | "ready" | "unavailable";
 
 export default function ChatbotPage() {
+  const router = useRouter();
   const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [aiStatus, setAiStatus] = useState<AiStatus>("checking");
+  const [aiNotice, setAiNotice] = useState("");
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  const messagesContainerRef = useRef<HTMLElement | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: createId(),
+      id: createId("chat"),
       role: "assistant",
-      text: "Xin chao, minh la JobHunter AI Assistant. Ban muon toi uu CV, chuan bi phong van, hay tim viec theo ky nang?"
+      text: GREETING
     }
   ]);
-  const [isSending, setIsSending] = useState(false);
-  const [model, setModel] = useState("gpt-4.1-mini");
 
-  async function sendMessage(event?: FormEvent<HTMLFormElement>) {
-    event?.preventDefault();
-    const trimmed = input.trim();
-    if (!trimmed || isSending) return;
+  const prefillJobId = useMemo(() => {
+    const raw = router.query.jobId;
+    if (!raw) return "";
+    return Array.isArray(raw) ? raw[0] : raw;
+  }, [router.query.jobId]);
 
-    const userMessage: ChatMessage = { id: createId(), role: "user", text: trimmed };
-    setMessages((prev) => [...prev, userMessage]);
+  useEffect(() => {
+    let active = true;
+
+    async function loadAiStatus() {
+      setAiStatus("checking");
+      try {
+        const status = await fetchAiAvailability();
+        if (!active) return;
+
+        if (status.available) {
+          setAiStatus("ready");
+          setAiNotice("");
+          return;
+        }
+
+        setAiStatus("unavailable");
+        setAiNotice(status.message?.trim() || AI_UNAVAILABLE_FRIENDLY);
+      } catch {
+        if (!active) return;
+        setAiStatus("unavailable");
+        setAiNotice(AI_UNAVAILABLE_FRIENDLY);
+      }
+    }
+
+    void loadAiStatus();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, [messages, sending, aiStatus]);
+
+  function resetConversation() {
     setInput("");
-    setIsSending(true);
+    setSending(false);
+    setLastFailedMessage(null);
+    setMessages([
+      {
+        id: createId("chat"),
+        role: "assistant",
+        text: GREETING
+      }
+    ]);
+  }
+
+  async function submitMessage(rawMessage: string) {
+    const message = rawMessage.trim();
+    if (!message || sending || aiStatus !== "ready") return;
+
+    setMessages((prev) => [...prev, { id: createId("chat"), role: "user", text: message }]);
+    setInput("");
+    setSending(true);
 
     try {
-      const response = await fetch(CHAT_API, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed })
-      });
-
-      const payload = (await response.json()) as ChatApiSuccess & ChatApiError;
-      if (!response.ok) {
-        throw new Error(extractErrorMessage(payload));
-      }
-
-      const parsed = extractReply(payload);
-      if (!parsed.reply) {
-        throw new Error("AI did not return any reply");
-      }
-
-      setModel(parsed.model);
-      setMessages((prev) => [...prev, { id: createId(), role: "assistant", text: parsed.reply }]);
+      const payload = await sendChat(message);
+      const reply = payload.reply?.trim() || AI_EMPTY_REPLY_MESSAGE;
+      setMessages((prev) => [...prev, { id: createId("chat"), role: "assistant", text: reply }]);
+      setLastFailedMessage(null);
     } catch (error) {
+      const userMessage = error instanceof Error && error.message ? error.message : "Không thể kết nối tới trợ lý AI.";
+      if (userMessage === AI_NOT_CONFIGURED_MESSAGE) {
+        setAiStatus("unavailable");
+        setAiNotice(AI_UNAVAILABLE_FRIENDLY);
+        setLastFailedMessage(null);
+        return;
+      }
+
+      setLastFailedMessage(message);
       setMessages((prev) => [
         ...prev,
-        {
-          id: createId(),
-          role: "assistant",
-          text: `Loi: ${(error as Error).message}`,
-          isError: true
-        }
+        { id: createId("chat"), role: "assistant", isError: true, text: userMessage }
       ]);
     } finally {
-      setIsSending(false);
+      setSending(false);
     }
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+  async function submit(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    await submitMessage(input);
+  }
+
+  function retryLastMessage() {
+    if (!lastFailedMessage || sending || aiStatus !== "ready") return;
+    void submitMessage(lastFailedMessage);
+  }
+
+  function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      void sendMessage();
+      void submit();
     }
   }
 
+  const inputDisabled = sending || aiStatus !== "ready";
+  const placeholder =
+    aiStatus === "checking"
+      ? CHAT_PLACEHOLDER_CHECKING
+      : aiStatus === "unavailable"
+        ? CHAT_PLACEHOLDER_UNAVAILABLE
+        : CHAT_PLACEHOLDER_DEFAULT;
+
   return (
-    <main className="page">
-      <section className="shell">
-        <header className="header">
-          <h1>JobHunter AI Chatbot</h1>
-          <p>
-            Endpoint: <code>{CHAT_API}</code>
-          </p>
-          <p>
-            Model: <code>{model}</code>
-          </p>
+    <main className="mx-auto min-h-screen max-w-4xl px-4 py-6">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-soft">
+        <header className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-5 py-4 text-white">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h1 className="text-xl font-extrabold md:text-2xl">Trợ lý AI Jobhunter</h1>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={resetConversation}
+                className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20"
+              >
+                Làm mới hội thoại
+              </button>
+              <Link
+                href={prefillJobId ? `/jobs/${prefillJobId}` : "/"}
+                className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20"
+              >
+                {prefillJobId ? "Về chi tiết công việc" : "Về trang chủ"}
+              </Link>
+            </div>
+          </div>
+          {prefillJobId ? (
+            <p className="mt-2 text-xs text-slate-200">Bạn đang tư vấn cho công việc ID: {prefillJobId}</p>
+          ) : null}
         </header>
 
-        <section className="messages" aria-live="polite">
+        <section ref={messagesContainerRef} className="grid max-h-[58vh] gap-2 overflow-y-auto bg-slate-50 px-4 py-4">
+          {aiStatus !== "ready" ? (
+            <article className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              {aiStatus === "checking" ? "Đang kiểm tra trạng thái trợ lý AI..." : aiNotice || AI_UNAVAILABLE_FRIENDLY}
+            </article>
+          ) : null}
+
           {messages.map((message) => (
             <article
               key={message.id}
-              className={message.role === "user" ? "bubble user" : `bubble assistant${message.isError ? " error" : ""}`}
+              className={
+                message.role === "user"
+                  ? "ml-auto max-w-[80%] rounded-2xl border border-emerald-200 bg-emerald-100 px-4 py-3 text-sm leading-relaxed text-emerald-900"
+                  : message.isError
+                    ? "max-w-[80%] rounded-2xl border border-rose-200 bg-rose-100 px-4 py-3 text-sm leading-relaxed text-rose-900"
+                    : "max-w-[80%] rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-relaxed text-slate-700"
+              }
             >
-              <p>{message.text}</p>
+              {message.text}
             </article>
           ))}
-          {isSending ? <p className="typing">AI dang tra loi...</p> : null}
+          {sending ? <p className="text-xs font-semibold text-slate-500">Trợ lý đang phản hồi...</p> : null}
+          {!sending && lastFailedMessage && aiStatus === "ready" ? (
+            <button
+              type="button"
+              onClick={retryLastMessage}
+              className="justify-self-start rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+            >
+              Gửi lại câu vừa rồi
+            </button>
+          ) : null}
         </section>
 
-        <form className="composer" onSubmit={sendMessage}>
+        <form className="grid grid-cols-[1fr,auto] gap-2 border-t border-slate-200 bg-white p-4 max-md:grid-cols-1" onSubmit={(event) => void submit(event)}>
           <textarea
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Nhap cau hoi cua ban..."
+            onKeyDown={onKeyDown}
+            placeholder={placeholder}
             rows={3}
-            disabled={isSending}
+            disabled={inputDisabled}
+            className="min-h-[72px] resize-vertical rounded-2xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:cursor-not-allowed disabled:bg-slate-100"
           />
-          <button type="submit" disabled={isSending || input.trim().length === 0}>
-            {isSending ? "Dang gui..." : "Gui"}
+          <button
+            type="submit"
+            disabled={inputDisabled || input.trim().length === 0}
+            className="rounded-2xl bg-rose-600 px-6 py-2 text-sm font-bold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {sending ? "Đang gửi..." : "Gửi"}
           </button>
         </form>
       </section>
-
-      <style jsx>{`
-        .page {
-          min-height: 100vh;
-          padding: 20px;
-          background: radial-gradient(circle at 15% 20%, #f0f9ff 0%, #f8fbff 42%, #ffffff 100%);
-          color: #12223a;
-          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .shell {
-          max-width: 860px;
-          margin: 0 auto;
-          border-radius: 16px;
-          border: 1px solid #dae4f2;
-          background: #ffffff;
-          box-shadow: 0 16px 38px rgba(19, 44, 70, 0.08);
-          overflow: hidden;
-        }
-
-        .header {
-          padding: 16px 20px;
-          border-bottom: 1px solid #e9eef7;
-          background: linear-gradient(135deg, #f6fbff 0%, #eef5ff 100%);
-        }
-
-        h1 {
-          margin: 0 0 8px;
-          font-size: clamp(1.3rem, 1rem + 1vw, 1.8rem);
-        }
-
-        p {
-          margin: 6px 0;
-          color: #4f617b;
-        }
-
-        code {
-          font-family: Consolas, "Courier New", monospace;
-          background: #e9f0fb;
-          color: #0f2b50;
-          border-radius: 6px;
-          padding: 2px 6px;
-        }
-
-        .messages {
-          padding: 18px;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          max-height: 60vh;
-          overflow-y: auto;
-          background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
-        }
-
-        .bubble {
-          max-width: min(78%, 560px);
-          padding: 10px 12px;
-          border-radius: 12px;
-          border: 1px solid #e4ebf6;
-          box-shadow: 0 8px 20px rgba(17, 39, 65, 0.05);
-        }
-
-        .bubble p {
-          margin: 0;
-          white-space: pre-wrap;
-        }
-
-        .bubble.assistant {
-          align-self: flex-start;
-          background: #ffffff;
-        }
-
-        .bubble.user {
-          align-self: flex-end;
-          background: #dff4ea;
-          border-color: #bce4d1;
-          color: #11553b;
-        }
-
-        .bubble.error {
-          border-color: #f3c2bf;
-          background: #fff2f1;
-        }
-
-        .typing {
-          margin: 4px 0 0;
-          color: #0f766e;
-          font-weight: 600;
-        }
-
-        .composer {
-          border-top: 1px solid #e9eef7;
-          padding: 14px;
-          background: #f8fbff;
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 10px;
-        }
-
-        textarea {
-          width: 100%;
-          resize: vertical;
-          min-height: 68px;
-          max-height: 180px;
-          border-radius: 10px;
-          border: 1px solid #ced9eb;
-          padding: 10px;
-          font: inherit;
-          color: inherit;
-          background: #ffffff;
-        }
-
-        textarea:focus {
-          outline: 2px solid #9bc3ff;
-          border-color: #9bc3ff;
-        }
-
-        button {
-          align-self: end;
-          border: 0;
-          border-radius: 10px;
-          background: #0f766e;
-          color: white;
-          padding: 10px 14px;
-          font-weight: 700;
-          min-width: 98px;
-          cursor: pointer;
-        }
-
-        button:disabled {
-          cursor: not-allowed;
-          opacity: 0.55;
-        }
-
-        @media (max-width: 700px) {
-          .page {
-            padding: 12px;
-          }
-
-          .messages {
-            max-height: 55vh;
-            padding: 14px;
-          }
-
-          .bubble {
-            max-width: 90%;
-          }
-
-          .composer {
-            grid-template-columns: 1fr;
-          }
-
-          button {
-            width: 100%;
-          }
-        }
-      `}</style>
     </main>
   );
 }
