@@ -34,6 +34,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
     implementation 'com.turkraft.springfilter:jpa:3.2.0'
     implementation 'io.swagger.core.v3:swagger-models:2.2.31'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.19.0'
@@ -52,5 +53,8 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    systemProperty 'spring.profiles.active', 'test'
     systemProperty 'jobhunter.seed.enabled', 'false'
+    systemProperty 'jobhunter.scheduler.enabled', 'false'
+    systemProperty 'jobhunter.scheduler.mail.enabled', 'false'
 }
