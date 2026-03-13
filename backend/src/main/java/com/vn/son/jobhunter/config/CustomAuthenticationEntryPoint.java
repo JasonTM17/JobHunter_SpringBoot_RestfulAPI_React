@@ -30,7 +30,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         RestResponse<Object> res = new RestResponse<Object>();
         res.setStatusCode(HttpStatus.UNAUTHORIZED.value());
         res.setError("UNAUTHORIZED");
-        res.setMessage("Token is invalid (expired, malformed, or missing in cookie/header).");
+        res.setMessage("Phiên đăng nhập không hợp lệ hoặc đã hết hạn. Vui lòng đăng nhập lại.");
 
         mapper.writeValue(response.getWriter(), res);
     }

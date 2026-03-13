@@ -31,6 +31,6 @@ class CustomAuthenticationEntryPointTest {
         assertEquals(401, response.getStatus());
         assertEquals(401, payload.get("statusCode"));
         assertEquals("UNAUTHORIZED", payload.get("error"));
-        assertTrue(payload.get("message").toString().contains("Token is invalid"));
+        assertTrue(payload.get("message").toString().contains("đăng nhập"));
     }
 }

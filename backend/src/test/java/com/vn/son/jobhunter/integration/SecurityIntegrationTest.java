@@ -1,14 +1,13 @@
 package com.vn.son.jobhunter.integration;
 
+import com.vn.son.jobhunter.service.EmailService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import com.vn.son.jobhunter.service.EmailService;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,7 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.jpa.hibernate.ddl-auto=create-drop",
         "son.jwt.base64-secret=QWNjZXNzVG9rZW5Gb3JUZXN0U2VjdXJlS2V5QWNjZXNzVG9rZW4xMjM0NTY=",
         "son.jwt.access-token-validity-in-seconds=900",
-        "son.jwt.refresh-token-validity-in-seconds=604800"
+        "son.jwt.refresh-token-validity-in-seconds=604800",
+        "jobhunter.swagger.enabled=true"
 })
 @AutoConfigureMockMvc(addFilters = true)
 class SecurityIntegrationTest {
@@ -37,8 +37,7 @@ class SecurityIntegrationTest {
     void protectedUserEndpointShouldReturnUnauthorizedWhenNoToken() throws Exception {
         mockMvc.perform(get("/api/v1/users/1"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.statusCode").value(401))
-                .andExpect(jsonPath("$.message").value(containsString("Token is invalid")));
+                .andExpect(jsonPath("$.statusCode").value(401));
     }
 
     @Test
@@ -52,5 +51,19 @@ class SecurityIntegrationTest {
         mockMvc.perform(get("/actuator/loggers"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.statusCode").value(401));
+    }
+
+    @Test
+    void swaggerUiShouldBePublicInLocalDev() throws Exception {
+        mockMvc.perform(get("/swagger-ui/index.html"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void openApiDocsShouldBePublicInLocalDev() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.openapi").exists())
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth").exists());
     }
 }
