@@ -118,11 +118,11 @@ export interface UserCreatePayload extends UserUpdatePayload {
 
 export interface RegisterPayload {
   name: string;
-  age: number;
   email: string;
   password: string;
-  address: string;
-  gender: "MALE" | "FEMALE" | "OTHER";
+  age?: number;
+  address?: string;
+  gender?: "MALE" | "FEMALE" | "OTHER";
 }
 
 export interface AuthUser {
@@ -130,6 +130,7 @@ export interface AuthUser {
   email: string;
   name: string;
   role?: AuthRole | null;
+  weeklyJobRecommendationEnabled?: boolean;
 }
 
 export interface AuthRole {
@@ -142,6 +143,10 @@ export interface AuthLoginResponse {
 
 export interface AuthAccountResponse {
   user?: AuthUser;
+}
+
+export interface EmailPreferenceSetting {
+  weeklyJobRecommendationEnabled: boolean;
 }
 
 export interface AuthCapabilityResponse {
