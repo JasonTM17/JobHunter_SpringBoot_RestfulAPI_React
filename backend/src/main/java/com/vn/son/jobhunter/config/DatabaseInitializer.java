@@ -1,6 +1,8 @@
 package com.vn.son.jobhunter.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,23 +16,23 @@ import com.vn.son.jobhunter.util.constant.GenderEnum;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
+@Slf4j
+@ConditionalOnProperty(name = "jobhunter.seed.enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class DatabaseInitializer implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RecruitmentDemoDataSeeder recruitmentDemoDataSeeder;
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("Start init database");
-        long countPermissions = this.permissionRepository.count();
-        long countRoles = this.roleRepository.count();
-        long countUsers = this.userRepository.count();
-
-        if(countPermissions == 0){
+        log.info("Starting database bootstrap");
+        if (this.permissionRepository.count() == 0) {
             ArrayList<Permission> arr = new ArrayList<>();
             arr.add(new Permission("Create a company", "/api/v1/companies", "POST", "COMPANIES"));
             arr.add(new Permission("Update a company", "/api/v1/companies", "PUT", "COMPANIES"));
@@ -63,7 +65,7 @@ public class DatabaseInitializer implements CommandLineRunner {
             arr.add(new Permission("Get roles with pagination", "/api/v1/roles", "GET", "ROLES"));
 
             arr.add(new Permission("Create a user", "/api/v1/users", "POST", "USERS"));
-            arr.add(new Permission("Update a user", "/api/v1/users", "PUT", "USERS"));
+            arr.add(new Permission("Update a user", "/api/v1/users/{id}", "PUT", "USERS"));
             arr.add(new Permission("Delete a user", "/api/v1/users/{id}", "DELETE", "USERS"));
             arr.add(new Permission("Get a user by id", "/api/v1/users/{id}", "GET", "USERS"));
             arr.add(new Permission("Get users with pagination", "/api/v1/users", "GET", "USERS"));
@@ -79,41 +81,62 @@ public class DatabaseInitializer implements CommandLineRunner {
 
             this.permissionRepository.saveAll(arr);
         }
+
         ensureFilePermissionsAreCorrect();
+        ensureUserPermissionsAreCorrect();
+        ensureSkillPermissionsAreCorrect();
+        ensureSuperAdminBootstrap();
+        this.recruitmentDemoDataSeeder.seedDemoData();
+        log.info("Database bootstrap completed");
+    }
 
-        if (countRoles == 0) {
-            List<Permission> allPermissions = this.permissionRepository.findAll();
-
-            Role adminRole = new Role();
-            adminRole.setName("SUPER_ADMIN");
-            adminRole.setDescription("Admin thì full permissions");
-            adminRole.setActive(true);
-            adminRole.setPermissions(allPermissions);
-
-            this.roleRepository.save(adminRole);
+    private void ensureSuperAdminBootstrap() {
+        List<Permission> allPermissions = this.permissionRepository.findAll();
+        if (allPermissions.isEmpty()) {
+            return;
         }
 
-        if (countUsers == 0) {
-            User adminUser = new User();
-            adminUser.setEmail("admin@gmail.com");
-            adminUser.setAddress("hn");
-            adminUser.setAge(25);
-            adminUser.setGender(GenderEnum.MALE);
-            adminUser.setName("I'm super admin");
-            adminUser.setPassword(this.passwordEncoder.encode("123456"));
-
-            Role adminRole = this.roleRepository.findByName("SUPER_ADMIN");
-            if (adminRole != null) {
-                adminUser.setRole(adminRole);
+        Role superAdminRole = this.roleRepository.findByName("SUPER_ADMIN");
+        if (superAdminRole == null) {
+            superAdminRole = new Role();
+            superAdminRole.setName("SUPER_ADMIN");
+            superAdminRole.setDescription("Super admin has full permissions");
+            superAdminRole.setActive(true);
+            superAdminRole.setPermissions(allPermissions);
+            superAdminRole = this.roleRepository.save(superAdminRole);
+        } else {
+            superAdminRole.setActive(true);
+            if (superAdminRole.getDescription() == null || superAdminRole.getDescription().isBlank()) {
+                superAdminRole.setDescription("Super admin has full permissions");
             }
-
-            this.userRepository.save(adminUser);
+            // Always re-sync permissions to avoid stale data and avoid lazy-read side effects during bootstrap.
+            superAdminRole.setPermissions(allPermissions);
+            superAdminRole = this.roleRepository.save(superAdminRole);
         }
 
-        if (countPermissions > 0 && countRoles > 0 && countUsers > 0) {
-            System.out.println(">>> SKIP INIT DATABASE ~ ALREADY HAVE DATA...");
-        } else
-            System.out.println(">>> END INIT DATABASE");
+        ensureBootstrapAdminUser("admin@gmail.com", "I'm super admin", superAdminRole);
+        ensureBootstrapAdminUser("superadmin@jobhunter.local", "Super Admin Jobhunter", superAdminRole);
+    }
+
+    private void ensureBootstrapAdminUser(String email, String name, Role superAdminRole) {
+        User existing = this.userRepository.findByEmail(email);
+        if (existing == null) {
+            User adminUser = new User();
+            adminUser.setEmail(email);
+            adminUser.setAddress("HN");
+            adminUser.setAge(30);
+            adminUser.setGender(GenderEnum.MALE);
+            adminUser.setName(name);
+            adminUser.setPassword(this.passwordEncoder.encode("123456"));
+            adminUser.setRole(superAdminRole);
+            this.userRepository.save(adminUser);
+            return;
+        }
+
+        if (existing.getRole() == null || !Objects.equals(existing.getRole().getId(), superAdminRole.getId())) {
+            existing.setRole(superAdminRole);
+            this.userRepository.save(existing);
+        }
     }
 
     private void ensureFilePermissionsAreCorrect() {
@@ -143,6 +166,123 @@ public class DatabaseInitializer implements CommandLineRunner {
 
         if (!toUpdate.isEmpty()) {
             this.permissionRepository.saveAll(toUpdate);
+        }
+    }
+
+    private void ensureUserPermissionsAreCorrect() {
+        List<Permission> permissions = this.permissionRepository.findAll();
+        List<Permission> toUpdate = new ArrayList<>();
+        boolean hasUpdatePermission = false;
+
+        for (Permission permission : permissions) {
+            if (!"USERS".equalsIgnoreCase(permission.getModule())) {
+                continue;
+            }
+
+            if ("Update a user".equalsIgnoreCase(permission.getName())) {
+                hasUpdatePermission = true;
+                boolean changed = false;
+
+                if (!"/api/v1/users/{id}".equals(permission.getApiPath())) {
+                    permission.setApiPath("/api/v1/users/{id}");
+                    changed = true;
+                }
+
+                if (!"PUT".equalsIgnoreCase(permission.getMethod())) {
+                    permission.setMethod("PUT");
+                    changed = true;
+                }
+
+                if (changed) {
+                    toUpdate.add(permission);
+                }
+            }
+        }
+
+        if (!hasUpdatePermission) {
+            Permission permission = new Permission("Update a user", "/api/v1/users/{id}", "PUT", "USERS");
+            this.permissionRepository.save(permission);
+        }
+
+        if (!toUpdate.isEmpty()) {
+            this.permissionRepository.saveAll(toUpdate);
+        }
+    }
+
+    private void ensureSkillPermissionsAreCorrect() {
+        List<Permission> permissions = this.permissionRepository.findAll();
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Create a skill",
+                "/api/v1/skills",
+                "POST",
+                "SKILLS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Update a skill",
+                "/api/v1/skills",
+                "PUT",
+                "SKILLS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Delete a skill",
+                "/api/v1/skills/{id}",
+                "DELETE",
+                "SKILLS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Get skills with pagination",
+                "/api/v1/skills",
+                "GET",
+                "SKILLS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Get resumes by current user",
+                "/api/v1/resumes/by-user",
+                "POST",
+                "RESUMES"
+        );
+    }
+
+    private void ensurePermissionByNameAndContract(
+            List<Permission> permissions,
+            String name,
+            String apiPath,
+            String method,
+            String module
+    ) {
+        Permission existing = permissions.stream()
+                .filter(permission -> name.equalsIgnoreCase(permission.getName()))
+                .findFirst()
+                .orElse(null);
+
+        if (existing == null) {
+            Permission created = new Permission(name, apiPath, method, module);
+            this.permissionRepository.save(created);
+            permissions.add(created);
+            return;
+        }
+
+        boolean changed = false;
+        if (!apiPath.equals(existing.getApiPath())) {
+            existing.setApiPath(apiPath);
+            changed = true;
+        }
+        if (!method.equalsIgnoreCase(existing.getMethod())) {
+            existing.setMethod(method);
+            changed = true;
+        }
+        if (!module.equalsIgnoreCase(existing.getModule())) {
+            existing.setModule(module);
+            changed = true;
+        }
+
+        if (changed) {
+            this.permissionRepository.save(existing);
         }
     }
 }
