@@ -1,5 +1,6 @@
 package com.vn.son.jobhunter.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
@@ -17,22 +18,23 @@ import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 
 @Service
+@Slf4j
 public class FileService {
     @Value("${son.upload-file.base-uri}")
     private String baseURI;
     public void createUploadFolder(String folder) throws URISyntaxException {
         URI uri = new URI(folder);
         Path path = Paths.get(uri);
-        File tmpDir = new File(path.toString());
-        if (!tmpDir.isDirectory()) {
+        if (!Files.isDirectory(path)) {
             try {
-                Files.createDirectory(tmpDir.toPath());
-                System.out.println(">>> CREATE NEW DIRECTORY SUCCESSFUL, PATH = " + tmpDir.toPath());
+                Files.createDirectories(path);
+                log.info("Created upload directory at {}", path);
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Failed to create upload directory at {}", path, e);
+                throw new IllegalStateException("Cannot create upload directory.", e);
             }
         } else {
-            System.out.println(">>> SKIP MAKING DIRECTORY, ALREADY EXISTS");
+            log.debug("Skip creating upload directory because it already exists at {}", path);
         }
     }
 
