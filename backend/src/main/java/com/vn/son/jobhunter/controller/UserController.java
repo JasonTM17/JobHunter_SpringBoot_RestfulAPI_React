@@ -1,6 +1,7 @@
 package com.vn.son.jobhunter.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -19,18 +20,19 @@ import com.vn.son.jobhunter.util.annotation.ApiMessage;
 @RequestMapping(path = "${apiPrefix}/users")
 @RequiredArgsConstructor
 @RestController
+@Tag(name = "Người dùng", description = "Nhóm API quản lý tài khoản người dùng")
 public class UserController {
     private final UserService userService;
 
     @PostMapping("")
-    @ApiMessage("Create a user")
+    @ApiMessage("Tạo người dùng")
     public ResponseEntity<CreatedUserResponse> createUser(@Valid @RequestBody User user) throws Exception {
         CreatedUserResponse newUser = this.userService.createUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }
 
     @GetMapping("")
-    @ApiMessage("Fetch all user data")
+    @ApiMessage("Lấy danh sách người dùng")
     public ResponseEntity<ResultPaginationResponse> getAllUser(
             @Filter Specification<User> spec,
             Pageable pageable
@@ -40,7 +42,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @ApiMessage("Fetch user by id")
+    @ApiMessage("Lấy chi tiết người dùng theo mã")
     public ResponseEntity<CreatedUserResponse> fetchUserById(
             @PathVariable("id") Long id
     ) throws Exception {
@@ -48,7 +50,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @ApiMessage("Update a user")
+    @ApiMessage("Cập nhật người dùng")
     public ResponseEntity<UpdatedUserResponse> updateUser(
             @PathVariable("id") Long id,
             @Valid @RequestBody UpdateUserDTO user
@@ -57,7 +59,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @ApiMessage("Delete a user")
+    @ApiMessage("Xóa người dùng")
     public ResponseEntity<Void> deleteUser(
             @PathVariable("id") Long id
     ) throws Exception {

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import com.vn.son.jobhunter.domain.Subscriber;
 import com.vn.son.jobhunter.service.SubscriberService;
@@ -17,6 +18,7 @@ import com.vn.son.jobhunter.util.security.SecurityUtils;
 
 @RestController
 @RequestMapping(path = "${apiPrefix}")
+@Tag(name = "Đăng ký nhận mail", description = "Nhóm API đăng ký nhận email gợi ý theo kỹ năng")
 public class SubscriberController {
     private final SubscriberService subscriberService;
 
@@ -25,7 +27,7 @@ public class SubscriberController {
     }
 
     @PostMapping("/subscribers")
-    @ApiMessage("Create a subscriber")
+    @ApiMessage("Tạo subscriber mới")
     public ResponseEntity<Subscriber> create(@Valid @RequestBody Subscriber sub) throws IdInvalidException {
         // check email
         boolean isExist = this.subscriberService.isExistsByEmail(sub.getEmail());
@@ -37,7 +39,7 @@ public class SubscriberController {
     }
 
     @PutMapping("/subscribers")
-    @ApiMessage("Update a subscriber")
+    @ApiMessage("Cập nhật thông tin subscriber")
     public ResponseEntity<Subscriber> update(@RequestBody Subscriber subsRequest) throws IdInvalidException {
         // check id
         Subscriber subsDB = this.subscriberService.findById(subsRequest.getId());
@@ -48,7 +50,7 @@ public class SubscriberController {
     }
 
     @PostMapping("/subscribers/skills")
-    @ApiMessage("Get subscriber's skill")
+    @ApiMessage("Lấy danh sách kỹ năng đã theo dõi của subscriber hiện tại")
     public ResponseEntity<Subscriber> getSubscribersSkill() throws IdInvalidException {
         String email = SecurityUtils.getCurrentUserLogin().isPresent()
                 ? SecurityUtils.getCurrentUserLogin().get()

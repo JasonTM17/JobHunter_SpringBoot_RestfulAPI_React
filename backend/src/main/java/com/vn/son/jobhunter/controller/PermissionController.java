@@ -1,6 +1,7 @@
 package com.vn.son.jobhunter.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -17,23 +18,24 @@ import com.vn.son.jobhunter.util.annotation.ApiMessage;
 @RequestMapping(path = "${apiPrefix}/permissions")
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Phân quyền", description = "Nhóm API quản lý permission trong hệ thống")
 public class PermissionController {
     private final PermissionService permissionService;
 
     @PostMapping("")
-    @ApiMessage("Create a permission")
+    @ApiMessage("Tạo quyền")
     public ResponseEntity<Permission> create(@Valid @RequestBody Permission permission) throws Exception {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.permissionService.create(permission));
     }
 
     @PutMapping("")
-    @ApiMessage("Update a permission")
+    @ApiMessage("Cập nhật quyền")
     public ResponseEntity<Permission> update(@Valid @RequestBody Permission permission) throws Exception {
         return ResponseEntity.status(HttpStatus.OK).body(this.permissionService.update(permission));
     }
 
     @GetMapping("")
-    @ApiMessage("fetch all permission")
+    @ApiMessage("Lấy danh sách quyền")
     public ResponseEntity<ResultPaginationResponse> getAll(
             @Filter Specification<Permission> spec,
             Pageable pageable
@@ -44,7 +46,7 @@ public class PermissionController {
     }
 
     @DeleteMapping("/{id}")
-    @ApiMessage("Delete a permission")
+    @ApiMessage("Xóa quyền")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws Exception{
         this.permissionService.delete(id);
         return ResponseEntity.ok().body(null);

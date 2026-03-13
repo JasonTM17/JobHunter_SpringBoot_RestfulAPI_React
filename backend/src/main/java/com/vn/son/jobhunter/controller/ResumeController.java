@@ -3,6 +3,7 @@ package com.vn.son.jobhunter.controller;
 import com.turkraft.springfilter.boot.Filter;
 import com.turkraft.springfilter.builder.FilterBuilder;
 import com.turkraft.springfilter.converter.FilterSpecificationConverter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @RequestMapping(path = "${apiPrefix}/resumes")
 @RequiredArgsConstructor
 @RestController
+@Tag(name = "Hồ sơ ứng tuyển", description = "Nhóm API quản lý hồ sơ ứng tuyển của ứng viên")
 public class ResumeController {
     private final ResumeService resumeService;
     private final UserService userService;
@@ -35,26 +37,26 @@ public class ResumeController {
     private final FilterBuilder filterBuilder;
 
     @PostMapping("")
-    @ApiMessage("Create a resume")
+    @ApiMessage("Tạo hồ sơ ứng tuyển")
     public ResponseEntity<CreatedResumeResponse> create(@Valid @RequestBody Resume resume) throws Exception {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.resumeService.create(resume));
     }
 
     @PutMapping("")
-    @ApiMessage("Update a resume")
+    @ApiMessage("Cập nhật hồ sơ ứng tuyển")
     public ResponseEntity<UpdatedResumeResponse> update(@Valid @RequestBody Resume resume) throws Exception {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.resumeService.update(resume));
     }
 
     @DeleteMapping("/{id}")
-    @ApiMessage("Delete a resume")
+    @ApiMessage("Xóa hồ sơ ứng tuyển")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws Exception{
         this.resumeService.delete(id);
         return ResponseEntity.ok().body(null);
     }
 
     @GetMapping("/{id}")
-    @ApiMessage("Fetch a resume by id")
+    @ApiMessage("Lấy chi tiết hồ sơ ứng tuyển theo mã")
     public ResponseEntity<FetchResumeResponse> fetchById(@PathVariable("id") Long id) throws Exception {
 
         return ResponseEntity.status(HttpStatus.OK).body(
@@ -63,7 +65,7 @@ public class ResumeController {
     }
 
     @GetMapping("")
-    @ApiMessage("fetch all resume")
+    @ApiMessage("Lấy danh sách hồ sơ ứng tuyển")
     @Transactional(readOnly = true)
     public ResponseEntity<ResultPaginationResponse> getAll(
             @Filter Specification<Resume> spec,
@@ -94,7 +96,7 @@ public class ResumeController {
     }
 
     @PostMapping("/by-user")
-    @ApiMessage("Get list resumes by user")
+    @ApiMessage("Lấy danh sách hồ sơ theo người dùng hiện tại")
     public ResponseEntity<ResultPaginationResponse> fetchResumeByUser(Pageable pageable) throws Exception {
         return ResponseEntity.status(HttpStatus.OK).body(this.resumeService.fetchResumeByUser(pageable));
     }
