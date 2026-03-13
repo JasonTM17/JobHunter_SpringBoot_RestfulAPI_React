@@ -17,7 +17,7 @@ import java.util.List;
 
 @Entity
 @Table(name="users")
-@Getter @Setter @AllArgsConstructor @NoArgsConstructor
+@Getter @Setter @NoArgsConstructor
 public class User extends AbstractAuditingEntity<Long> {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,6 +51,9 @@ public class User extends AbstractAuditingEntity<Long> {
     @Enumerated(EnumType.STRING)
     @NotNull(message = "Gender cannot be null")
     private GenderEnum gender;
+
+    @Column(name = "weekly_job_recommendation_enabled", nullable = false)
+    private boolean weeklyJobRecommendationEnabled;
 
     @Column(name = "refresh_token", columnDefinition = "MEDIUMTEXT")
     @JsonIgnore

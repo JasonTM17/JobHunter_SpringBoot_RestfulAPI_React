@@ -16,6 +16,7 @@ public class LoginResponse {
         private String email;
         private String name;
         private RoleLogin role;
+        private boolean weeklyJobRecommendationEnabled;
     }
 
     @Getter

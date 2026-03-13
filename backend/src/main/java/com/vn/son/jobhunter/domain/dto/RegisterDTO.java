@@ -19,7 +19,7 @@ public class RegisterDTO {
 
     @Min(value = 0, message = "Age must be greater than or equal to 0")
     @Max(value = 150, message = "Age must be less than or equal to 150")
-    private int age;
+    private Integer age;
 
     @NotBlank(message = "Email is required")
     @NotNull(message = "Email cannot be null")
@@ -34,6 +34,5 @@ public class RegisterDTO {
     @Size(max = 200, message = "Address must be at most 200 characters")
     private String address;
 
-    @NotNull(message = "Gender cannot be null")
     private GenderEnum gender;
 }
