@@ -13,6 +13,7 @@ import {
   logoutCurrentSession
 } from "../services/auth-rbac-api";
 import { AuthUser, RoleOption } from "../types/models";
+import { toUserErrorMessage } from "../utils/error-message";
 import { hasPermissionKey } from "../utils/permissions";
 
 type SessionStatus = "loading" | "authenticated" | "anonymous";
@@ -75,7 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setCanAccessManagement(false);
         setAssignableRoles([]);
         setStatus("anonymous");
-        setLastAuthError((error as Error).message);
+        setLastAuthError(toUserErrorMessage(error, "Không thể xác thực phiên đăng nhập hiện tại."));
       }
     })();
   }, []);
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setCanAccessManagement(false);
       setAssignableRoles([]);
       setStatus("authenticated");
-      setLastAuthError((error as Error).message);
+      setLastAuthError(toUserErrorMessage(error, "Không thể đồng bộ quyền truy cập tài khoản."));
       return fallbackUser;
     }
   }
