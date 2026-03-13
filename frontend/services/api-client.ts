@@ -1,7 +1,18 @@
 import { ApiEnvelope } from "../types/models";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
-export const STORAGE_BASE_URL = process.env.NEXT_PUBLIC_STORAGE_BASE_URL ?? API_BASE_URL;
+const PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
+const PUBLIC_STORAGE_BASE_URL = process.env.NEXT_PUBLIC_STORAGE_BASE_URL ?? PUBLIC_API_BASE_URL;
+const INTERNAL_API_BASE_URL = process.env.INTERNAL_API_BASE_URL ?? PUBLIC_API_BASE_URL;
+const INTERNAL_STORAGE_BASE_URL =
+  process.env.INTERNAL_STORAGE_BASE_URL ?? process.env.INTERNAL_API_BASE_URL ?? PUBLIC_STORAGE_BASE_URL;
+
+const isServerRuntime = typeof window === "undefined";
+
+export const API_BASE_URL = (isServerRuntime ? INTERNAL_API_BASE_URL : PUBLIC_API_BASE_URL).replace(/\/+$/, "");
+export const STORAGE_BASE_URL = (isServerRuntime ? INTERNAL_STORAGE_BASE_URL : PUBLIC_STORAGE_BASE_URL).replace(
+  /\/+$/,
+  ""
+);
 const REFRESH_ENDPOINT = "/api/v1/auth/refresh";
 
 type QueryValue = string | number | boolean | null | undefined;
