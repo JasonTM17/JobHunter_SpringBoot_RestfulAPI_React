@@ -2,6 +2,7 @@ package com.vn.son.jobhunter.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,10 +19,14 @@ import com.vn.son.jobhunter.domain.User;
 import com.vn.son.jobhunter.domain.dto.LoginDTO;
 import com.vn.son.jobhunter.domain.dto.RegisterDTO;
 import com.vn.son.jobhunter.domain.res.auth.AuthCapabilityResponse;
+import com.vn.son.jobhunter.domain.dto.auth.EmailPreferenceUpdateDTO;
+import com.vn.son.jobhunter.domain.res.auth.EmailPreferenceResponse;
 import com.vn.son.jobhunter.domain.res.auth.LoginResponse;
 import com.vn.son.jobhunter.domain.res.auth.UserActionCapabilityResponse;
 import com.vn.son.jobhunter.domain.res.user.CreatedUserResponse;
+import com.vn.son.jobhunter.util.constant.GenderEnum;
 import com.vn.son.jobhunter.util.error.IdInvalidException;
+import com.vn.son.jobhunter.util.error.UnauthorizedException;
 import com.vn.son.jobhunter.util.security.SecurityUtils;
 import com.vn.son.jobhunter.service.SecurityService;
 import com.vn.son.jobhunter.service.UserService;
@@ -32,6 +37,7 @@ import java.util.List;
 @RequestMapping(path = "${apiPrefix}/auth")
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Xác thực & tài khoản", description = "Nhóm API đăng ký, đăng nhập và quản lý phiên người dùng")
 public class AuthController {
     private static final String ACCESS_TOKEN_COOKIE_NAME = "access_token";
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
@@ -54,14 +60,14 @@ public class AuthController {
     private String sameSitePolicy;
 
     @PostMapping("/register")
-    @ApiMessage("Register a new user")
+    @ApiMessage("Đăng ký tài khoản mới")
     public ResponseEntity<CreatedUserResponse> createUser(@Valid @RequestBody RegisterDTO registerDTO) throws Exception {
         CreatedUserResponse newUser = this.userService.createUser(this.toRegisterUser(registerDTO));
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }
 
     @PostMapping(path = "/login")
-    @ApiMessage("Login by credential")
+    @ApiMessage("Đăng nhập bằng email và mật khẩu")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginDTO loginDTO){
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
@@ -95,7 +101,7 @@ public class AuthController {
     }
 
     @GetMapping("/account")
-    @ApiMessage("Get user information")
+    @ApiMessage("Lấy thông tin tài khoản hiện tại")
     public ResponseEntity<LoginResponse.UserGetAccout> getAccount(){
         String email = SecurityUtils.getCurrentUserLogin().isPresent()
                 ? SecurityUtils.getCurrentUserLogin().get()
@@ -108,8 +114,26 @@ public class AuthController {
         return ResponseEntity.ok().body(userGetAccout);
     }
 
+    @GetMapping("/preferences/email")
+    @ApiMessage("Lấy tùy chọn nhận email gợi ý")
+    public ResponseEntity<EmailPreferenceResponse> getCurrentEmailPreference() throws UnauthorizedException {
+        User currentUser = this.userService.getCurrentAuthenticatedUserOrThrow();
+        return ResponseEntity.ok(new EmailPreferenceResponse(currentUser.isWeeklyJobRecommendationEnabled()));
+    }
+
+    @PatchMapping("/preferences/email")
+    @ApiMessage("Cập nhật tùy chọn nhận email gợi ý")
+    public ResponseEntity<EmailPreferenceResponse> updateCurrentEmailPreference(
+            @Valid @RequestBody EmailPreferenceUpdateDTO request
+    ) throws UnauthorizedException {
+        User updatedUser = this.userService.updateCurrentWeeklyRecommendationPreference(
+                Boolean.TRUE.equals(request.getWeeklyJobRecommendationEnabled())
+        );
+        return ResponseEntity.ok(new EmailPreferenceResponse(updatedUser.isWeeklyJobRecommendationEnabled()));
+    }
+
     @GetMapping("/capabilities")
-    @ApiMessage("Get current account capabilities")
+    @ApiMessage("Lấy danh sách quyền thao tác của tài khoản hiện tại")
     public ResponseEntity<AuthCapabilityResponse> getCapabilities() {
         List<String> actionKeys = this.userService.getCurrentPermissionKeys();
         List<AuthCapabilityResponse.RoleOption> assignableRoles = this.userService.getAssignableRoleOptionsForCurrentUser();
@@ -118,7 +142,7 @@ public class AuthController {
     }
 
     @GetMapping("/capabilities/users/{id}")
-    @ApiMessage("Get current account capability on a target user")
+    @ApiMessage("Lấy quyền thao tác của tài khoản hiện tại trên người dùng mục tiêu")
     public ResponseEntity<UserActionCapabilityResponse> getUserActionCapability(
             @PathVariable("id") Long id
     ) throws Exception {
@@ -126,7 +150,7 @@ public class AuthController {
     }
 
     @GetMapping("/refresh")
-    @ApiMessage("Get user information")
+    @ApiMessage("Làm mới phiên đăng nhập và trả về thông tin tài khoản")
     public ResponseEntity<LoginResponse> getRefreshToken(
             @CookieValue("refresh_token") String refreshToken
     ) throws IdInvalidException {
@@ -159,7 +183,7 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @ApiMessage("Logout user")
+    @ApiMessage("Đăng xuất tài khoản")
     public ResponseEntity<Void> logout(
             @CookieValue(value = REFRESH_TOKEN_COOKIE_NAME, required = false) String refreshToken
     ){
@@ -225,18 +249,19 @@ public class AuthController {
                 user.getId(),
                 user.getEmail(),
                 user.getName(),
-                roleLogin
+                roleLogin,
+                user.isWeeklyJobRecommendationEnabled()
         );
     }
 
     private User toRegisterUser(RegisterDTO dto) {
         User user = new User();
         user.setName(dto.getName() == null ? null : dto.getName().trim());
-        user.setAge(dto.getAge());
+        user.setAge(dto.getAge() == null ? 0 : dto.getAge());
         user.setEmail(dto.getEmail() == null ? null : dto.getEmail().trim().toLowerCase());
         user.setPassword(dto.getPassword());
         user.setAddress(dto.getAddress() == null ? null : dto.getAddress().trim());
-        user.setGender(dto.getGender());
+        user.setGender(dto.getGender() == null ? GenderEnum.OTHER : dto.getGender());
         return user;
     }
 }

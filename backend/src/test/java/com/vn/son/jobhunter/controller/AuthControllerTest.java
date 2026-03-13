@@ -40,6 +40,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -105,7 +106,7 @@ class AuthControllerTest {
                         .content(payload))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.statusCode").value(400))
-                .andExpect(jsonPath("$.message").value("Bad credentials"));
+                .andExpect(jsonPath("$.message").value("Email hoặc mật khẩu chưa đúng."));
     }
 
     @Test
@@ -170,10 +171,10 @@ class AuthControllerTest {
     @Test
     void refreshShouldReturnBadRequestWhenCookieMissing() throws Exception {
         mockMvc.perform(get("/api/v1/auth/refresh"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.statusCode").value(400))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.statusCode").value(401))
                 .andExpect(jsonPath("$.message")
-                        .value(containsString("Required cookie 'refresh_token'")));
+                        .value(containsString("Phiên làm việc")));
     }
 
     @Test
@@ -190,7 +191,7 @@ class AuthControllerTest {
                         .cookie(new Cookie("refresh_token", "valid-refresh-token")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.statusCode").value(400))
-                .andExpect(jsonPath("$.message").value("Refresh token is not valid"));
+                .andExpect(jsonPath("$.message").value("Yêu cầu không hợp lệ. Vui lòng kiểm tra lại dữ liệu gửi lên."));
     }
 
     @Test
@@ -276,5 +277,35 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.assignableRoles[0].id").value(1))
                 .andExpect(jsonPath("$.assignableRoles[0].name").value("USER"))
                 .andExpect(jsonPath("$.assignableRoles[0].description").doesNotExist());
+    }
+
+    @Test
+    void getCurrentEmailPreferenceShouldReturnCurrentSetting() throws Exception {
+        User user = new User();
+        user.setWeeklyJobRecommendationEnabled(true);
+        when(userService.getCurrentAuthenticatedUserOrThrow()).thenReturn(user);
+
+        mockMvc.perform(get("/api/v1/auth/preferences/email"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.weeklyJobRecommendationEnabled").value(true));
+    }
+
+    @Test
+    void updateCurrentEmailPreferenceShouldPersistSetting() throws Exception {
+        User updated = new User();
+        updated.setWeeklyJobRecommendationEnabled(false);
+        when(userService.updateCurrentWeeklyRecommendationPreference(false)).thenReturn(updated);
+
+        String payload = """
+                {
+                  "weeklyJobRecommendationEnabled": false
+                }
+                """;
+
+        mockMvc.perform(patch("/api/v1/auth/preferences/email")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.weeklyJobRecommendationEnabled").value(false));
     }
 }

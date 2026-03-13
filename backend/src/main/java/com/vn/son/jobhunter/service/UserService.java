@@ -180,6 +180,12 @@ public class UserService {
         }
     }
 
+    public User updateCurrentWeeklyRecommendationPreference(boolean enabled) throws UnauthorizedException {
+        User currentUser = this.getCurrentAuthenticatedUserOrThrow();
+        currentUser.setWeeklyJobRecommendationEnabled(enabled);
+        return this.userRepository.save(currentUser);
+    }
+
     public User getUserByRefreshTokenAndEmail(String token, String email) {
         return this.userRepository.findByRefreshTokenAndEmail(token, email);
     }
@@ -326,7 +332,7 @@ public class UserService {
         };
     }
 
-    private User getCurrentAuthenticatedUserOrThrow() throws UnauthorizedException {
+    public User getCurrentAuthenticatedUserOrThrow() throws UnauthorizedException {
         User user = getCurrentAuthenticatedUserOptional();
         if (user == null) {
             throw new UnauthorizedException("Access token is not valid");
