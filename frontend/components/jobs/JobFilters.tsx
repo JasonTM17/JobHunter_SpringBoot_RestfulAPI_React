@@ -71,7 +71,7 @@ export default function JobFilters({
         </div>
       </div>
 
-      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-[minmax(0,2.1fr)_repeat(4,minmax(0,1fr))]">
+      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.45fr)_repeat(2,minmax(0,1fr))] 2xl:grid-cols-[minmax(0,1.9fr)_repeat(4,minmax(0,1fr))]">
         <input
           className={`${controlClassName} sm:col-span-2 xl:col-span-1`}
           placeholder="Tìm theo vị trí, công ty, kỹ năng..."
@@ -118,7 +118,7 @@ export default function JobFilters({
           ))}
         </select>
 
-        <div className="grid min-w-0 grid-cols-2 gap-2 sm:col-span-2 xl:col-span-1">
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:col-span-2 xl:col-span-3 2xl:col-span-1">
           <input
             className={controlClassName}
             placeholder="Lương từ"
