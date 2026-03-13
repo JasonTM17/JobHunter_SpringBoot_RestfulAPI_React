@@ -527,7 +527,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1120px] px-3 pb-24 pt-3 sm:px-4 lg:px-4">
+    <main className="mx-auto w-full max-w-[1040px] px-3 pb-24 pt-3 sm:px-4 lg:px-4">
       <ToastViewport toasts={toasts} onDismiss={removeToast} />
 
       <header className="mb-3 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-4 text-white shadow-soft sm:p-5">
@@ -666,7 +666,7 @@ export default function HomePage() {
             onReset={resetFilters}
           />
 
-          <section className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_336px] 2xl:grid-cols-[minmax(0,1fr)_360px]">
+          <section className="grid min-w-0 gap-3 2xl:grid-cols-[minmax(0,1fr)_332px]">
             <section className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-4">
               <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5">
                 <div>
@@ -739,7 +739,7 @@ export default function HomePage() {
               ) : null}
             </section>
 
-            <aside className="h-fit min-w-0 w-full xl:sticky xl:top-24">
+            <aside className="h-fit min-w-0 w-full 2xl:sticky 2xl:top-24">
               <JobQuickDetail job={selectedJob} />
             </aside>
           </section>
