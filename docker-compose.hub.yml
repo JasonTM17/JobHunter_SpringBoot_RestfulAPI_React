@@ -1,0 +1,99 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: jobhunter-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jobhunter}
+      MYSQL_USER: ${MYSQL_USER:-jobhunter}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jobhunter}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "${DB_PORT:-3307}:3306"
+    volumes:
+      - jobhunter-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - jobhunter-net
+
+  backend:
+    image: ${DOCKERHUB_USERNAME:?Missing DOCKERHUB_USERNAME}/jobhunter-backend:${IMAGE_TAG:-latest}
+    container_name: jobhunter-backend
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev,docker}
+      SERVER_PORT: 8080
+      DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-jobhunter}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
+      DB_USERNAME: ${MYSQL_USER:-jobhunter}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-jobhunter}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001}
+      JWT_BASE64_SECRET: ${JWT_BASE64_SECRET:-g/AYKfaK6dDKXZFgopotLApRTC79KZo9uIWfWCXH/bKPDt3TgG4jEX5Dm+hboY2TJmEuyVPXbSrNpvgD/SGu4A==}
+      SON_JPA_DDL_AUTO: ${SON_JPA_DDL_AUTO:-update}
+      JOBHUNTER_SEED_ENABLED: ${JOBHUNTER_SEED_ENABLED:-true}
+      UPLOAD_BASE_URI: ${UPLOAD_BASE_URI:-file:///app/storage/}
+      UPLOAD_MAX_SIZE_BYTES: ${UPLOAD_MAX_SIZE_BYTES:-5242880}
+      UPLOAD_MAX_FILE_SIZE: ${UPLOAD_MAX_FILE_SIZE:-10MB}
+      UPLOAD_MAX_REQUEST_SIZE: ${UPLOAD_MAX_REQUEST_SIZE:-10MB}
+      MAIL_TEMPLATE_PORTAL_URL: ${MAIL_TEMPLATE_PORTAL_URL:-http://localhost:3001}
+      MANAGEMENT_HEALTH_MAIL_ENABLED: ${MANAGEMENT_HEALTH_MAIL_ENABLED:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - jobhunter-backend-storage:/app/storage
+      - jobhunter-backend-logs:/app/logs
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+    networks:
+      - jobhunter-net
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME:?Missing DOCKERHUB_USERNAME}/jobhunter-frontend:${IMAGE_TAG:-latest}
+    container_name: jobhunter-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
+      NEXT_PUBLIC_STORAGE_BASE_URL: ${NEXT_PUBLIC_STORAGE_BASE_URL:-http://localhost:8080}
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8080}
+      INTERNAL_STORAGE_BASE_URL: ${INTERNAL_STORAGE_BASE_URL:-http://backend:8080}
+      NODE_ENV: production
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3001}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/ > /dev/null || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+    networks:
+      - jobhunter-net
+
+networks:
+  jobhunter-net:
+    name: jobhunter-net
+
+volumes:
+  jobhunter-db-data:
+  jobhunter-backend-storage:
+  jobhunter-backend-logs:
