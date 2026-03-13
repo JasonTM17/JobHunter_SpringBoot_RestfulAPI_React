@@ -126,7 +126,8 @@ public class AiChatService {
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 400) {
                 String providerError = extractProviderError(response.body(), response.statusCode());
-                logger.warn("AI provider OPENAI failed with status {}: {}", response.statusCode(), providerError);
+                logger.warn("AI provider OPENAI request failed status={}", response.statusCode());
+                logger.debug("AI provider OPENAI error detail: {}", providerError);
                 throw new AiServiceException(AI_PROVIDER_ERROR_CODE, AI_PROVIDER_ERROR_MESSAGE);
             }
             return response.body();
@@ -168,7 +169,8 @@ public class AiChatService {
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() >= 400) {
                 String providerError = extractProviderError(response.body(), response.statusCode());
-                logger.warn("AI provider GEMINI failed with status {}: {}", response.statusCode(), providerError);
+                logger.warn("AI provider GEMINI request failed status={}", response.statusCode());
+                logger.debug("AI provider GEMINI error detail: {}", providerError);
                 throw new AiServiceException(AI_PROVIDER_ERROR_CODE, AI_PROVIDER_ERROR_MESSAGE);
             }
             return response.body();
@@ -251,6 +253,7 @@ public class AiChatService {
         String provider = StringUtils.hasText(aiProvider) ? aiProvider.trim().toLowerCase(Locale.ROOT) : "auto";
         String openAiKey = resolveOpenAiKey();
         String geminiKey = resolveGeminiKey(openAiKey);
+        boolean openAiCompatibleGemini = isOpenAiCompatibleGeminiBaseUrlConfigured();
 
         if ("openai".equals(provider)) {
             return buildOpenAiConfig(openAiKey);
@@ -262,7 +265,8 @@ public class AiChatService {
             logger.warn("Unknown ai.provider '{}', fallback to auto", aiProvider);
         }
 
-        if (StringUtils.hasText(openAiKey) && !looksLikeGeminiApiKey(openAiKey)) {
+        if (StringUtils.hasText(openAiKey)
+                && (!looksLikeGeminiApiKey(openAiKey) || openAiCompatibleGemini)) {
             return buildOpenAiConfig(openAiKey);
         }
         if (StringUtils.hasText(geminiKey)) {
@@ -312,6 +316,14 @@ public class AiChatService {
 
     private boolean looksLikeGeminiApiKey(String key) {
         return StringUtils.hasText(key) && key.trim().startsWith("AIza");
+    }
+
+    private boolean isOpenAiCompatibleGeminiBaseUrlConfigured() {
+        if (!StringUtils.hasText(openAiBaseUrl)) {
+            return false;
+        }
+        String normalized = openAiBaseUrl.trim().toLowerCase(Locale.ROOT);
+        return normalized.contains("generativelanguage.googleapis.com") && normalized.contains("/openai");
     }
 
     private String trimTrailingSlash(String value) {
