@@ -1,35 +1,64 @@
-# Jobhunter Frontend (Next.js)
+# Jobhunter Frontend
 
-## Run
+## Công nghệ
+- Next.js 16
+- React 19
+- TypeScript
+- TailwindCSS
 
-1. `cd frontend`
-2. `copy .env.example .env.local` (Windows) or create `.env.local` manually
-3. `npm install`
-4. `npm run dev`
+## Cấu hình
+Tạo `frontend/.env.local`:
 
-Open: `http://localhost:3000`
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_STORAGE_BASE_URL=http://localhost:8080
+```
 
-AI chatbot page: `http://localhost:3000/chatbot`
+## Chạy local
+- `cd frontend`
+- `npm install`
+- `npm run dev`
 
-## Logo path rule
+Truy cập:
+- `http://localhost:3000`
+- `http://localhost:3000/chatbot`
 
-- API: `GET http://localhost:8080/api/v1/companies?page=1&size=100`
-- DB field: `companies.logo`
-- Render path: `http://localhost:8080/storage/company/<logo-file-name>`
+## Build và kiểm tra
+- Type check/lint: `npm run lint`
+- Build production: `npm run build`
+- Chạy bản build: `npm run start`
+- Dọn cache frontend: `npm run clean`
 
-Put files in backend folder:
+## Module chính
+- Public portal (`/`)
+  - danh sách việc làm
+  - tìm kiếm/lọc
+  - quick detail + detail page (`/jobs/[id]`)
+  - chat widget hỗ trợ tư vấn
+- Management portal (`/?tab=manage`)
+  - quản lý users/roles/permissions theo capability
+  - quản lý jobs/companies/skills
+  - quản lý resumes theo quyền
+- Auth pages
+  - đăng nhập (`/login`)
+  - đăng ký (`/register`)
+  - tài khoản (`/account`)
 
-- `D:/PROJECT_INDIVIDUAL/Jobhunter/backend/storage/company/`
+## Auth và RBAC
+- Frontend không lưu access token trong `localStorage`.
+- Backend cấp cookie `HttpOnly` cho phiên đăng nhập.
+- Frontend gọi API với `credentials: include`.
+- Khi gặp `401`, client tự thử refresh token một lần qua `/api/v1/auth/refresh`.
+- Nút/tab/action trong management sẽ tự ẩn hoặc disable theo permission thực tế.
 
-Example file names from current DB:
+## Chat AI
+- Gọi API backend: `POST /api/v1/ai/chat`.
+- Khi backend chưa có `OPENAI_API_KEY`, UI hiển thị thông báo thân thiện.
+- Không hiển thị raw error kỹ thuật cho người dùng cuối.
 
-- `1716687538974-amzon.jpg`
-- `1716687768336-apple.jpg`
-- `1716687909879-google.png`
-- `1716688017004-lazada.png`
-- `1716688067538-netflix.png`
-- `1716688187365-photoshop.png`
-- `1716688251710-pr.jpg`
-- `1716688292011-shopee.png`
-- `1716688336563-tiki.jpg`
-- `1716688386288-tiktok.jpg`
+## Demo account
+Mật khẩu mặc định: `123456`
+- `superadmin@jobhunter.local` (`SUPER_ADMIN`)
+- `admin.operations@jobhunter.local` (`ADMIN`)
+- `recruiter01@jobhunter.local` (`RECRUITER`)
+- `candidate01@jobhunter.local` (`USER`)

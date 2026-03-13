@@ -1,0 +1,15 @@
+{
+  "name": "jobhunter-workspace-tools",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "clean": "node scripts/clean-workspace.mjs --logs --temp",
+    "clean:logs": "node scripts/clean-workspace.mjs --logs",
+    "clean:temp": "node scripts/clean-workspace.mjs --temp",
+    "clean:frontend": "node scripts/clean-workspace.mjs --scope=frontend --logs --temp --build",
+    "clean:backend": "node scripts/clean-workspace.mjs --scope=backend --logs --temp --build",
+    "clean:all": "node scripts/clean-workspace.mjs --all",
+    "clean:dry": "node scripts/clean-workspace.mjs --logs --temp --dry-run",
+    "clean:dry:all": "node scripts/clean-workspace.mjs --all --dry-run"
+  }
+}
