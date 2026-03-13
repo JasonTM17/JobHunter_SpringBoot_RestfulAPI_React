@@ -1,6 +1,7 @@
 import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import { fetchAiAvailability, sendChat } from "../../services/jobhunter-api";
 import { ChatMessage } from "../../types/models";
+import { toUserErrorMessage } from "../../utils/error-message";
 import { createId } from "../../utils/format";
 
 const AI_NOT_CONFIGURED_MESSAGE = "Tính năng AI hiện chưa được cấu hình trên máy chủ. Vui lòng thử lại sau.";
@@ -93,8 +94,8 @@ export default function FloatingChatWidget() {
       setMessages((prev) => [...prev, { id: createId("chat"), role: "assistant", text: reply }]);
       setLastFailedMessage(null);
     } catch (error) {
-      const userMessage = error instanceof Error && error.message ? error.message : "Không thể kết nối tới trợ lý AI.";
-      if (userMessage === AI_NOT_CONFIGURED_MESSAGE) {
+      const userMessage = toUserErrorMessage(error, "Không thể kết nối tới trợ lý AI.");
+      if (userMessage === AI_NOT_CONFIGURED_MESSAGE || userMessage === AI_UNAVAILABLE_FRIENDLY) {
         setAiStatus("unavailable");
         setAiNotice(AI_UNAVAILABLE_FRIENDLY);
         setLastFailedMessage(null);
@@ -142,9 +143,9 @@ export default function FloatingChatWidget() {
         : CHAT_PLACEHOLDER_DEFAULT;
 
   return (
-    <div className="fixed bottom-4 right-4 z-40">
+    <div className="fixed bottom-3 right-3 z-40 sm:bottom-4 sm:right-4">
       {open ? (
-        <section className="grid h-[410px] w-[min(340px,calc(100vw-1.5rem))] grid-rows-[auto,1fr,auto] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <section className="grid h-[min(500px,calc(100vh-6rem))] w-[min(330px,calc(100vw-1rem))] grid-rows-[auto,1fr,auto] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:w-[330px]">
           <header className="flex items-center justify-between border-b border-slate-200 bg-slate-900 px-3 py-2.5 text-white">
             <strong className="text-sm">Trợ lý Jobhunter</strong>
             <div className="flex items-center gap-1.5">
@@ -220,7 +221,7 @@ export default function FloatingChatWidget() {
         </section>
       ) : (
         <button
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-lg shadow-rose-500/30 transition hover:scale-105"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-lg shadow-rose-500/30 transition hover:scale-105 sm:h-12 sm:w-12"
           onClick={() => setOpen(true)}
           type="button"
           aria-label="Mở trợ lý AI"

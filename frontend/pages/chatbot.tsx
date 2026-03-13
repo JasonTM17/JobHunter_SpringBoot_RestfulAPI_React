@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiAvailability, sendChat } from "../services/jobhunter-api";
 import { ChatMessage } from "../types/models";
+import { toUserErrorMessage } from "../utils/error-message";
 import { createId } from "../utils/format";
 
 const AI_NOT_CONFIGURED_MESSAGE = "Tính năng AI hiện chưa được cấu hình trên máy chủ. Vui lòng thử lại sau.";
@@ -100,8 +101,8 @@ export default function ChatbotPage() {
       setMessages((prev) => [...prev, { id: createId("chat"), role: "assistant", text: reply }]);
       setLastFailedMessage(null);
     } catch (error) {
-      const userMessage = error instanceof Error && error.message ? error.message : "Không thể kết nối tới trợ lý AI.";
-      if (userMessage === AI_NOT_CONFIGURED_MESSAGE) {
+      const userMessage = toUserErrorMessage(error, "Không thể kết nối tới trợ lý AI.");
+      if (userMessage === AI_NOT_CONFIGURED_MESSAGE || userMessage === AI_UNAVAILABLE_FRIENDLY) {
         setAiStatus("unavailable");
         setAiNotice(AI_UNAVAILABLE_FRIENDLY);
         setLastFailedMessage(null);
@@ -144,7 +145,7 @@ export default function ChatbotPage() {
         : CHAT_PLACEHOLDER_DEFAULT;
 
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-4 py-6">
+    <main className="mx-auto min-h-screen w-full max-w-[980px] px-3 py-5 sm:px-4">
       <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-soft">
         <header className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-5 py-4 text-white">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -170,7 +171,7 @@ export default function ChatbotPage() {
           ) : null}
         </header>
 
-        <section ref={messagesContainerRef} className="grid max-h-[58vh] gap-2 overflow-y-auto bg-slate-50 px-4 py-4">
+        <section ref={messagesContainerRef} className="grid max-h-[56vh] gap-2 overflow-y-auto bg-slate-50 px-3.5 py-3.5 sm:px-4 sm:py-4">
           {aiStatus !== "ready" ? (
             <article className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
               {aiStatus === "checking" ? "Đang kiểm tra trạng thái trợ lý AI..." : aiNotice || AI_UNAVAILABLE_FRIENDLY}
@@ -203,7 +204,7 @@ export default function ChatbotPage() {
           ) : null}
         </section>
 
-        <form className="grid grid-cols-[1fr,auto] gap-2 border-t border-slate-200 bg-white p-4 max-md:grid-cols-1" onSubmit={(event) => void submit(event)}>
+        <form className="grid grid-cols-[1fr,auto] gap-2 border-t border-slate-200 bg-white p-3.5 max-md:grid-cols-1 sm:p-4" onSubmit={(event) => void submit(event)}>
           <textarea
             value={input}
             onChange={(event) => setInput(event.target.value)}
