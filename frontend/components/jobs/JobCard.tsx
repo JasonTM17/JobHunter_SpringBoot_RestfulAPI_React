@@ -25,8 +25,8 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
     <article
       className={
         selected
-          ? "min-w-0 overflow-hidden rounded-2xl border border-rose-200 bg-rose-50/40 p-3 ring-1 ring-rose-100 transition"
-          : "min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+          ? "min-w-0 overflow-hidden rounded-2xl border border-rose-200 bg-white p-2.5 ring-1 ring-rose-100 transition"
+          : "min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-2.5 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
       }
       onClick={() => onSelect(job.id)}
       role="button"
@@ -54,18 +54,18 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
             </span>
           </div>
 
-          <div className="mt-2 flex flex-wrap gap-1.5">
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
             <span className={metaPillClass}>{formatLocationLabel(job.location)}</span>
             <span className={metaPillClass}>{formatLevelLabel(job.level)}</span>
             <span className={metaPillClass}>SL: {job.quantity}</span>
             <span className={metaPillClass}>Hạn: {formatDateVi(job.endDate)}</span>
           </div>
 
-          <p className="mt-2 line-clamp-2 break-words text-[13px] leading-5 text-slate-600">{summary}</p>
+          <p className="mt-1.5 line-clamp-2 break-words text-[13px] leading-5 text-slate-600">{summary}</p>
         </div>
       </div>
 
-      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2">
         <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
           {skillNames.length > 0 ? (
             skillNames.slice(0, 4).map((skillName) => (
@@ -85,7 +85,7 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
         </div>
         <Link
           href={`/jobs/${job.id}`}
-          className="shrink-0 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
+          className="shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
           onClick={(event) => event.stopPropagation()}
         >
           Xem chi tiết
