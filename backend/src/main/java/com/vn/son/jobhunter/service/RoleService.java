@@ -1,11 +1,13 @@
 package com.vn.son.jobhunter.service;
 
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.vn.son.jobhunter.domain.Permission;
 import com.vn.son.jobhunter.domain.Resume;
 import com.vn.son.jobhunter.domain.Role;
@@ -42,9 +44,11 @@ public class RoleService {
         return this.roleRepository.save(role);
     }
 
+    @Transactional(readOnly = true)
     public Role fetchRoleById(Long id) throws Exception {
         Optional<Role> role = this.roleRepository.findById(id);
         if(role.isPresent()){
+            Hibernate.initialize(role.get().getPermissions());
             return role.get();
         }else{
             throw new IdInvalidException("The specified Role ID is invalid");
@@ -76,9 +80,15 @@ public class RoleService {
         this.roleRepository.delete(role);
     }
 
+    @Transactional(readOnly = true)
     public ResultPaginationResponse fetchAll(Specification<Role> spec, Pageable pageable){
         Page<Role> rolePage = this.roleRepository.findAll(spec, pageable);
+        rolePage.getContent().forEach(role -> Hibernate.initialize(role.getPermissions()));
         ResultPaginationResponse response = FormatResultPagaination.createPaginationResponse(rolePage);
         return response;
+    }
+
+    public List<Role> fetchActiveRoles() {
+        return this.roleRepository.findByActiveTrueOrderByNameAsc();
     }
 }

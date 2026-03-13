@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Service;
 import com.vn.son.jobhunter.service.SecurityService;
+import com.vn.son.jobhunter.util.error.IdInvalidException;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -108,14 +109,21 @@ public class SecurityUtils {
         return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority);
     }
 
-    public Jwt checkValidRefreshToken(String token){
+    public Jwt checkValidRefreshToken(String token) throws IdInvalidException {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
                 getSecretKey()).macAlgorithm(SecurityService.JWT_ALGORITHM).build();
         try {
-            return jwtDecoder.decode(token);
+            Jwt decodedToken = jwtDecoder.decode(token);
+            String tokenType = decodedToken.getClaimAsString("token_type");
+            if (!"refresh".equalsIgnoreCase(tokenType)) {
+                throw new IdInvalidException("Refresh token is not valid");
+            }
+            return decodedToken;
         } catch (Exception e) {
-            System.out.println(">>> JWT error: " + e.getMessage());
-            throw e;
+            if (e instanceof IdInvalidException idInvalidException) {
+                throw idInvalidException;
+            }
+            throw new IdInvalidException("Refresh token is not valid");
         }
     }
 
