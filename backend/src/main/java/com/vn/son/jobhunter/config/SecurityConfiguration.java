@@ -45,6 +45,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(
             HttpSecurity http,
             CustomAuthenticationEntryPoint caep,
+            CustomAccessDeniedHandler cadh,
             BearerTokenResolver bearerTokenResolver
     ) throws Exception {
         String[] whiteList = {
@@ -55,9 +56,13 @@ public class SecurityConfiguration {
                 "/api/v1/auth/logout",
                 "/storage/**",
                 "/api/v1/ai/**",
+                "/v3/api-docs",
                 "/v3/api-docs/**",
+                "/v3/api-docs.yaml",
+                "/swagger-ui",
                 "/swagger-ui/**",
-                "/swagger-ui.html"
+                "/swagger-ui.html",
+                "/swagger-ui/index.html"
         };
 
         http
@@ -79,6 +84,7 @@ public class SecurityConfiguration {
                                 .bearerTokenResolver(bearerTokenResolver)
                                 .jwt(Customizer.withDefaults())
                                 .authenticationEntryPoint(caep)
+                                .accessDeniedHandler(cadh)
                 )
                 .formLogin(f -> f.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
