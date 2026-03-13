@@ -53,16 +53,26 @@ import {
   UserListItem,
   UserUpdatePayload
 } from "../types/models";
+import { toUserErrorMessage } from "../utils/error-message";
 import { createId, stripHtml } from "../utils/format";
-import { hasManagementPermission } from "../utils/permissions";
+import { resolveWorkspaceKind, workspacePath } from "../utils/workspace";
 
 type MainTab = "browse" | "manage";
+type ManageModule = "jobs" | "companies" | "skills" | "resumes" | "users" | "roles" | "permissions";
 const UNKNOWN_LEVEL = "CHUA_CAP_NHAT";
 const JOBS_PER_PAGE = 12;
 
 export default function HomePage() {
   const router = useRouter();
-  const { status: authStatus, can, assignableRoles, permissionKeys, refreshAccount } = useAuth();
+  const {
+    status: authStatus,
+    can,
+    assignableRoles,
+    permissionKeys,
+    canAccessManagement,
+    roleName,
+    refreshAccount
+  } = useAuth();
 
   const [tab, setTab] = useState<MainTab>("browse");
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -91,10 +101,16 @@ export default function HomePage() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   const deferredKeyword = useDeferredValue(keyword.trim().toLowerCase());
-  const canAccessManagement = useMemo(
-    () => authStatus === "authenticated" && hasManagementPermission(permissionKeys),
-    [authStatus, permissionKeys]
+  const workspace = useMemo(
+    () => resolveWorkspaceKind(roleName, canAccessManagement),
+    [roleName, canAccessManagement]
   );
+  const workspaceHref = useMemo(() => workspacePath(workspace), [workspace]);
+  const workspaceLabel = useMemo(() => {
+    if (workspace === "admin") return "Bảng điều hành quản trị";
+    if (workspace === "recruiter") return "Bảng tuyển dụng";
+    return "Không gian ứng viên";
+  }, [workspace]);
 
   function renderPublicStat(value: number): string {
     if (loading) return "Đang tải...";
@@ -105,7 +121,7 @@ export default function HomePage() {
   function queryWithoutTab(currentQuery: typeof router.query): Record<string, string> {
     const nextQuery: Record<string, string> = {};
     Object.entries(currentQuery).forEach(([key, value]) => {
-      if (key === "tab") return;
+      if (key === "tab" || key === "module") return;
       if (Array.isArray(value)) {
         if (value[0]) nextQuery[key] = value[0];
       } else if (value) {
@@ -120,11 +136,23 @@ export default function HomePage() {
   }
 
   function addToast(type: ToastType, message: string) {
-    const id = createId("toast");
-    setToasts((prev) => [...prev, { id, type, message }]);
-    if (typeof window !== "undefined") {
+    const safeMessage = type === "error" ? toUserErrorMessage(message) : message.trim();
+    if (!safeMessage) return;
+
+    let createdToastId = "";
+    setToasts((prev) => {
+      const duplicated = prev.some((item) => item.type === type && item.message === safeMessage);
+      if (duplicated) {
+        return prev;
+      }
+
+      createdToastId = createId("toast");
+      return [...prev, { id: createdToastId, type, message: safeMessage }];
+    });
+
+    if (createdToastId && typeof window !== "undefined") {
       window.setTimeout(() => {
-        setToasts((prev) => prev.filter((item) => item.id !== id));
+        setToasts((prev) => prev.filter((item) => item.id !== createdToastId));
       }, 4200);
     }
   }
@@ -147,7 +175,7 @@ export default function HomePage() {
       setCompanies(sortedCompanies);
       setSkills(sortedSkills);
     } catch (loadError) {
-      setError((loadError as Error).message || "Không thể tải dữ liệu tuyển dụng.");
+      setError(toUserErrorMessage(loadError, "Không thể tải dữ liệu tuyển dụng lúc này."));
     } finally {
       setLoading(false);
     }
@@ -199,7 +227,7 @@ export default function HomePage() {
         } catch (usersError) {
           setUsers([]);
           setUserCapabilities({});
-          messages.push(`Người dùng: ${(usersError as Error).message}`);
+          messages.push(`Người dùng: ${toUserErrorMessage(usersError, "Không thể tải danh sách tài khoản.")}`);
         }
       } else {
         setUsers([]);
@@ -211,7 +239,7 @@ export default function HomePage() {
           setRoles(await fetchRolesWithAuth());
         } catch (rolesError) {
           setRoles([]);
-          messages.push(`Vai trò: ${(rolesError as Error).message}`);
+          messages.push(`Vai trò: ${toUserErrorMessage(rolesError, "Không thể tải danh sách vai trò.")}`);
         }
       } else {
         setRoles([]);
@@ -222,7 +250,7 @@ export default function HomePage() {
           setPermissions(await fetchPermissionsWithAuth());
         } catch (permError) {
           setPermissions([]);
-          messages.push(`Quyền: ${(permError as Error).message}`);
+          messages.push(`Quyền: ${toUserErrorMessage(permError, "Không thể tải danh sách quyền.")}`);
         }
       } else {
         setPermissions([]);
@@ -233,7 +261,7 @@ export default function HomePage() {
           setResumes(await fetchResumesWithAuth());
         } catch (resumeError) {
           setResumes([]);
-          messages.push(`Ứng tuyển: ${(resumeError as Error).message}`);
+          messages.push(`Ứng tuyển: ${toUserErrorMessage(resumeError, "Không thể tải hồ sơ ứng tuyển.")}`);
         }
       } else {
         setResumes([]);
@@ -241,7 +269,7 @@ export default function HomePage() {
 
       setRbacError(messages.join(" | "));
     } catch (loadError) {
-      setRbacError((loadError as Error).message || "Không thể tải dữ liệu quản trị.");
+      setRbacError(toUserErrorMessage(loadError, "Không thể tải dữ liệu quản trị lúc này."));
     } finally {
       setRbacLoading(false);
       setRbacLoaded(true);
@@ -253,11 +281,32 @@ export default function HomePage() {
       try {
         await refreshAccount();
       } catch (refreshError) {
-        addToast("error", (refreshError as Error).message || "Không thể đồng bộ lại quyền truy cập.");
+        addToast("error", toUserErrorMessage(refreshError, "Không thể đồng bộ lại quyền truy cập."));
       }
     }
     await loadRbacData();
   }
+
+  const manageModuleQuery = useMemo(() => {
+    const raw = router.query.module;
+    const value = Array.isArray(raw) ? raw[0] : raw;
+    if (!value) return null;
+
+    const normalized = value.trim().toLowerCase();
+    const supported = new Set(["jobs", "companies", "skills", "resumes", "users", "roles", "permissions"]);
+    return supported.has(normalized) ? (normalized as ManageModule) : null;
+  }, [router.query.module]);
+
+  const defaultManageModule = useMemo<ManageModule>(() => {
+    if (workspace === "admin") return "users";
+    if (workspace === "recruiter") return "resumes";
+    return "jobs";
+  }, [workspace]);
+  const manageCtaLabel = useMemo(() => {
+    if (workspace === "admin") return "Mở quản trị dữ liệu";
+    if (workspace === "recruiter") return "Mở công cụ tuyển dụng";
+    return "Mở khu quản lý";
+  }, [workspace]);
 
   useEffect(() => {
     void loadPublicData();
@@ -267,7 +316,7 @@ export default function HomePage() {
     if (!router.isReady) return;
     const raw = router.query.tab;
     const tabQueryValue = Array.isArray(raw) ? raw[0] : raw;
-    const wantsManage = tabQueryValue === "manage";
+    const wantsManage = tabQueryValue === "manage" || Boolean(manageModuleQuery);
 
     if (wantsManage && !canAccessManagement) {
       const nextQuery = queryWithoutTab(router.query);
@@ -285,7 +334,7 @@ export default function HomePage() {
 
     const nextTab: MainTab = wantsManage ? "manage" : "browse";
     setTab((prev) => (prev === nextTab ? prev : nextTab));
-  }, [router.isReady, router.query.tab, canAccessManagement]);
+  }, [router.isReady, router.query.tab, canAccessManagement, manageModuleQuery]);
 
   useEffect(() => {
     if (authStatus !== "authenticated") {
@@ -404,7 +453,7 @@ export default function HomePage() {
     setCurrentPage(1);
   }
 
-  function changeMainTab(nextTab: MainTab) {
+  function changeMainTab(nextTab: MainTab, module?: ManageModule) {
     if (nextTab === "manage" && !canAccessManagement) {
       addToast("error", "Bạn chưa có quyền truy cập khu vực quản trị.");
       return;
@@ -416,12 +465,31 @@ export default function HomePage() {
     const nextQuery = queryWithoutTab(router.query);
     if (nextTab === "manage") {
       nextQuery.tab = "manage";
+      if (module) {
+        nextQuery.module = module;
+      }
     }
 
     void router.replace(
       {
         pathname: router.pathname,
         query: nextQuery
+      },
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  function syncManageModule(module: ManageModule) {
+    if (!canAccessManagement || !router.isReady) return;
+    void router.replace(
+      {
+        pathname: router.pathname,
+        query: {
+          ...queryWithoutTab(router.query),
+          tab: "manage",
+          module
+        }
       },
       undefined,
       { shallow: true }
@@ -438,7 +506,7 @@ export default function HomePage() {
       await Promise.all([loadPublicData(), reloadRbacData()]);
       addToast("success", successMessage);
     } catch (mutationError) {
-      addToast("error", (mutationError as Error).message);
+      addToast("error", toUserErrorMessage(mutationError, "Không thể hoàn tất thao tác lúc này."));
       throw mutationError;
     }
   }
@@ -453,39 +521,39 @@ export default function HomePage() {
       await reloadRbacData();
       addToast("success", successMessage);
     } catch (mutationError) {
-      addToast("error", (mutationError as Error).message);
+      addToast("error", toUserErrorMessage(mutationError, "Không thể hoàn tất thao tác lúc này."));
       throw mutationError;
     }
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-28 pt-3">
+    <main className="mx-auto w-full max-w-[1200px] px-3 pb-24 pt-3 sm:px-4 lg:px-5">
       <ToastViewport toasts={toasts} onDismiss={removeToast} />
 
-      <header className="mb-3 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-5 text-white shadow-soft md:p-6">
+      <header className="mb-3 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-4 text-white shadow-soft sm:p-5">
         <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
           <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
           Jobhunter
         </div>
-        <h1 className="text-2xl font-extrabold leading-tight md:text-4xl">
+        <h1 className="text-[27px] font-extrabold leading-tight sm:text-3xl lg:text-[34px]">
           Nền tảng việc làm công nghệ dành cho ứng viên tại Việt Nam
         </h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-200 md:text-base">
+        <p className="mt-2 max-w-3xl text-sm text-slate-200 md:text-[15px]">
           Tìm vị trí phù hợp theo kỹ năng, mức lương và khu vực. Xem thông tin tuyển dụng rõ ràng, ứng tuyển nhanh và theo dõi cơ hội mới mỗi ngày.
         </p>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+        <div className="mt-3.5 grid gap-2 sm:grid-cols-3">
           <article className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
             <p className="text-xs uppercase tracking-wide text-slate-200">Việc đang tuyển</p>
-            <p className="mt-1 text-2xl font-extrabold">{renderPublicStat(activeJobsCount)}</p>
+            <p className="mt-1 text-xl font-extrabold sm:text-2xl">{renderPublicStat(activeJobsCount)}</p>
           </article>
           <article className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
             <p className="text-xs uppercase tracking-wide text-slate-200">Doanh nghiệp</p>
-            <p className="mt-1 text-2xl font-extrabold">{renderPublicStat(companies.length)}</p>
+            <p className="mt-1 text-xl font-extrabold sm:text-2xl">{renderPublicStat(companies.length)}</p>
           </article>
           <article className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
             <p className="text-xs uppercase tracking-wide text-slate-200">Kỹ năng nổi bật</p>
-            <p className="mt-1 text-2xl font-extrabold">{renderPublicStat(skills.length)}</p>
+            <p className="mt-1 text-xl font-extrabold sm:text-2xl">{renderPublicStat(skills.length)}</p>
           </article>
         </div>
 
@@ -493,45 +561,54 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => changeMainTab("browse")}
-            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+            className="rounded-xl bg-rose-600 px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-rose-700 sm:text-sm"
           >
             Khám phá việc làm
           </button>
           {authStatus === "authenticated" ? (
-            <button
-              type="button"
-              onClick={() => void router.push("/account")}
-              className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
-            >
-              Trang tài khoản
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => void router.push(workspaceHref)}
+                className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
+              >
+                {workspaceLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => void router.push("/account")}
+                className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
+              >
+                Thông tin tài khoản
+              </button>
+              {canAccessManagement ? (
+                <button
+                  type="button"
+                  onClick={() => changeMainTab("manage", manageModuleQuery ?? defaultManageModule)}
+                  className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
+                >
+                  {manageCtaLabel}
+                </button>
+              ) : null}
+            </>
           ) : (
             <>
               <button
                 type="button"
                 onClick={() => void router.push(`/login?next=${encodeURIComponent(router.asPath || "/")}`)}
-                className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
+                className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
               >
                 Đăng nhập để ứng tuyển
               </button>
               <button
                 type="button"
                 onClick={() => void router.push(`/register?next=${encodeURIComponent(router.asPath || "/")}`)}
-                className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
+                className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
               >
                 Tạo tài khoản
               </button>
             </>
           )}
-          {canAccessManagement ? (
-            <button
-              type="button"
-              onClick={() => changeMainTab("manage")}
-              className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
-            >
-              Khu quản trị
-            </button>
-          ) : null}
         </div>
       </header>
 
@@ -542,22 +619,22 @@ export default function HomePage() {
             onClick={() => changeMainTab("browse")}
             className={
               tab === "browse"
-                ? "rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-                : "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                ? "rounded-xl bg-slate-900 px-3.5 py-2 text-[13px] font-semibold text-white sm:text-sm"
+                : "rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:text-sm"
             }
           >
             Việc làm
           </button>
           <button
             type="button"
-            onClick={() => changeMainTab("manage")}
+            onClick={() => changeMainTab("manage", manageModuleQuery ?? defaultManageModule)}
             className={
               tab === "manage"
-                ? "rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
-                : "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                ? "rounded-xl bg-slate-900 px-3.5 py-2 text-[13px] font-semibold text-white sm:text-sm"
+                : "rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:text-sm"
             }
           >
-            Quản trị
+            Quản lý
           </button>
         </section>
       ) : null}
@@ -567,7 +644,7 @@ export default function HomePage() {
       ) : error ? (
         <ErrorState description={error} onRetry={() => void loadPublicData()} />
       ) : tab === "browse" ? (
-        <section className="grid gap-3">
+        <section className="grid gap-3.5">
           <JobFilters
             keyword={keyword}
             location={location}
@@ -589,8 +666,8 @@ export default function HomePage() {
             onReset={resetFilters}
           />
 
-          <section className="grid gap-3 lg:grid-cols-[1.65fr,1fr]">
-            <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-soft">
+          <section className="grid items-start gap-3.5 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)] 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,420px)]">
+            <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
               <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">Việc làm phù hợp</h2>
@@ -620,7 +697,7 @@ export default function HomePage() {
               </div>
 
               {filteredJobs.length > JOBS_PER_PAGE ? (
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3.5">
                   <p className="text-xs text-slate-500">
                     Trang {currentPage}/{totalPages}
                   </p>
@@ -660,19 +737,19 @@ export default function HomePage() {
               ) : null}
             </section>
 
-            <aside className="h-fit lg:sticky lg:top-24">
+            <aside className="h-fit min-w-0 max-w-full xl:sticky xl:top-20">
               <JobQuickDetail job={selectedJob} />
             </aside>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-soft">
+          <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-base font-bold text-slate-900">Nhà tuyển dụng nổi bật</h2>
               <span className="text-xs font-semibold text-slate-500">{companies.length} công ty</span>
             </div>
-            <div className="flex gap-2 overflow-x-auto pb-1">
+            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {companies.slice(0, 12).map((company) => (
-                <article key={company.id} className="min-w-[170px] rounded-xl border border-slate-200 bg-white p-2">
+                <article key={company.id} className="min-w-[152px] rounded-xl border border-slate-200 bg-white p-2.5">
                   <div className="mb-2 flex items-center gap-2">
                     <CompanyLogo name={company.name} logo={company.logo} size="sm" />
                     <h3 className="line-clamp-2 text-sm font-semibold text-slate-800">{company.name}</h3>
@@ -722,6 +799,8 @@ export default function HomePage() {
             createAssignableRoles={assignableRoles}
             rbacLoading={rbacLoading}
             rbacError={rbacError}
+            preferredModule={manageModuleQuery}
+            onModuleChange={syncManageModule}
             onReloadPublicData={loadPublicData}
             onReloadRbacData={reloadRbacData}
             onCreateJob={(payload) => runProtectedMutation(() => createJob(payload), "Tạo việc làm thành công.")}
