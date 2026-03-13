@@ -140,6 +140,12 @@ public class RecruitmentDemoDataSeeder {
                         "Update a skill",
                         "Delete a skill",
                         "Get skills with pagination",
+                        "Send subscribers digest email",
+                        "Send a test email",
+                        "Send a test template email",
+                        "Trigger scheduler mail heartbeat",
+                        "Trigger weekly recommendation email",
+                        "Trigger log cleanup",
                         "Upload a file",
                         "Download a file"
                 ))
@@ -241,9 +247,11 @@ public class RecruitmentDemoDataSeeder {
                 company.setName(seed.name);
             }
 
-            company.setDescription(seed.description);
-            company.setAddress(seed.address);
-            company.setLogo(seed.logo);
+            company.setDescription(buildLocalizedCompanyDescription(seed));
+            company.setAddress(localizeAddress(seed.address));
+            if (seed.logo != null && !seed.logo.isBlank()) {
+                company.setLogo(seed.logo);
+            }
             Company saved = this.companyRepository.save(company);
             companyByName.put(key, saved);
         }
@@ -330,14 +338,14 @@ public class RecruitmentDemoDataSeeder {
     ) {
         List<UserSeed> seeds = new ArrayList<>();
 
-        seeds.add(new UserSeed("admin.operations@jobhunter.local", "Tran Quoc Bao", 33, GenderEnum.MALE, "Hanoi", "ADMIN", null));
-        seeds.add(new UserSeed("admin.hr@jobhunter.local", "Le My Linh", 31, GenderEnum.FEMALE, "Ho Chi Minh City", "ADMIN", null));
+        seeds.add(new UserSeed("admin.operations@jobhunter.local", "Trần Quốc Bảo", 33, GenderEnum.MALE, "Hà Nội", "ADMIN", null));
+        seeds.add(new UserSeed("admin.hr@jobhunter.local", "Lê Mỹ Linh", 31, GenderEnum.FEMALE, "TP. Hồ Chí Minh", "ADMIN", null));
 
         List<String> recruiterNames = List.of(
-                "Pham Thu Ha", "Nguyen Van Khoa", "Do Minh Chau", "Bui Thanh Son",
-                "Truong Gia Han", "Dang Quoc Viet", "Hoang Linh Chi", "Tran Hoai Nam",
-                "Ngo Bao Ngoc", "Phan Anh Tuan", "Le Quynh Nhu", "Vo Duc Minh",
-                "Nguyen Thi Huong", "Pham Gia Huy"
+                "Phạm Thu Hà", "Nguyễn Văn Khoa", "Đỗ Minh Châu", "Bùi Thanh Sơn",
+                "Trương Gia Hân", "Đặng Quốc Việt", "Hoàng Linh Chi", "Trần Hoài Nam",
+                "Ngô Bảo Ngọc", "Phan Anh Tuấn", "Lê Quỳnh Như", "Võ Đức Minh",
+                "Nguyễn Thị Hương", "Phạm Gia Huy"
         );
 
         for (int i = 0; i < recruiterNames.size() && i < companies.size(); i++) {
@@ -354,16 +362,16 @@ public class RecruitmentDemoDataSeeder {
         }
 
         List<String> candidateNames = List.of(
-                "Nguyen Minh Anh", "Tran Quoc Tuan", "Le Hoang Nam", "Pham Bao Han",
-                "Vu Thanh Dat", "Ngo Quynh Anh", "Do Duc Long", "Bui My Tien",
-                "Phan Gia Bao", "Hoang Thu Trang", "Nguyen Duc Huy", "Tran Kim Ngan",
-                "Le Quoc Khanh", "Dang Anh Thu", "Vo Minh Quan", "Phung Thanh Truc",
-                "Mai Khanh Linh", "Nguyen Huu Phuoc", "Ta Minh Chau", "Dinh Thanh Son",
-                "Pham The Anh", "Truong Bao Ngoc", "Le Duy Khang", "Nguyen Thao Vy"
+                "Nguyễn Minh Anh", "Trần Quốc Tuấn", "Lê Hoàng Nam", "Phạm Bảo Hân",
+                "Vũ Thành Đạt", "Ngô Quỳnh Anh", "Đỗ Đức Long", "Bùi Mỹ Tiên",
+                "Phan Gia Bảo", "Hoàng Thu Trang", "Nguyễn Đức Huy", "Trần Kim Ngân",
+                "Lê Quốc Khánh", "Đặng Anh Thư", "Võ Minh Quân", "Phùng Thanh Trúc",
+                "Mai Khánh Linh", "Nguyễn Hữu Phước", "Tạ Minh Châu", "Đinh Thanh Sơn",
+                "Phạm Thế Anh", "Trương Bảo Ngọc", "Lê Duy Khang", "Nguyễn Thảo Vy"
         );
 
         List<String> candidateLocations = List.of(
-                "Hanoi", "Ho Chi Minh City", "Da Nang", "Can Tho", "Hai Phong", "Nha Trang"
+                "Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", "Cần Thơ", "Hải Phòng", "Nha Trang"
         );
 
         for (int i = 0; i < candidateNames.size(); i++) {
@@ -395,7 +403,7 @@ public class RecruitmentDemoDataSeeder {
             user.setName(seed.name);
             user.setAge(seed.age);
             user.setGender(seed.gender);
-            user.setAddress(seed.address);
+            user.setAddress(localizeAddress(seed.address));
 
             Role role = roleByName.get(normalizeKey(seed.roleName));
             if (role != null) {
@@ -857,18 +865,18 @@ public class RecruitmentDemoDataSeeder {
             JobTemplate template,
             String jobName
     ) {
-        String responsibilities = toHtmlList(template.responsibilities);
-        String requirements = toHtmlList(template.requirements);
-        String benefits = toHtmlList(template.benefits);
+        String responsibilities = toHtmlList(buildLocalizedResponsibilities(template, jobName, company));
+        String requirements = toHtmlList(buildLocalizedRequirements(template));
+        String benefits = toHtmlList(buildLocalizedBenefits());
 
         return """
                 <!--seed:jobhunter:%s-->
-                <h3>Mo ta cong viec</h3>
-                <p>%s dang mo rong doi ngu va can %s de phat trien san pham trong linh vuc %s.</p>
+                <h3>Mô tả công việc</h3>
+                <p>%s đang mở rộng đội ngũ và cần %s để phát triển sản phẩm trong lĩnh vực %s.</p>
                 <ul>%s</ul>
-                <h3>Yeu cau</h3>
+                <h3>Yêu cầu</h3>
                 <ul>%s</ul>
-                <h3>Quyen loi</h3>
+                <h3>Quyền lợi</h3>
                 <ul>%s</ul>
                 """.formatted(
                 code,
@@ -885,6 +893,67 @@ public class RecruitmentDemoDataSeeder {
         return items.stream()
                 .map(item -> "<li>" + item + "</li>")
                 .collect(Collectors.joining());
+    }
+
+    private List<String> buildLocalizedResponsibilities(
+            JobTemplate template,
+            String jobName,
+            CompanySeed company
+    ) {
+        String skills = joinSkills(template.skillNames, 3);
+        return List.of(
+                "Tham gia phát triển và vận hành các hạng mục chính của vị trí " + jobName + ".",
+                "Phối hợp với nhóm sản phẩm, QA và kỹ thuật để bảo đảm chất lượng phát hành đúng tiến độ.",
+                "Tối ưu hệ thống và trải nghiệm người dùng trong lĩnh vực " + company.sector + ", ưu tiên các kỹ năng như " + skills + "."
+        );
+    }
+
+    private List<String> buildLocalizedRequirements(JobTemplate template) {
+        String skills = joinSkills(template.skillNames, 3);
+        return List.of(
+                "Có nền tảng hoặc kinh nghiệm thực tế với " + skills + ".",
+                "Tư duy phân tích vấn đề tốt, chủ động phối hợp và chịu trách nhiệm với chất lượng đầu ra.",
+                "Khả năng học hỏi nhanh, làm việc nhóm hiệu quả và giao tiếp rõ ràng trong môi trường sản phẩm."
+        );
+    }
+
+    private List<String> buildLocalizedBenefits() {
+        return List.of(
+                "Mức đãi ngộ cạnh tranh, xét tăng lương và thưởng theo hiệu quả công việc.",
+                "Môi trường làm việc chuyên nghiệp, quy trình minh bạch và hỗ trợ phát triển lâu dài.",
+                "Được tham gia chương trình đào tạo nội bộ cùng lộ trình phát triển nghề nghiệp rõ ràng."
+        );
+    }
+
+    private String joinSkills(List<String> skillNames, int limit) {
+        return skillNames.stream()
+                .filter(skill -> skill != null && !skill.isBlank())
+                .limit(Math.max(1, limit))
+                .collect(Collectors.joining(", "));
+    }
+
+    private String buildLocalizedCompanyDescription(CompanySeed seed) {
+        return "Doanh nghiệp hoạt động trong lĩnh vực "
+                + seed.sector
+                + ", tập trung phát triển sản phẩm công nghệ chất lượng cao tại "
+                + localizeAddress(seed.address)
+                + ".";
+    }
+
+    private String localizeAddress(String address) {
+        String normalized = normalizeKey(address)
+                .replace(".", "")
+                .replace(",", " ")
+                .replaceAll("\\s+", " ");
+        return switch (normalized) {
+            case "ha noi", "hanoi" -> "Hà Nội";
+            case "ho chi minh city", "ho chi minh", "tp ho chi minh" -> "TP. Hồ Chí Minh";
+            case "da nang", "danang" -> "Đà Nẵng";
+            case "can tho" -> "Cần Thơ";
+            case "hai phong" -> "Hải Phòng";
+            case "bac ninh" -> "Bắc Ninh";
+            default -> address;
+        };
     }
 
     private String decorateJobTitle(String baseTitle, LevelEnum level) {
