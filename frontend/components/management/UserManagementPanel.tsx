@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Company,
   Permission,
@@ -43,6 +43,8 @@ interface UserManagementPanelProps {
   canCreateUser: boolean;
   canReadRoles: boolean;
   canReadPermissions: boolean;
+  preferredMode?: "users" | "roles" | "permissions" | null;
+  onModeChange?: (mode: "users" | "roles" | "permissions") => void;
   onCreateUser: (payload: UserCreatePayload) => Promise<void>;
   onUpdateUser: (userId: number, payload: UserUpdatePayload) => Promise<void>;
   onDeleteUser: (userId: number) => Promise<void>;
@@ -60,6 +62,8 @@ export default function UserManagementPanel({
   canCreateUser,
   canReadRoles,
   canReadPermissions,
+  preferredMode,
+  onModeChange,
   onCreateUser,
   onUpdateUser,
   onDeleteUser
@@ -108,6 +112,16 @@ export default function UserManagementPanel({
 
   const editingCapability = formState.target ? userCapabilities[formState.target.id] : undefined;
 
+  useEffect(() => {
+    if (!preferredMode) return;
+    setMode((prev) => (prev === preferredMode ? prev : preferredMode));
+  }, [preferredMode]);
+
+  function changeMode(nextMode: "users" | "roles" | "permissions") {
+    setMode(nextMode);
+    onModeChange?.(nextMode);
+  }
+
   async function submitUser(payload: UserCreatePayload | UserUpdatePayload) {
     if (formState.action === "create") {
       await onCreateUser(payload as UserCreatePayload);
@@ -118,39 +132,39 @@ export default function UserManagementPanel({
   }
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
+    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
         <h2 className="text-xl font-bold text-slate-900">Quản lý tài khoản và phân quyền</h2>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setMode("users")}
+            onClick={() => changeMode("users")}
             className={
               mode === "users"
-                ? "rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
-                : "rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
             }
           >
             Tài khoản
           </button>
           <button
             type="button"
-            onClick={() => setMode("roles")}
+            onClick={() => changeMode("roles")}
             className={
               mode === "roles"
-                ? "rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
-                : "rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
             }
           >
             Vai trò
           </button>
           <button
             type="button"
-            onClick={() => setMode("permissions")}
+            onClick={() => changeMode("permissions")}
             className={
               mode === "permissions"
-                ? "rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
-                : "rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
             }
           >
             Quyền
@@ -184,7 +198,7 @@ export default function UserManagementPanel({
                   disabled={!canCreateUser}
                   title={canCreateUser ? "Tạo tài khoản mới" : noPermissionTitle}
                   onClick={() => setFormState({ open: true, action: "create", target: null })}
-                  className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl bg-rose-600 px-3 py-2 text-[13px] font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                 >
                   Tạo tài khoản
                 </button>
@@ -195,8 +209,8 @@ export default function UserManagementPanel({
               ) : filteredUsers.length === 0 ? (
                 <EmptyState title="Không có tài khoản phù hợp" description="Thử đổi từ khóa tìm kiếm." />
               ) : (
-                <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                  <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <div className="w-full overflow-x-auto rounded-2xl border border-slate-200">
+                  <table className="min-w-full divide-y divide-slate-200 text-xs sm:text-sm">
                     <thead className="bg-slate-50">
                       <tr>
                         <th className="px-3 py-2 text-left font-bold text-slate-700">Họ tên</th>

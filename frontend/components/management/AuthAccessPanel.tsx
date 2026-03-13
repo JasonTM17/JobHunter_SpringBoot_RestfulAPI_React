@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useAuth } from "../../contexts/auth-context";
+import { toUserErrorMessage } from "../../utils/error-message";
 
 interface AuthAccessPanelProps {
   onAfterLogin?: () => Promise<void>;
@@ -21,7 +22,7 @@ export default function AuthAccessPanel({ onAfterLogin }: AuthAccessPanelProps) 
       if (onAfterLogin) await onAfterLogin();
       setPassword("");
     } catch (submitError) {
-      setError((submitError as Error).message);
+      setError(toUserErrorMessage(submitError, "Đăng nhập không thành công. Vui lòng thử lại."));
     } finally {
       setLoading(false);
     }
@@ -29,7 +30,7 @@ export default function AuthAccessPanel({ onAfterLogin }: AuthAccessPanelProps) 
 
   if (status === "authenticated") {
     return (
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+      <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-base font-bold text-slate-900">Tài khoản đang quản trị</h3>
@@ -41,7 +42,7 @@ export default function AuthAccessPanel({ onAfterLogin }: AuthAccessPanelProps) 
           <button
             type="button"
             onClick={() => void logout()}
-            className="rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            className="rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
           >
             Đăng xuất
           </button>
@@ -72,7 +73,7 @@ export default function AuthAccessPanel({ onAfterLogin }: AuthAccessPanelProps) 
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
       <h3 className="text-base font-bold text-slate-900">Đăng nhập để dùng cổng quản trị</h3>
       <p className="mt-1 text-sm text-slate-600">
         Hệ thống sẽ tự bật hoặc ẩn thao tác theo quyền của tài khoản hiện tại.

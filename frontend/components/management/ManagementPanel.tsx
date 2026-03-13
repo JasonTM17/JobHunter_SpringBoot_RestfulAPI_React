@@ -30,6 +30,8 @@ import SkillFormModal from "./SkillFormModal";
 import UserManagementPanel from "./UserManagementPanel";
 
 type PublicEntity = "jobs" | "companies" | "skills" | "resumes";
+type RbacEntity = "users" | "roles" | "permissions";
+type ManagementModule = PublicEntity | RbacEntity;
 type PublicConfirmTarget = { entity: PublicEntity; id: number; name: string } | null;
 type ManagementTab = "public-crud" | "rbac";
 
@@ -69,6 +71,8 @@ interface ManagementPanelProps {
   onCreateUser: (payload: UserCreatePayload) => Promise<void>;
   onUpdateUser: (userId: number, payload: UserUpdatePayload) => Promise<void>;
   onDeleteUser: (userId: number) => Promise<void>;
+  preferredModule?: ManagementModule | null;
+  onModuleChange?: (module: ManagementModule) => void;
 }
 
 export default function ManagementPanel({
@@ -99,12 +103,15 @@ export default function ManagementPanel({
   onUploadCompanyLogo,
   onCreateUser,
   onUpdateUser,
-  onDeleteUser
+  onDeleteUser,
+  preferredModule,
+  onModuleChange
 }: ManagementPanelProps) {
   const { status, roleName, permissionKeys, can } = useAuth();
 
   const [tab, setTab] = useState<ManagementTab>("public-crud");
   const [publicTab, setPublicTab] = useState<PublicEntity>("jobs");
+  const [rbacMode, setRbacMode] = useState<RbacEntity>("users");
   const [loadingAction, setLoadingAction] = useState(false);
   const [reloadingPublic, setReloadingPublic] = useState(false);
   const [reloadingRbac, setReloadingRbac] = useState(false);
@@ -154,15 +161,73 @@ export default function ManagementPanel({
   const canManageJobs = canCreateJob || canUpdateJob || canDeleteJob;
   const canManageCompanies = canCreateCompany || canUpdateCompany || canDeleteCompany;
   const canManageSkills = canCreateSkill || canUpdateSkill || canDeleteSkill;
+  const canAccessRbac = canReadUsers || canCreateUser || canReadRoles || canReadPermissions;
 
   const sortedUsers = useMemo(() => [...users].sort((a, b) => a.name.localeCompare(b.name)), [users]);
   const noPermissionTitle = "Bạn không có quyền thực hiện thao tác này.";
+
+  function getFirstAllowedRbacMode(): RbacEntity {
+    if (canReadUsers || canCreateUser) return "users";
+    if (canReadRoles) return "roles";
+    if (canReadPermissions) return "permissions";
+    return "users";
+  }
+
+  function resolveAllowedRbacMode(nextMode: RbacEntity): RbacEntity {
+    if (nextMode === "users" && (canReadUsers || canCreateUser)) return "users";
+    if (nextMode === "roles" && canReadRoles) return "roles";
+    if (nextMode === "permissions" && canReadPermissions) return "permissions";
+    return getFirstAllowedRbacMode();
+  }
 
   useEffect(() => {
     if (publicTab === "resumes" && !canReadResumes) {
       setPublicTab("jobs");
     }
   }, [publicTab, canReadResumes]);
+
+  useEffect(() => {
+    if (tab === "rbac" && !canAccessRbac) {
+      setTab("public-crud");
+    }
+  }, [tab, canAccessRbac]);
+
+  useEffect(() => {
+    if (!preferredModule) return;
+
+    if (preferredModule === "jobs" || preferredModule === "companies" || preferredModule === "skills" || preferredModule === "resumes") {
+      const nextPublicTab = preferredModule === "resumes" && !canReadResumes ? "jobs" : preferredModule;
+      setTab("public-crud");
+      setPublicTab((prev) => (prev === nextPublicTab ? prev : nextPublicTab));
+      return;
+    }
+
+    if (!canAccessRbac) {
+      const fallbackModule: PublicEntity = canReadResumes ? "resumes" : "jobs";
+      setTab("public-crud");
+      setPublicTab((prev) => (prev === fallbackModule ? prev : fallbackModule));
+      onModuleChange?.(fallbackModule);
+      return;
+    }
+    const nextMode = resolveAllowedRbacMode(preferredModule);
+    setTab("rbac");
+    setRbacMode((prev) => (prev === nextMode ? prev : nextMode));
+  }, [preferredModule, canReadResumes, canAccessRbac, canReadUsers, canCreateUser, canReadRoles, canReadPermissions]);
+
+  function selectPublicTab(nextTab: PublicEntity) {
+    const safeTab = nextTab === "resumes" && !canReadResumes ? "jobs" : nextTab;
+    setTab("public-crud");
+    setPublicTab(safeTab);
+    onModuleChange?.(safeTab);
+  }
+
+  function selectRbacMode(nextMode: RbacEntity) {
+    if (!canAccessRbac) return;
+    const safeMode = resolveAllowedRbacMode(nextMode);
+    setTab("rbac");
+    setRbacMode(safeMode);
+    onModuleChange?.(safeMode);
+  }
 
   async function reloadPublicData() {
     setReloadingPublic(true);
@@ -231,7 +296,7 @@ export default function ManagementPanel({
 
   return (
     <section className="grid gap-3">
-      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
+      <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Cổng quản trị</h2>
@@ -244,7 +309,7 @@ export default function ManagementPanel({
               type="button"
               onClick={() => void reloadPublicData()}
               disabled={reloadingPublic || loadingAction}
-              className="rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3 sm:text-sm"
             >
               Tải lại dữ liệu công khai
             </button>
@@ -252,7 +317,7 @@ export default function ManagementPanel({
               type="button"
               onClick={() => void reloadRbacData()}
               disabled={reloadingRbac || loadingAction}
-              className="rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3 sm:text-sm"
             >
               Tải lại quyền truy cập
             </button>
@@ -262,22 +327,24 @@ export default function ManagementPanel({
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setTab("public-crud")}
+            onClick={() => selectPublicTab(publicTab)}
             className={
               tab === "public-crud"
-                ? "rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
-                : "rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
             }
           >
             Quản lý dữ liệu
           </button>
           <button
             type="button"
-            onClick={() => setTab("rbac")}
+            onClick={() => selectRbacMode(rbacMode)}
+            disabled={!canAccessRbac}
+            title={canAccessRbac ? "Mở quản lý tài khoản và phân quyền" : "Mục này chỉ hiện khi tài khoản có quyền liên quan"}
             className={
               tab === "rbac"
-                ? "rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
-                : "rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
             }
           >
             Tài khoản & phân quyền
@@ -286,50 +353,50 @@ export default function ManagementPanel({
       </section>
 
       {tab === "public-crud" ? (
-        <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
+        <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
           <div className="mb-3 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setPublicTab("jobs")}
+              onClick={() => selectPublicTab("jobs")}
               className={
                 publicTab === "jobs"
-                  ? "rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
-                  : "rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                  : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
               }
             >
               Việc làm ({jobs.length})
             </button>
             <button
               type="button"
-              onClick={() => setPublicTab("companies")}
+              onClick={() => selectPublicTab("companies")}
               className={
                 publicTab === "companies"
-                  ? "rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
-                  : "rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                  : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
               }
             >
               Công ty ({companies.length})
             </button>
             <button
               type="button"
-              onClick={() => setPublicTab("skills")}
+              onClick={() => selectPublicTab("skills")}
               className={
                 publicTab === "skills"
-                  ? "rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
-                  : "rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                  ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                  : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
               }
             >
               Kỹ năng ({skills.length})
             </button>
             <button
               type="button"
-              onClick={() => setPublicTab("resumes")}
+              onClick={() => selectPublicTab("resumes")}
               disabled={!canReadResumes}
               title={canReadResumes ? "Mở danh sách hồ sơ ứng tuyển" : "Bạn chưa có quyền xem hồ sơ ứng tuyển"}
               className={
                 publicTab === "resumes"
-                  ? "rounded-xl bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white"
-                  : "rounded-xl border border-slate-300 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                  : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
               }
             >
               Hồ sơ ứng tuyển ({rbacLoading ? "Đang tải..." : canReadResumes ? resumes.length : "Không có quyền"})
@@ -363,8 +430,8 @@ export default function ManagementPanel({
               {jobs.length === 0 ? (
                 <EmptyState title="Chưa có việc làm" description="Bạn có thể tạo một công việc mới." />
               ) : (
-                <div className="overflow-x-auto rounded-2xl border border-slate-200">
-                  <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <div className="w-full overflow-x-auto rounded-2xl border border-slate-200">
+                  <table className="min-w-full divide-y divide-slate-200 text-xs sm:text-sm">
                     <thead className="bg-slate-50">
                       <tr>
                         <th className="px-3 py-2 text-left font-bold text-slate-700">Việc làm</th>
@@ -547,7 +614,7 @@ export default function ManagementPanel({
         </section>
       ) : null}
 
-      {tab === "rbac" ? (
+      {tab === "rbac" && canAccessRbac ? (
         <section className="grid gap-3">
           <AuthAccessPanel onAfterLogin={reloadRbacData} />
           {status === "authenticated" && permissionKeys.length === 0 ? (
@@ -583,6 +650,8 @@ export default function ManagementPanel({
               canCreateUser={canCreateUser}
               canReadRoles={canReadRoles}
               canReadPermissions={canReadPermissions}
+              preferredMode={rbacMode}
+              onModeChange={(nextMode) => selectRbacMode(nextMode)}
               onCreateUser={(payload) => runAction(() => onCreateUser(payload))}
               onUpdateUser={(userId, payload) => runAction(() => onUpdateUser(userId, payload))}
               onDeleteUser={(userId) => runAction(() => onDeleteUser(userId))}

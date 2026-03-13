@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/auth-context";
 import { fetchCurrentUserResumesWithAuth } from "../services/auth-rbac-api";
 import { fetchAllJobs } from "../services/jobhunter-api";
 import { Job, ResumeItem } from "../types/models";
+import { toUserErrorMessage } from "../utils/error-message";
 import { formatCurrencyVnd, formatDateVi } from "../utils/format";
 import { canAccessCandidateWorkspace } from "../utils/workspace";
 
@@ -54,7 +55,7 @@ export default function CandidateWorkspacePage() {
       setJobs(jobData.filter((item) => item.active));
       setResumes(resumeData);
     } catch (loadError) {
-      setError((loadError as Error).message || "Không thể tải dữ liệu ứng viên.");
+      setError(toUserErrorMessage(loadError, "Không thể tải dữ liệu ứng viên lúc này."));
     } finally {
       setLoading(false);
     }
@@ -68,7 +69,7 @@ export default function CandidateWorkspacePage() {
 
   if (status === "loading") {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
         <LoadingState title="Đang khởi tạo không gian ứng viên..." rows={4} />
       </main>
     );
@@ -76,7 +77,7 @@ export default function CandidateWorkspacePage() {
 
   if (status !== "authenticated") {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
         <EmptyState
           title="Bạn cần đăng nhập để vào không gian ứng viên"
           description="Đăng nhập để xem hồ sơ đã ứng tuyển và theo dõi tiến trình tuyển dụng của bạn."
@@ -93,7 +94,7 @@ export default function CandidateWorkspacePage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
         <LoadingState title="Đang tải dữ liệu ứng viên..." rows={5} />
       </main>
     );
@@ -101,7 +102,7 @@ export default function CandidateWorkspacePage() {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
         <ErrorState description={error} onRetry={() => void loadData()} />
       </main>
     );
@@ -121,8 +122,8 @@ export default function CandidateWorkspacePage() {
   const reviewingCount = resumes.filter((item) => item.status?.toUpperCase() === "REVIEWING").length;
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
-      <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-6 text-white shadow-soft">
+    <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-5 text-white shadow-soft sm:p-6">
         <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
           Không gian ứng viên
         </p>
@@ -162,7 +163,7 @@ export default function CandidateWorkspacePage() {
         </div>
       </section>
 
-      <section className="mt-4 grid gap-3 lg:grid-cols-[1.35fr,1fr]">
+      <section className="mt-3.5 grid gap-3 lg:grid-cols-[1.35fr,1fr]">
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
           <h2 className="text-lg font-bold text-slate-900">Hồ sơ ứng tuyển gần đây</h2>
           <p className="mt-1 text-sm text-slate-600">
