@@ -128,7 +128,7 @@ export default function AppHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-[1040px] items-center justify-between gap-2 px-3 py-2.5 sm:px-4 lg:px-4">
+      <div className="mx-auto flex w-full max-w-[1180px] items-center justify-between gap-2 px-4 py-2.5 sm:px-5 xl:px-6">
         <div className="flex items-center gap-2">
           <Link href="/" className="inline-flex items-center gap-2 rounded-full px-2 py-1 hover:bg-slate-100">
             <img src="/favicon.svg" alt="Jobhunter" className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -223,7 +223,7 @@ export default function AppHeader() {
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[1040px] px-3 pb-2 sm:px-4 lg:hidden">
+      <div className="mx-auto w-full max-w-[1180px] px-4 pb-2 sm:px-5 xl:px-6 lg:hidden">
         <nav className="flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {navItems.map((item) => (
             <Link key={`mobile-${item.href}`} href={item.href} className={`${navClass(item.active)} whitespace-nowrap`}>
