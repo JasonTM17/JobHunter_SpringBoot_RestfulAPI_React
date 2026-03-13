@@ -7,6 +7,7 @@ import LoadingState from "../components/common/LoadingState";
 import { useAuth } from "../contexts/auth-context";
 import { fetchResumesWithAuth, fetchUsersWithAuth } from "../services/auth-rbac-api";
 import { fetchAllCompanies, fetchAllJobs, fetchAllSkills } from "../services/jobhunter-api";
+import { toUserErrorMessage } from "../utils/error-message";
 import { canAccessAdminWorkspace } from "../utils/workspace";
 
 interface AdminStats {
@@ -64,7 +65,7 @@ export default function AdminWorkspacePage() {
         resumes: resumes ? resumes.length : null
       });
     } catch (loadError) {
-      setError((loadError as Error).message || "Không thể tải dữ liệu quản trị.");
+      setError(toUserErrorMessage(loadError, "Không thể tải dữ liệu quản trị lúc này."));
     } finally {
       setLoading(false);
     }
@@ -78,7 +79,7 @@ export default function AdminWorkspacePage() {
 
   if (status === "loading") {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
         <LoadingState title="Đang khởi tạo khu quản trị..." rows={4} />
       </main>
     );
@@ -86,7 +87,7 @@ export default function AdminWorkspacePage() {
 
   if (status !== "authenticated") {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
         <EmptyState
           title="Bạn cần đăng nhập để vào khu quản trị"
           description="Vui lòng đăng nhập bằng tài khoản quản trị để truy cập các công cụ vận hành hệ thống."
@@ -103,7 +104,7 @@ export default function AdminWorkspacePage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
         <LoadingState title="Đang tải số liệu quản trị..." rows={5} />
       </main>
     );
@@ -111,15 +112,15 @@ export default function AdminWorkspacePage() {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
         <ErrorState description={error} onRetry={() => void loadData()} />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-6">
-      <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-6 text-white shadow-soft">
+    <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-5 text-white shadow-soft sm:p-6">
         <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
           Khu quản trị hệ thống
         </p>
@@ -157,7 +158,7 @@ export default function AdminWorkspacePage() {
         </div>
       </section>
 
-      <section className="mt-4 grid gap-3 md:grid-cols-2">
+      <section className="mt-3.5 grid gap-3 md:grid-cols-2">
         <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
           <h2 className="text-lg font-bold text-slate-900">Điều hướng quản trị</h2>
           <p className="mt-1 text-sm text-slate-600">
@@ -165,7 +166,7 @@ export default function AdminWorkspacePage() {
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
-              href="/?tab=manage"
+              href="/?tab=manage&module=users"
               className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
             >
               Mở cổng quản trị chi tiết
