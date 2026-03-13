@@ -644,7 +644,7 @@ export default function HomePage() {
       ) : error ? (
         <ErrorState description={error} onRetry={() => void loadPublicData()} />
       ) : tab === "browse" ? (
-        <section className="grid gap-3.5">
+        <section className="grid gap-3">
           <JobFilters
             keyword={keyword}
             location={location}
@@ -666,9 +666,9 @@ export default function HomePage() {
             onReset={resetFilters}
           />
 
-          <section className="flex min-w-0 flex-col items-start gap-3.5 xl:flex-row">
-            <section className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
-              <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+          <section className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_336px] 2xl:grid-cols-[minmax(0,1fr)_360px]">
+            <section className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-4">
+              <div className="mb-2.5 flex flex-wrap items-end justify-between gap-2.5">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">Việc làm phù hợp</h2>
                   <p className="text-xs text-slate-500">
@@ -681,7 +681,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <div className="grid gap-2">
+              <div className="grid gap-2.5">
                 {filteredJobs.length === 0 ? (
                   <EmptyState
                     title="Không tìm thấy công việc phù hợp"
@@ -697,7 +697,7 @@ export default function HomePage() {
               </div>
 
               {filteredJobs.length > JOBS_PER_PAGE ? (
-                <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3.5">
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
                   <p className="text-xs text-slate-500">
                     Trang {currentPage}/{totalPages}
                   </p>
@@ -737,7 +737,7 @@ export default function HomePage() {
               ) : null}
             </section>
 
-            <aside className="h-fit min-w-0 w-full xl:sticky xl:top-20 xl:w-[360px] xl:shrink-0 2xl:w-[420px]">
+            <aside className="h-fit min-w-0 w-full xl:sticky xl:top-24">
               <JobQuickDetail job={selectedJob} />
             </aside>
           </section>
