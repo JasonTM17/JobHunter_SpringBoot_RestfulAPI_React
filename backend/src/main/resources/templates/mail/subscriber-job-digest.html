@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body style="margin: 0; padding: 0; background: #f1f5f9;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; background: #f1f5f9;">
+    <tr>
+        <td align="center" style="padding: 28px 14px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; max-width: 680px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px; overflow: hidden;">
+                <tr th:replace="~{mail/fragments/brand :: header(${appName}, ${digestSummary})}">
+                    <td></td>
+                </tr>
+
+                <tr>
+                    <td style="padding: 28px 32px 10px;">
+                        <p style="margin: 0; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #334155;">
+                            Xin chào <strong th:text="${recipientName}">bạn</strong>,
+                        </p>
+                        <h2 style="margin: 14px 0 0; font-family: Arial, sans-serif; font-size: 24px; line-height: 1.35; color: #0f172a;" th:text="${digestTitle}">
+                            Gợi ý việc làm mới theo kỹ năng bạn đã đăng ký
+                        </h2>
+                        <p style="margin: 14px 0 0; font-family: Arial, sans-serif; font-size: 15px; line-height: 1.75; color: #475569;">
+                            Dưới đây là một số vị trí nổi bật mà Jobhunter đề xuất để bạn tham khảo.
+                        </p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding: 0 24px 8px;">
+                        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: separate; border-spacing: 0 10px;">
+                            <tr th:if="${jobs == null or #lists.isEmpty(jobs)}">
+                                <td style="padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc;">
+                                    <p style="margin: 0; font-family: Arial, sans-serif; font-size: 14px; color: #64748b;">
+                                        Hiện chưa có vị trí mới phù hợp. Bạn có thể quay lại sau để xem thêm cơ hội mới.
+                                    </p>
+                                </td>
+                            </tr>
+
+                            <tr th:each="job : ${jobs}">
+                                <td style="padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+                                    <p style="margin: 0; font-family: Arial, sans-serif; font-size: 18px; line-height: 1.4; color: #0f172a; font-weight: 700;" th:text="${job.name}">
+                                        Senior Java Backend Developer
+                                    </p>
+                                    <p style="margin: 8px 0 0; font-family: Arial, sans-serif; font-size: 14px; color: #334155;">
+                                        Công ty: <strong th:text="${job.company.name}">Jobhunter Company</strong>
+                                    </p>
+                                    <p style="margin: 6px 0 0; font-family: Arial, sans-serif; font-size: 14px; color: #0f766e;">
+                                        Mức lương tham khảo:
+                                        <strong th:text="${#numbers.formatDecimal(job.salary, 0, 'COMMA', 0, 'POINT')} + ' VND'">30,000,000 VND</strong>
+                                    </p>
+                                    <p style="margin: 8px 0 0; font-family: Arial, sans-serif; font-size: 13px; line-height: 1.7; color: #475569;">
+                                        Kỹ năng:
+                                        <span th:each="skill, iter : ${job.skills}" th:text="${skill.name + (iter.last ? '' : ', ')}">Java</span>
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding: 14px 32px 26px;">
+                        <a
+                                th:href="${portalUrl}"
+                                style="display: inline-block; padding: 12px 20px; border-radius: 10px; background: #e11d48; color: #ffffff; font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; text-decoration: none;">
+                            Xem thêm việc làm
+                        </a>
+                    </td>
+                </tr>
+
+                <tr th:replace="~{mail/fragments/brand :: footer(${currentYear}, ${supportEmail}, ${appName})}">
+                    <td></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
