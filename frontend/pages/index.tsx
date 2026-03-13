@@ -668,16 +668,18 @@ export default function HomePage() {
 
           <section className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_336px] 2xl:grid-cols-[minmax(0,1fr)_360px]">
             <section className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-4">
-              <div className="mb-2.5 flex flex-wrap items-end justify-between gap-2.5">
+              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">Việc làm phù hợp</h2>
-                  <p className="text-xs text-slate-500">
+                  <h2 className="text-[17px] font-bold text-slate-900">Việc làm phù hợp</h2>
+                  <p className="mt-0.5 text-xs text-slate-500">
                     {activeFilterCount > 0 ? `Đang áp dụng ${activeFilterCount} bộ lọc` : "Danh sách việc làm mới nhất cho bạn"}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-slate-600">{filteredJobs.length} kết quả</p>
-                  {isFilteringKeyword ? <p className="text-xs text-slate-500">Đang cập nhật theo từ khóa...</p> : null}
+                <div className="flex flex-col items-end gap-1">
+                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                    {filteredJobs.length} kết quả
+                  </span>
+                  {isFilteringKeyword ? <p className="text-[11px] text-slate-500">Đang cập nhật theo từ khóa...</p> : null}
                 </div>
               </div>
 
