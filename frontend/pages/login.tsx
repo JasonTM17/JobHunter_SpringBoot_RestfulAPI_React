@@ -97,15 +97,15 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto grid min-h-[calc(100vh-72px)] w-full max-w-7xl items-center px-4 py-8 md:py-12">
-      <section className="mx-auto grid w-full max-w-5xl overflow-hidden rounded-[32px] border border-slate-200 bg-white/95 shadow-soft backdrop-blur md:grid-cols-[1.08fr,1fr]">
-        <aside className="relative hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-10 text-slate-100 md:block">
+    <main className="mx-auto grid min-h-[calc(100vh-72px)] w-full max-w-[1180px] items-center px-3 py-6 sm:px-4 md:py-10">
+      <section className="mx-auto grid w-full max-w-4xl overflow-hidden rounded-[26px] border border-slate-200 bg-white/95 shadow-soft backdrop-blur lg:grid-cols-[1.05fr,1fr]">
+        <aside className="relative hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-8 text-slate-100 lg:block">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-rose-100">
             <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
             Jobhunter
           </div>
 
-          <h2 className="mt-6 text-3xl font-extrabold leading-tight">
+          <h2 className="mt-5 text-[30px] font-extrabold leading-tight">
             Chào mừng bạn quay lại với hành trình nghề nghiệp của mình
           </h2>
           <p className="mt-4 text-sm leading-relaxed text-slate-200">
@@ -125,7 +125,7 @@ export default function LoginPage() {
           </div>
         </aside>
 
-        <article className="p-6 sm:p-8 md:p-10">
+        <article className="p-5 sm:p-7 lg:p-8">
           <div className="mb-5 md:hidden">
             <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
               <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
@@ -154,7 +154,7 @@ export default function LoginPage() {
             </p>
           ) : null}
 
-          <form className="mt-6 grid gap-4" onSubmit={(event) => void handleSubmit(event)}>
+          <form className="mt-5 grid gap-3.5" onSubmit={(event) => void handleSubmit(event)}>
             <label className="grid gap-1.5 text-sm">
               <span className="font-semibold text-slate-700">Email</span>
               <input
@@ -163,7 +163,7 @@ export default function LoginPage() {
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="Nhập email của bạn"
                 autoComplete="email"
-                className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
+                className="rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
               />
             </label>
 
@@ -175,7 +175,7 @@ export default function LoginPage() {
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Nhập mật khẩu"
                 autoComplete="current-password"
-                className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
+                className="rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
               />
             </label>
 
@@ -191,13 +191,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-1 rounded-2xl bg-rose-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-1 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-600">
+          <p className="mt-5 text-center text-sm text-slate-600">
             Chưa có tài khoản?{" "}
             <Link
               href={`/register?next=${encodeURIComponent(nextPath)}`}
