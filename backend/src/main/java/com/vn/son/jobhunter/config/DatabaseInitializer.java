@@ -79,12 +79,20 @@ public class DatabaseInitializer implements CommandLineRunner {
             arr.add(new Permission("Upload a file", "/api/v1/files", "POST", "FILES"));
             arr.add(new Permission("Download a file", "/api/v1/files", "GET", "FILES"));
 
+            arr.add(new Permission("Send subscribers digest email", "/api/v1/email/subscribers", "POST", "EMAIL"));
+            arr.add(new Permission("Send a test email", "/api/v1/email/test", "POST", "EMAIL"));
+            arr.add(new Permission("Send a test template email", "/api/v1/email/test-template", "POST", "EMAIL"));
+            arr.add(new Permission("Trigger scheduler mail heartbeat", "/api/v1/email/scheduler/trigger", "POST", "EMAIL"));
+            arr.add(new Permission("Trigger weekly recommendation email", "/api/v1/email/recommendations/weekly/trigger", "POST", "EMAIL"));
+            arr.add(new Permission("Trigger log cleanup", "/api/v1/email/logs/cleanup/trigger", "POST", "EMAIL"));
+
             this.permissionRepository.saveAll(arr);
         }
 
         ensureFilePermissionsAreCorrect();
         ensureUserPermissionsAreCorrect();
         ensureSkillPermissionsAreCorrect();
+        ensureEmailPermissionsAreCorrect();
         ensureSuperAdminBootstrap();
         this.recruitmentDemoDataSeeder.seedDemoData();
         log.info("Database bootstrap completed");
@@ -245,6 +253,52 @@ public class DatabaseInitializer implements CommandLineRunner {
                 "/api/v1/resumes/by-user",
                 "POST",
                 "RESUMES"
+        );
+    }
+
+    private void ensureEmailPermissionsAreCorrect() {
+        List<Permission> permissions = this.permissionRepository.findAll();
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Send subscribers digest email",
+                "/api/v1/email/subscribers",
+                "POST",
+                "EMAIL"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Send a test email",
+                "/api/v1/email/test",
+                "POST",
+                "EMAIL"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Send a test template email",
+                "/api/v1/email/test-template",
+                "POST",
+                "EMAIL"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Trigger scheduler mail heartbeat",
+                "/api/v1/email/scheduler/trigger",
+                "POST",
+                "EMAIL"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Trigger weekly recommendation email",
+                "/api/v1/email/recommendations/weekly/trigger",
+                "POST",
+                "EMAIL"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Trigger log cleanup",
+                "/api/v1/email/logs/cleanup/trigger",
+                "POST",
+                "EMAIL"
         );
     }
 
