@@ -202,8 +202,10 @@ export function splitDescriptionSections(html?: string | null): {
 
 export function resolveCompanyLogo(logo?: string | null): string | null {
   if (!logo) return null;
+  if (logo.startsWith("blob:") || logo.startsWith("data:")) return logo;
   if (/^https?:\/\//i.test(logo)) return logo;
   if (logo.startsWith("/storage/")) return `${STORAGE_BASE_URL}${logo}`;
+  if (logo.startsWith("storage/")) return `${STORAGE_BASE_URL}/${logo}`;
   return `${STORAGE_BASE_URL}/storage/company/${logo}`;
 }
 

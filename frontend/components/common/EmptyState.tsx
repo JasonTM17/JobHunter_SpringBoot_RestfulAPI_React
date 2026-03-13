@@ -7,7 +7,7 @@ interface EmptyStateProps {
 
 export default function EmptyState({ title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
-    <section className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
+    <section className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-center sm:p-6">
       <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-slate-200 text-slate-700">
         <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
           <path d="M12 3v18M3 12h18" />
