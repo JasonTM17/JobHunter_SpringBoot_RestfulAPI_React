@@ -527,7 +527,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1200px] px-3 pb-24 pt-3 sm:px-4 lg:px-5">
+    <main className="mx-auto w-full max-w-[1120px] px-3 pb-24 pt-3 sm:px-4 lg:px-4">
       <ToastViewport toasts={toasts} onDismiss={removeToast} />
 
       <header className="mb-3 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-4 text-white shadow-soft sm:p-5">
@@ -666,8 +666,8 @@ export default function HomePage() {
             onReset={resetFilters}
           />
 
-          <section className="grid items-start gap-3.5 xl:grid-cols-[minmax(0,1fr)_minmax(0,360px)] 2xl:grid-cols-[minmax(0,1.35fr)_minmax(0,420px)]">
-            <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+          <section className="flex min-w-0 flex-col items-start gap-3.5 xl:flex-row">
+            <section className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
               <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">Việc làm phù hợp</h2>
@@ -737,7 +737,7 @@ export default function HomePage() {
               ) : null}
             </section>
 
-            <aside className="h-fit min-w-0 max-w-full xl:sticky xl:top-20">
+            <aside className="h-fit min-w-0 w-full xl:sticky xl:top-20 xl:w-[360px] xl:shrink-0 2xl:w-[420px]">
               <JobQuickDetail job={selectedJob} />
             </aside>
           </section>
