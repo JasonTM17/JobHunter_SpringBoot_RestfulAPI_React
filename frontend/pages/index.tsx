@@ -527,7 +527,7 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1040px] px-3 pb-24 pt-3 sm:px-4 lg:px-4">
+    <main className="mx-auto w-full max-w-[1180px] px-4 pb-24 pt-4 sm:px-5 xl:px-6">
       <ToastViewport toasts={toasts} onDismiss={removeToast} />
 
       <header className="mb-3 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-4 text-white shadow-soft sm:p-5">
@@ -644,7 +644,7 @@ export default function HomePage() {
       ) : error ? (
         <ErrorState description={error} onRetry={() => void loadPublicData()} />
       ) : tab === "browse" ? (
-        <section className="grid gap-3">
+        <section className="grid gap-4">
           <JobFilters
             keyword={keyword}
             location={location}
@@ -666,16 +666,16 @@ export default function HomePage() {
             onReset={resetFilters}
           />
 
-          <section className="grid min-w-0 gap-3 2xl:grid-cols-[minmax(0,1fr)_332px]">
+          <section className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.95fr)]">
             <section className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-4">
-              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2.5">
                 <div>
                   <h2 className="text-[17px] font-bold text-slate-900">Việc làm phù hợp</h2>
                   <p className="mt-0.5 text-xs text-slate-500">
                     {activeFilterCount > 0 ? `Đang áp dụng ${activeFilterCount} bộ lọc` : "Danh sách việc làm mới nhất cho bạn"}
                   </p>
                 </div>
-                <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                   <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                     {filteredJobs.length} kết quả
                   </span>
@@ -739,7 +739,7 @@ export default function HomePage() {
               ) : null}
             </section>
 
-            <aside className="h-fit min-w-0 w-full 2xl:sticky 2xl:top-24">
+            <aside className="h-fit min-w-0 w-full xl:sticky xl:top-24">
               <JobQuickDetail job={selectedJob} />
             </aside>
           </section>
