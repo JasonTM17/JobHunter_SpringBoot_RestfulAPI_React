@@ -10,6 +10,8 @@
     "clean:backend": "node scripts/clean-workspace.mjs --scope=backend --logs --temp --build",
     "clean:all": "node scripts/clean-workspace.mjs --all",
     "clean:dry": "node scripts/clean-workspace.mjs --logs --temp --dry-run",
-    "clean:dry:all": "node scripts/clean-workspace.mjs --all --dry-run"
+    "clean:dry:all": "node scripts/clean-workspace.mjs --all --dry-run",
+    "docker:build-images": "powershell -ExecutionPolicy Bypass -File scripts/docker-build-images.ps1",
+    "docker:push-images": "powershell -ExecutionPolicy Bypass -File scripts/docker-push-images.ps1"
   }
 }
