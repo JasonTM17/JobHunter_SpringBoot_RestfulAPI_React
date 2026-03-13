@@ -1,299 +1,771 @@
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/router";
+import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import FloatingChatWidget from "../components/chat/FloatingChatWidget";
+import CompanyLogo from "../components/common/CompanyLogo";
+import EmptyState from "../components/common/EmptyState";
+import ErrorState from "../components/common/ErrorState";
+import LoadingState from "../components/common/LoadingState";
+import ToastViewport, { ToastItem, ToastType } from "../components/common/ToastViewport";
+import JobCard from "../components/jobs/JobCard";
+import JobFilters from "../components/jobs/JobFilters";
+import JobQuickDetail from "../components/jobs/JobQuickDetail";
+import ManagementPanel from "../components/management/ManagementPanel";
+import { useAuth } from "../contexts/auth-context";
+import {
+  createUserWithAuth,
+  deleteResumeWithAuth,
+  deleteUserWithAuth,
+  fetchPermissionsWithAuth,
+  fetchResumesWithAuth,
+  fetchRolesWithAuth,
+  fetchUserActionCapabilityWithAuth,
+  fetchUsersWithAuth,
+  updateResumeWithAuth,
+  updateUserWithAuth
+} from "../services/auth-rbac-api";
+import {
+  createCompany,
+  createJob,
+  createSkill,
+  deleteCompany,
+  deleteJob,
+  deleteSkill,
+  fetchAllCompanies,
+  fetchAllJobs,
+  fetchAllSkills,
+  updateCompany,
+  updateJob,
+  updateSkill,
+  uploadCompanyLogo
+} from "../services/jobhunter-api";
+import {
+  Company,
+  CompanyUpsertPayload,
+  Job,
+  JobUpsertPayload,
+  Permission,
+  ResumeItem,
+  Role,
+  Skill,
+  SkillUpsertPayload,
+  UserActionCapability,
+  UserCreatePayload,
+  UserListItem,
+  UserUpdatePayload
+} from "../types/models";
+import { createId, stripHtml } from "../utils/format";
+import { hasManagementPermission } from "../utils/permissions";
 
-type Company = {
-  id: number;
-  name: string;
-  logo: string;
-  description?: string;
-  address?: string;
-};
-
-type ApiPayload = {
-  data?: {
-    result?: Company[];
-  };
-  result?: Company[];
-};
-
-const FALLBACK_COMPANIES: Company[] = [
-  { id: 1, name: "Amazon.com, Inc", logo: "1716687538974-amzon.jpg" },
-  { id: 2, name: "Apple Inc.", logo: "1716687768336-apple.jpg" },
-  { id: 3, name: "Google LLC", logo: "1716687909879-google.png" },
-  { id: 4, name: "Lazada Viet Nam", logo: "1716688017004-lazada.png" },
-  { id: 5, name: "Netflix Inc", logo: "1716688067538-netflix.png" },
-  { id: 6, name: "Adobe Photoshop", logo: "1716688187365-photoshop.png" },
-  { id: 7, name: "Tap doan Adobe", logo: "1716688251710-pr.jpg" },
-  { id: 8, name: "Shopee", logo: "1716688292011-shopee.png" },
-  { id: 9, name: "Tiki", logo: "1716688336563-tiki.jpg" },
-  { id: 10, name: "Tiktok", logo: "1716688386288-tiktok.jpg" }
-];
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
-const COMPANIES_API = `${API_BASE_URL}/api/v1/companies?page=1&size=100`;
-const STORAGE_BASE_URL = process.env.NEXT_PUBLIC_STORAGE_BASE_URL ?? API_BASE_URL;
-
-function parseCompanies(payload: ApiPayload): Company[] {
-  if (Array.isArray(payload?.data?.result)) return payload.data.result;
-  if (Array.isArray(payload?.result)) return payload.result;
-  return [];
-}
-
-function makeLogoUrl(logo: string): string {
-  if (!logo) return "";
-  if (/^https?:\/\//i.test(logo)) return logo;
-  if (logo.startsWith("/storage/")) return `${STORAGE_BASE_URL}${logo}`;
-  if (logo.startsWith("storage/")) return `${STORAGE_BASE_URL}/${logo}`;
-  if (logo.startsWith("/")) return `${STORAGE_BASE_URL}${logo}`;
-  return `${STORAGE_BASE_URL}/storage/company/${logo}`;
-}
-
-function initials(name: string): string {
-  return (
-    name
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase())
-      .join("") || "NA"
-  );
-}
+type MainTab = "browse" | "manage";
+const UNKNOWN_LEVEL = "CHUA_CAP_NHAT";
+const JOBS_PER_PAGE = 12;
 
 export default function HomePage() {
+  const router = useRouter();
+  const { status: authStatus, can, assignableRoles, permissionKeys, refreshAccount } = useAuth();
+
+  const [tab, setTab] = useState<MainTab>("browse");
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
-  const [status, setStatus] = useState("Loading companies...");
-  const [isError, setIsError] = useState(false);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [resumes, setResumes] = useState<ResumeItem[]>([]);
+  const [users, setUsers] = useState<UserListItem[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [userCapabilities, setUserCapabilities] = useState<Record<number, UserActionCapability>>({});
 
-  useEffect(() => {
-    let mounted = true;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [rbacLoading, setRbacLoading] = useState(false);
+  const [rbacLoaded, setRbacLoaded] = useState(false);
+  const [rbacError, setRbacError] = useState("");
 
-    async function loadCompanies() {
-      try {
-        const res = await fetch(COMPANIES_API);
-        if (!res.ok) throw new Error(`API ${res.status}`);
-        const json: ApiPayload = await res.json();
-        const parsed = parseCompanies(json);
+  const [keyword, setKeyword] = useState("");
+  const [location, setLocation] = useState("ALL");
+  const [level, setLevel] = useState("ALL");
+  const [skill, setSkill] = useState("ALL");
+  const [salaryMin, setSalaryMin] = useState("");
+  const [salaryMax, setSalaryMax] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-        if (!mounted) return;
+  const deferredKeyword = useDeferredValue(keyword.trim().toLowerCase());
+  const canAccessManagement = useMemo(
+    () => authStatus === "authenticated" && hasManagementPermission(permissionKeys),
+    [authStatus, permissionKeys]
+  );
 
-        if (parsed.length === 0) {
-          setCompanies(FALLBACK_COMPANIES);
-          setStatus("No company data from API, using fallback logo list from DB.");
-          setIsError(false);
-          return;
-        }
+  function renderPublicStat(value: number): string {
+    if (loading) return "Đang tải...";
+    if (error) return "Không khả dụng";
+    return String(value);
+  }
 
-        setCompanies(parsed);
-        setStatus("Loaded companies from backend API.");
-        setIsError(false);
-      } catch (error) {
-        if (!mounted) return;
-        setCompanies(FALLBACK_COMPANIES);
-        setStatus(`API error, using fallback logo list from DB. ${(error as Error).message}`);
-        setIsError(true);
+  function queryWithoutTab(currentQuery: typeof router.query): Record<string, string> {
+    const nextQuery: Record<string, string> = {};
+    Object.entries(currentQuery).forEach(([key, value]) => {
+      if (key === "tab") return;
+      if (Array.isArray(value)) {
+        if (value[0]) nextQuery[key] = value[0];
+      } else if (value) {
+        nextQuery[key] = value;
       }
+    });
+    return nextQuery;
+  }
+
+  function removeToast(id: string) {
+    setToasts((prev) => prev.filter((item) => item.id !== id));
+  }
+
+  function addToast(type: ToastType, message: string) {
+    const id = createId("toast");
+    setToasts((prev) => [...prev, { id, type, message }]);
+    if (typeof window !== "undefined") {
+      window.setTimeout(() => {
+        setToasts((prev) => prev.filter((item) => item.id !== id));
+      }, 4200);
+    }
+  }
+
+  async function loadPublicData() {
+    setLoading(true);
+    setError("");
+    try {
+      const [nextJobs, nextCompanies, nextSkills] = await Promise.all([fetchAllJobs(), fetchAllCompanies(), fetchAllSkills()]);
+      const sortedJobs = [...nextJobs].sort((a, b) => {
+        if (a.active !== b.active) return a.active ? -1 : 1;
+        const aDate = a.endDate ? new Date(a.endDate).getTime() : 0;
+        const bDate = b.endDate ? new Date(b.endDate).getTime() : 0;
+        return bDate - aDate;
+      });
+      const sortedCompanies = [...nextCompanies].sort((a, b) => a.name.localeCompare(b.name));
+      const sortedSkills = [...nextSkills].sort((a, b) => a.name.localeCompare(b.name));
+
+      setJobs(sortedJobs);
+      setCompanies(sortedCompanies);
+      setSkills(sortedSkills);
+    } catch (loadError) {
+      setError((loadError as Error).message || "Không thể tải dữ liệu tuyển dụng.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadRbacData() {
+    if (authStatus !== "authenticated") {
+      setUsers([]);
+      setRoles([]);
+      setPermissions([]);
+      setResumes([]);
+      setUserCapabilities({});
+      setRbacLoaded(false);
+      setRbacError("");
+      return;
     }
 
-    loadCompanies();
-    return () => {
-      mounted = false;
-    };
+    setRbacLoaded(false);
+    setRbacLoading(true);
+    setRbacError("");
+    const canReadUsers = can("/api/v1/users", "GET");
+    const canReadRoles = can("/api/v1/roles", "GET");
+    const canReadPermissions = can("/api/v1/permissions", "GET");
+    const canReadResumes = can("/api/v1/resumes", "GET");
+
+    try {
+      const messages: string[] = [];
+
+      if (canReadUsers) {
+        try {
+          const usersResult = await fetchUsersWithAuth();
+          setUsers(usersResult);
+
+          const capabilityPairs = await Promise.allSettled(
+            usersResult.map(async (user) => {
+              const capability = await fetchUserActionCapabilityWithAuth(user.id);
+              return [user.id, capability] as const;
+            })
+          );
+
+          const capabilityMap: Record<number, UserActionCapability> = {};
+          capabilityPairs.forEach((item) => {
+            if (item.status === "fulfilled") {
+              const [id, capability] = item.value;
+              capabilityMap[id] = capability;
+            }
+          });
+          setUserCapabilities(capabilityMap);
+        } catch (usersError) {
+          setUsers([]);
+          setUserCapabilities({});
+          messages.push(`Người dùng: ${(usersError as Error).message}`);
+        }
+      } else {
+        setUsers([]);
+        setUserCapabilities({});
+      }
+
+      if (canReadRoles) {
+        try {
+          setRoles(await fetchRolesWithAuth());
+        } catch (rolesError) {
+          setRoles([]);
+          messages.push(`Vai trò: ${(rolesError as Error).message}`);
+        }
+      } else {
+        setRoles([]);
+      }
+
+      if (canReadPermissions) {
+        try {
+          setPermissions(await fetchPermissionsWithAuth());
+        } catch (permError) {
+          setPermissions([]);
+          messages.push(`Quyền: ${(permError as Error).message}`);
+        }
+      } else {
+        setPermissions([]);
+      }
+
+      if (canReadResumes) {
+        try {
+          setResumes(await fetchResumesWithAuth());
+        } catch (resumeError) {
+          setResumes([]);
+          messages.push(`Ứng tuyển: ${(resumeError as Error).message}`);
+        }
+      } else {
+        setResumes([]);
+      }
+
+      setRbacError(messages.join(" | "));
+    } catch (loadError) {
+      setRbacError((loadError as Error).message || "Không thể tải dữ liệu quản trị.");
+    } finally {
+      setRbacLoading(false);
+      setRbacLoaded(true);
+    }
+  }
+
+  async function reloadRbacData() {
+    if (authStatus === "authenticated") {
+      try {
+        await refreshAccount();
+      } catch (refreshError) {
+        addToast("error", (refreshError as Error).message || "Không thể đồng bộ lại quyền truy cập.");
+      }
+    }
+    await loadRbacData();
+  }
+
+  useEffect(() => {
+    void loadPublicData();
   }, []);
 
-  const logoNames = useMemo(() => companies.map((company) => company.logo).filter(Boolean), [companies]);
+  useEffect(() => {
+    if (!router.isReady) return;
+    const raw = router.query.tab;
+    const tabQueryValue = Array.isArray(raw) ? raw[0] : raw;
+    const wantsManage = tabQueryValue === "manage";
+
+    if (wantsManage && !canAccessManagement) {
+      const nextQuery = queryWithoutTab(router.query);
+      setTab("browse");
+      void router.replace(
+        {
+          pathname: router.pathname,
+          query: nextQuery
+        },
+        undefined,
+        { shallow: true }
+      );
+      return;
+    }
+
+    const nextTab: MainTab = wantsManage ? "manage" : "browse";
+    setTab((prev) => (prev === nextTab ? prev : nextTab));
+  }, [router.isReady, router.query.tab, canAccessManagement]);
+
+  useEffect(() => {
+    if (authStatus !== "authenticated") {
+      setUsers([]);
+      setRoles([]);
+      setPermissions([]);
+      setResumes([]);
+      setUserCapabilities({});
+      setRbacLoaded(false);
+      setRbacError("");
+      return;
+    }
+    void reloadRbacData();
+  }, [authStatus]);
+
+  const locationOptions = useMemo(
+    () => Array.from(new Set(jobs.map((job) => job.location).filter(Boolean))),
+    [jobs]
+  );
+
+  const levelOptions = useMemo(
+    () => Array.from(new Set(jobs.map((job) => String(job.level || UNKNOWN_LEVEL)).filter(Boolean))),
+    [jobs]
+  );
+
+  const skillOptions = useMemo(
+    () => Array.from(new Set(skills.map((item) => item.name).filter(Boolean))),
+    [skills]
+  );
+
+  const activeJobsCount = useMemo(() => jobs.filter((job) => job.active).length, [jobs]);
+  const isFilteringKeyword = keyword.trim().toLowerCase() !== deferredKeyword;
+
+  const filteredJobs = useMemo(() => {
+    const min = salaryMin ? Number(salaryMin) : null;
+    const max = salaryMax ? Number(salaryMax) : null;
+
+    return jobs.filter((job) => {
+      if (!job.active) return false;
+      if (location !== "ALL" && job.location !== location) return false;
+      if (level !== "ALL" && String(job.level || UNKNOWN_LEVEL) !== level) return false;
+      if (skill !== "ALL" && !(job.skills ?? []).some((item) => item.name === skill)) return false;
+      if (min !== null && Number(job.salary || 0) < min) return false;
+      if (max !== null && Number(job.salary || 0) > max) return false;
+
+      if (!deferredKeyword) return true;
+
+      const haystack = [
+        job.name,
+        job.location,
+        job.level || "",
+        job.company?.name || "",
+        stripHtml(job.description),
+        ...(job.skills ?? []).map((item) => item.name)
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(deferredKeyword);
+    });
+  }, [jobs, location, level, skill, salaryMin, salaryMax, deferredKeyword]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PER_PAGE));
+  const paginatedJobs = useMemo(() => {
+    const start = (currentPage - 1) * JOBS_PER_PAGE;
+    return filteredJobs.slice(start, start + JOBS_PER_PAGE);
+  }, [filteredJobs, currentPage]);
+
+  const paginationNumbers = useMemo(() => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+    const start = Math.min(Math.max(currentPage - 2, 1), totalPages - 4);
+    return Array.from({ length: 5 }, (_, index) => start + index);
+  }, [currentPage, totalPages]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (keyword.trim()) count += 1;
+    if (location !== "ALL") count += 1;
+    if (level !== "ALL") count += 1;
+    if (skill !== "ALL") count += 1;
+    if (salaryMin) count += 1;
+    if (salaryMax) count += 1;
+    return count;
+  }, [keyword, location, level, skill, salaryMin, salaryMax]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [keyword, location, level, skill, salaryMin, salaryMax]);
+
+  useEffect(() => {
+    setCurrentPage((prev) => (prev > totalPages ? totalPages : prev));
+  }, [totalPages]);
+
+  useEffect(() => {
+    if (!paginatedJobs.length) {
+      setSelectedJobId(null);
+      return;
+    }
+    const stillExists = paginatedJobs.some((item) => item.id === selectedJobId);
+    if (!stillExists) {
+      setSelectedJobId(paginatedJobs[0].id);
+    }
+  }, [paginatedJobs, selectedJobId]);
+
+  const selectedJob = paginatedJobs.find((job) => job.id === selectedJobId) ?? null;
+
+  function resetFilters() {
+    setKeyword("");
+    setLocation("ALL");
+    setLevel("ALL");
+    setSkill("ALL");
+    setSalaryMin("");
+    setSalaryMax("");
+    setCurrentPage(1);
+  }
+
+  function changeMainTab(nextTab: MainTab) {
+    if (nextTab === "manage" && !canAccessManagement) {
+      addToast("error", "Bạn chưa có quyền truy cập khu vực quản trị.");
+      return;
+    }
+
+    setTab(nextTab);
+    if (!router.isReady) return;
+
+    const nextQuery = queryWithoutTab(router.query);
+    if (nextTab === "manage") {
+      nextQuery.tab = "manage";
+    }
+
+    void router.replace(
+      {
+        pathname: router.pathname,
+        query: nextQuery
+      },
+      undefined,
+      { shallow: true }
+    );
+  }
+
+  async function runProtectedMutation(action: () => Promise<void>, successMessage: string) {
+    if (authStatus !== "authenticated") {
+      addToast("error", "Vui lòng đăng nhập để thực hiện thao tác này.");
+      throw new Error("Bạn chưa đăng nhập.");
+    }
+    try {
+      await action();
+      await Promise.all([loadPublicData(), reloadRbacData()]);
+      addToast("success", successMessage);
+    } catch (mutationError) {
+      addToast("error", (mutationError as Error).message);
+      throw mutationError;
+    }
+  }
+
+  async function runRbacMutation(action: () => Promise<void>, successMessage: string) {
+    if (authStatus !== "authenticated") {
+      addToast("error", "Vui lòng đăng nhập để thao tác trên khu vực quản trị.");
+      throw new Error("Bạn chưa đăng nhập.");
+    }
+    try {
+      await action();
+      await reloadRbacData();
+      addToast("success", successMessage);
+    } catch (mutationError) {
+      addToast("error", (mutationError as Error).message);
+      throw mutationError;
+    }
+  }
 
   return (
-    <main className="page">
-      <div className="hero">
-        <h1>Jobhunter Frontend (React + Next.js)</h1>
-        <p>
-          Logo rule: backend DB logo is mapped to <code>/storage/company/&lt;logoFile&gt;</code>.
-          Put image files with exact same names.
-        </p>
-        <p>
-          New: open <a href="/chatbot">/chatbot</a> to use AI chatbot.
-        </p>
-        <p className={isError ? "status error" : "status"}>{status}</p>
-      </div>
+    <main className="mx-auto max-w-7xl px-4 pb-28 pt-3">
+      <ToastViewport toasts={toasts} onDismiss={removeToast} />
 
-      <section className="panel">
-        <h2>Logo file names in DB</h2>
-        <ul>
-          {logoNames.length > 0 ? (
-            logoNames.map((logo) => (
-              <li key={logo}>
-                <code>{logo}</code>
-              </li>
-            ))
+      <header className="mb-3 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-5 text-white shadow-soft md:p-6">
+        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
+          <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
+          Jobhunter
+        </div>
+        <h1 className="text-2xl font-extrabold leading-tight md:text-4xl">
+          Nền tảng việc làm công nghệ dành cho ứng viên tại Việt Nam
+        </h1>
+        <p className="mt-2 max-w-3xl text-sm text-slate-200 md:text-base">
+          Tìm vị trí phù hợp theo kỹ năng, mức lương và khu vực. Xem thông tin tuyển dụng rõ ràng, ứng tuyển nhanh và theo dõi cơ hội mới mỗi ngày.
+        </p>
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <article className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-slate-200">Việc đang tuyển</p>
+            <p className="mt-1 text-2xl font-extrabold">{renderPublicStat(activeJobsCount)}</p>
+          </article>
+          <article className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-slate-200">Doanh nghiệp</p>
+            <p className="mt-1 text-2xl font-extrabold">{renderPublicStat(companies.length)}</p>
+          </article>
+          <article className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
+            <p className="text-xs uppercase tracking-wide text-slate-200">Kỹ năng nổi bật</p>
+            <p className="mt-1 text-2xl font-extrabold">{renderPublicStat(skills.length)}</p>
+          </article>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => changeMainTab("browse")}
+            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+          >
+            Khám phá việc làm
+          </button>
+          {authStatus === "authenticated" ? (
+            <button
+              type="button"
+              onClick={() => void router.push("/account")}
+              className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
+            >
+              Trang tài khoản
+            </button>
           ) : (
-            <li>
-              <code>(empty)</code>
-            </li>
+            <>
+              <button
+                type="button"
+                onClick={() => void router.push(`/login?next=${encodeURIComponent(router.asPath || "/")}`)}
+                className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
+              >
+                Đăng nhập để ứng tuyển
+              </button>
+              <button
+                type="button"
+                onClick={() => void router.push(`/register?next=${encodeURIComponent(router.asPath || "/")}`)}
+                className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
+              >
+                Tạo tài khoản
+              </button>
+            </>
           )}
-        </ul>
-      </section>
+          {canAccessManagement ? (
+            <button
+              type="button"
+              onClick={() => changeMainTab("manage")}
+              className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
+            >
+              Khu quản trị
+            </button>
+          ) : null}
+        </div>
+      </header>
 
-      <section className="grid">
-        {companies.map((company) => {
-          const logoUrl = makeLogoUrl(company.logo);
-          return (
-            <article className="card" key={company.id}>
-              <div className="logoWrap">
-                {logoUrl ? (
-                  <>
-                    <img
-                      src={logoUrl}
-                      alt={`${company.name} logo`}
-                      onError={(event) => {
-                        const image = event.currentTarget;
-                        image.style.display = "none";
-                        const fallback = image.nextElementSibling as HTMLElement | null;
-                        if (fallback) fallback.style.display = "grid";
-                      }}
-                    />
-                    <div className="fallback" style={{ display: "none" }}>
-                      {initials(company.name)}
-                    </div>
-                  </>
+      {canAccessManagement ? (
+        <section className="mb-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => changeMainTab("browse")}
+            className={
+              tab === "browse"
+                ? "rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                : "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            }
+          >
+            Việc làm
+          </button>
+          <button
+            type="button"
+            onClick={() => changeMainTab("manage")}
+            className={
+              tab === "manage"
+                ? "rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                : "rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            }
+          >
+            Quản trị
+          </button>
+        </section>
+      ) : null}
+
+      {loading ? (
+        <LoadingState title="Đang tải dữ liệu tuyển dụng..." rows={6} />
+      ) : error ? (
+        <ErrorState description={error} onRetry={() => void loadPublicData()} />
+      ) : tab === "browse" ? (
+        <section className="grid gap-3">
+          <JobFilters
+            keyword={keyword}
+            location={location}
+            level={level}
+            skill={skill}
+            salaryMin={salaryMin}
+            salaryMax={salaryMax}
+            activeFilterCount={activeFilterCount}
+            isFiltering={isFilteringKeyword}
+            locationOptions={locationOptions}
+            levelOptions={levelOptions}
+            skillOptions={skillOptions}
+            onKeywordChange={(value) => startTransition(() => setKeyword(value))}
+            onLocationChange={setLocation}
+            onLevelChange={setLevel}
+            onSkillChange={setSkill}
+            onSalaryMinChange={setSalaryMin}
+            onSalaryMaxChange={setSalaryMax}
+            onReset={resetFilters}
+          />
+
+          <section className="grid gap-3 lg:grid-cols-[1.65fr,1fr]">
+            <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-soft">
+              <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Việc làm phù hợp</h2>
+                  <p className="text-xs text-slate-500">
+                    {activeFilterCount > 0 ? `Đang áp dụng ${activeFilterCount} bộ lọc` : "Danh sách việc làm mới nhất cho bạn"}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-slate-600">{filteredJobs.length} kết quả</p>
+                  {isFilteringKeyword ? <p className="text-xs text-slate-500">Đang cập nhật theo từ khóa...</p> : null}
+                </div>
+              </div>
+
+              <div className="grid gap-2">
+                {filteredJobs.length === 0 ? (
+                  <EmptyState
+                    title="Không tìm thấy công việc phù hợp"
+                    description="Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm."
+                    actionLabel="Xóa bộ lọc"
+                    onAction={resetFilters}
+                  />
                 ) : (
-                  <div className="fallback">{initials(company.name)}</div>
+                  paginatedJobs.map((job) => (
+                    <JobCard key={job.id} job={job} selected={selectedJobId === job.id} onSelect={setSelectedJobId} />
+                  ))
                 )}
               </div>
 
-              <h3>{company.name}</h3>
-              <p>
-                DB logo: <code>{company.logo || "(empty)"}</code>
-              </p>
-              <p>
-                Render URL: <code>{logoUrl || "(none)"}</code>
+              {filteredJobs.length > JOBS_PER_PAGE ? (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                  <p className="text-xs text-slate-500">
+                    Trang {currentPage}/{totalPages}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      disabled={currentPage <= 1}
+                      className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Trước
+                    </button>
+                    {paginationNumbers.map((pageNumber) => (
+                      <button
+                        key={pageNumber}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNumber)}
+                        className={
+                          pageNumber === currentPage
+                            ? "rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-bold text-white"
+                            : "rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                        }
+                      >
+                        {pageNumber}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage >= totalPages}
+                      className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Sau
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </section>
+
+            <aside className="h-fit lg:sticky lg:top-24">
+              <JobQuickDetail job={selectedJob} />
+            </aside>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-soft">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="text-base font-bold text-slate-900">Nhà tuyển dụng nổi bật</h2>
+              <span className="text-xs font-semibold text-slate-500">{companies.length} công ty</span>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {companies.slice(0, 12).map((company) => (
+                <article key={company.id} className="min-w-[170px] rounded-xl border border-slate-200 bg-white p-2">
+                  <div className="mb-2 flex items-center gap-2">
+                    <CompanyLogo name={company.name} logo={company.logo} size="sm" />
+                    <h3 className="line-clamp-2 text-sm font-semibold text-slate-800">{company.name}</h3>
+                  </div>
+                  <p className="line-clamp-2 text-xs text-slate-500">{company.address || "Đang cập nhật địa chỉ"}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        </section>
+      ) : canAccessManagement ? (
+        <section className="grid gap-3">
+          <section className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:grid-cols-2 lg:grid-cols-4">
+            <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Tài khoản quản lý được</p>
+              <p className="mt-1 text-xl font-extrabold text-slate-900">
+                {rbacLoading ? "..." : can("/api/v1/users", "GET") ? users.length : "Không có quyền"}
               </p>
             </article>
-          );
-        })}
-      </section>
+            <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Hồ sơ ứng tuyển</p>
+              <p className="mt-1 text-xl font-extrabold text-slate-900">
+                {rbacLoading ? "..." : can("/api/v1/resumes", "GET") ? resumes.length : "Không có quyền"}
+              </p>
+            </article>
+            <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Vai trò trong hệ thống</p>
+              <p className="mt-1 text-xl font-extrabold text-slate-900">
+                {rbacLoading ? "..." : can("/api/v1/roles", "GET") ? roles.length : "Không có quyền"}
+              </p>
+            </article>
+            <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs uppercase tracking-wide text-slate-500">Quyền khả dụng</p>
+              <p className="mt-1 text-xl font-extrabold text-slate-900">{permissionKeys.length}</p>
+            </article>
+          </section>
 
-      <style jsx>{`
-        .page {
-          min-height: 100vh;
-          padding: 28px 18px 40px;
-          background: linear-gradient(145deg, #e8f6f4 0%, #f4f8ff 42%, #f9fbfe 100%);
-          color: #12223a;
-          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        }
+          <ManagementPanel
+            jobs={jobs}
+            companies={companies}
+            skills={skills}
+            resumes={resumes}
+            users={users}
+            roles={roles}
+            permissions={permissions}
+            userCapabilities={userCapabilities}
+            createAssignableRoles={assignableRoles}
+            rbacLoading={rbacLoading}
+            rbacError={rbacError}
+            onReloadPublicData={loadPublicData}
+            onReloadRbacData={reloadRbacData}
+            onCreateJob={(payload) => runProtectedMutation(() => createJob(payload), "Tạo việc làm thành công.")}
+            onUpdateJob={(payload) => runProtectedMutation(() => updateJob(payload), "Cập nhật việc làm thành công.")}
+            onDeleteJob={(jobId) => runProtectedMutation(() => deleteJob(jobId), "Xóa việc làm thành công.")}
+            onCreateCompany={(payload) => runProtectedMutation(() => createCompany(payload), "Tạo công ty thành công.")}
+            onUpdateCompany={(payload) => runProtectedMutation(() => updateCompany(payload), "Cập nhật công ty thành công.")}
+            onDeleteCompany={(companyId) => runProtectedMutation(() => deleteCompany(companyId), "Xóa công ty thành công.")}
+            onCreateSkill={(payload) => runProtectedMutation(() => createSkill(payload), "Tạo kỹ năng thành công.")}
+            onUpdateSkill={(payload) => runProtectedMutation(() => updateSkill(payload), "Cập nhật kỹ năng thành công.")}
+            onDeleteSkill={(skillId) => runProtectedMutation(() => deleteSkill(skillId), "Xóa kỹ năng thành công.")}
+            onUpdateResumeStatus={(resume, nextStatus) =>
+              runRbacMutation(
+                () =>
+                  updateResumeWithAuth({
+                    id: resume.id,
+                    email: resume.email,
+                    url: resume.url,
+                    status: nextStatus,
+                    user: resume.user?.id ? { id: resume.user.id } : null,
+                    job: resume.job?.id ? { id: resume.job.id } : null
+                  }),
+                "Cập nhật trạng thái hồ sơ thành công."
+              )
+            }
+            onDeleteResume={(resumeId) => runRbacMutation(() => deleteResumeWithAuth(resumeId), "Xóa hồ sơ thành công.")}
+            onUploadCompanyLogo={(file) => uploadCompanyLogo(file)}
+            onCreateUser={(payload) => runRbacMutation(() => createUserWithAuth(payload), "Tạo tài khoản thành công.")}
+            onUpdateUser={(userId, payload) =>
+              runRbacMutation(() => updateUserWithAuth(userId, payload), "Cập nhật tài khoản thành công.")
+            }
+            onDeleteUser={(userId) => runRbacMutation(() => deleteUserWithAuth(userId), "Xóa tài khoản thành công.")}
+          />
+        </section>
+      ) : (
+        <EmptyState
+          title="Bạn không có quyền truy cập khu vực này"
+          description="Khu vực quản trị chỉ hiển thị cho tài khoản có quyền phù hợp."
+          actionLabel="Về danh sách việc làm"
+          onAction={() => changeMainTab("browse")}
+        />
+      )}
 
-        .hero {
-          max-width: 1100px;
-          margin: 0 auto 16px;
-          padding: 20px;
-          border-radius: 14px;
-          background: #ffffff;
-          border: 1px solid #e7edf5;
-          box-shadow: 0 12px 28px rgba(16, 42, 73, 0.06);
-        }
-
-        h1 {
-          margin: 0 0 8px;
-          font-size: clamp(1.4rem, 2vw + 1rem, 2rem);
-          line-height: 1.2;
-        }
-
-        h2 {
-          margin: 0 0 8px;
-          font-size: 1rem;
-        }
-
-        p {
-          margin: 8px 0;
-          color: #4f617b;
-        }
-
-        .status {
-          font-weight: 600;
-          color: #0f766e;
-        }
-
-        .status.error {
-          color: #b42318;
-        }
-
-        .panel {
-          max-width: 1100px;
-          margin: 0 auto 18px;
-          padding: 16px 20px;
-          border-radius: 14px;
-          background: #ffffff;
-          border: 1px solid #e7edf5;
-        }
-
-        .panel ul {
-          margin: 0;
-          padding-left: 18px;
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          gap: 8px 14px;
-        }
-
-        code {
-          font-family: Consolas, "Courier New", monospace;
-          background: #edf2fb;
-          border-radius: 6px;
-          padding: 2px 6px;
-          color: #0f2b50;
-        }
-
-        .grid {
-          max-width: 1100px;
-          margin: 0 auto;
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-          gap: 14px;
-        }
-
-        .card {
-          border: 1px solid #e6edf6;
-          border-radius: 14px;
-          padding: 12px;
-          background: #ffffff;
-          box-shadow: 0 10px 20px rgba(18, 40, 69, 0.05);
-        }
-
-        .card h3 {
-          margin: 10px 0 6px;
-          font-size: 1rem;
-          line-height: 1.35;
-        }
-
-        .card p {
-          margin: 6px 0;
-          font-size: 0.9rem;
-        }
-
-        .logoWrap {
-          height: 120px;
-          border: 1px solid #e5ebf4;
-          border-radius: 10px;
-          background: #f9fcff;
-          display: grid;
-          place-items: center;
-          overflow: hidden;
-        }
-
-        .logoWrap img {
-          max-width: 92%;
-          max-height: 92%;
-          object-fit: contain;
-        }
-
-        .fallback {
-          width: 48px;
-          height: 48px;
-          border-radius: 999px;
-          background: #def4f1;
-          color: #0f766e;
-          display: grid;
-          place-items: center;
-          font-weight: 700;
-        }
-      `}</style>
+      {tab === "browse" ? <FloatingChatWidget /> : null}
     </main>
   );
 }
