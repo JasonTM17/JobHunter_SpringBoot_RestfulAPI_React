@@ -62,7 +62,7 @@ class UserControllerIntegrationTest {
                         .content(payload))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.statusCode").value(201))
-                .andExpect(jsonPath("$.message").value("Create a user"))
+                .andExpect(jsonPath("$.message").value("Tạo người dùng"))
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.email").value("integration@mail.com"));
     }

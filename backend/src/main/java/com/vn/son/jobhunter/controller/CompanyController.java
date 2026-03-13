@@ -1,6 +1,7 @@
 package com.vn.son.jobhunter.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -18,18 +19,19 @@ import com.vn.son.jobhunter.util.annotation.ApiMessage;
 @RequestMapping(path = "${apiPrefix}/companies")
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Công ty", description = "Nhóm API quản lý thông tin công ty tuyển dụng")
 public class CompanyController {
     private final CompanyService companyService;
 
     @PostMapping("")
-    @ApiMessage("Create a company")
+    @ApiMessage("Tạo công ty")
     public ResponseEntity<Company> createCompany(@Valid @RequestBody Company company){
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(this.companyService.createCompany(company));
     }
 
     @GetMapping("")
-    @ApiMessage("Fetch all company data")
+    @ApiMessage("Lấy danh sách công ty")
     public ResponseEntity<ResultPaginationResponse> getAllCompany(
             @Filter Specification<Company> spec,
             Pageable pageable
@@ -39,7 +41,7 @@ public class CompanyController {
     }
 
     @PutMapping("")
-    @ApiMessage("Update a company")
+    @ApiMessage("Cập nhật công ty")
     public ResponseEntity<Company> updateCompany(
             @Valid @RequestBody Company company
     ){
@@ -47,7 +49,7 @@ public class CompanyController {
     }
 
     @DeleteMapping("/{id}")
-    @ApiMessage("Delete a company")
+    @ApiMessage("Xóa công ty")
     public ResponseEntity<Void> deleteCompany(
             @PathVariable("id") Long id
     ){
@@ -56,7 +58,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}")
-    @ApiMessage("Get company by id")
+    @ApiMessage("Lấy chi tiết công ty theo mã")
     public ResponseEntity<Company> getCompany(@PathVariable("id") Long id) throws Exception{
         return ResponseEntity.ok().body(this.companyService.findCompanyById(id));
     }

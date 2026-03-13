@@ -1,6 +1,7 @@
 package com.vn.son.jobhunter.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -19,23 +20,24 @@ import com.vn.son.jobhunter.util.convert.ResumeConvert;
 @RequestMapping(path = "${apiPrefix}/roles")
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Vai trò", description = "Nhóm API quản lý vai trò và phạm vi quyền")
 public class RoleController {
     private final RoleService roleService;
 
     @PostMapping("")
-    @ApiMessage("Create a role")
+    @ApiMessage("Tạo vai trò")
     public ResponseEntity<Role> create(@Valid @RequestBody Role role) throws Exception {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.roleService.create(role));
     }
 
     @PutMapping("")
-    @ApiMessage("Update a role")
+    @ApiMessage("Cập nhật vai trò")
     public ResponseEntity<Role> update(@Valid @RequestBody Role role) throws Exception {
         return ResponseEntity.status(HttpStatus.OK).body(this.roleService.update(role));
     }
 
     @GetMapping("")
-    @ApiMessage("fetch all role")
+    @ApiMessage("Lấy danh sách vai trò")
     public ResponseEntity<ResultPaginationResponse> getAll(
             @Filter Specification<Role> spec,
             Pageable pageable
@@ -46,13 +48,13 @@ public class RoleController {
     }
 
     @GetMapping("/{id}")
-    @ApiMessage("Fetch a role by id")
+    @ApiMessage("Lấy chi tiết vai trò theo mã")
     public ResponseEntity<Role> fetchById(@PathVariable("id") Long id) throws Exception {
         return ResponseEntity.status(HttpStatus.OK).body(this.roleService.fetchRoleById(id));
     }
 
     @DeleteMapping("/{id}")
-    @ApiMessage("Delete a role")
+    @ApiMessage("Xóa vai trò")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws Exception{
         this.roleService.delete(id);
         return ResponseEntity.ok().body(null);

@@ -1,6 +1,7 @@
 package com.vn.son.jobhunter.controller;
 
 import com.turkraft.springfilter.boot.Filter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -18,11 +19,12 @@ import com.vn.son.jobhunter.util.annotation.ApiMessage;
 @RequestMapping(path = "${apiPrefix}/jobs")
 @RequiredArgsConstructor
 @RestController
+@Tag(name = "Việc làm", description = "Nhóm API quản lý và tra cứu tin tuyển dụng")
 public class JobController {
     private final JobService jobService;
 
     @PostMapping("")
-    @ApiMessage("Create a job")
+    @ApiMessage("Tạo việc làm")
     public ResponseEntity<CreatedJobResponse> create(@Valid @RequestBody Job job){
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 this.jobService.create(job)
@@ -30,26 +32,26 @@ public class JobController {
     }
 
     @PutMapping("")
-    @ApiMessage("Update a job")
+    @ApiMessage("Cập nhật việc làm")
     public ResponseEntity<UpdatedJobResponse> update(@Valid @RequestBody Job job) throws Exception {
         return ResponseEntity.status(HttpStatus.OK).body(this.jobService.update(job));
     }
 
     @DeleteMapping("/{id}")
-    @ApiMessage("Delete job by id")
+    @ApiMessage("Xóa việc làm theo mã")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id) throws Exception{
         this.jobService.delete(id);
         return ResponseEntity.ok().body(null);
     }
 
     @GetMapping("/{id}")
-    @ApiMessage("Get job by id")
+    @ApiMessage("Lấy chi tiết việc làm theo mã")
     public ResponseEntity<Job> getJob(@PathVariable("id") Long id) throws Exception{
         return ResponseEntity.ok().body(this.jobService.fetchJobById(id));
     }
 
     @GetMapping("")
-    @ApiMessage("fetch all skills")
+    @ApiMessage("Lấy danh sách việc làm")
     public ResponseEntity<ResultPaginationResponse> getAll(
             @Filter Specification<Job> spec,
             Pageable pageable
