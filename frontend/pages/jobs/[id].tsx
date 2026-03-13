@@ -8,6 +8,7 @@ import { useAuth } from "../../contexts/auth-context";
 import { createResumeWithAuth } from "../../services/auth-rbac-api";
 import { fetchJobDetail } from "../../services/jobhunter-api";
 import { Job } from "../../types/models";
+import { toUserErrorMessage } from "../../utils/error-message";
 import {
   formatCurrencyVnd,
   formatDateVi,
@@ -53,7 +54,7 @@ export default function JobDetailPage() {
       const data = await fetchJobDetail(jobId);
       setJob(data);
     } catch (loadError) {
-      setError((loadError as Error).message || "Không thể tải chi tiết công việc.");
+      setError(toUserErrorMessage(loadError, "Không thể tải chi tiết công việc lúc này."));
     } finally {
       setLoading(false);
     }
@@ -118,7 +119,7 @@ export default function JobDetailPage() {
       setApplySuccess("Đã gửi hồ sơ ứng tuyển thành công.");
       setCvUrl("");
     } catch (submitError) {
-      setApplyError((submitError as Error).message || "Không thể gửi hồ sơ ứng tuyển.");
+      setApplyError(toUserErrorMessage(submitError, "Không thể gửi hồ sơ ứng tuyển lúc này."));
     } finally {
       setApplying(false);
     }
@@ -126,7 +127,7 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto min-h-screen max-w-5xl px-4 py-5">
+      <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4">
         <LoadingState title="Đang tải chi tiết công việc..." rows={5} />
       </main>
     );
@@ -134,7 +135,7 @@ export default function JobDetailPage() {
 
   if (error || !job) {
     return (
-      <main className="mx-auto min-h-screen max-w-5xl px-4 py-5">
+      <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4">
         <ErrorState description={error || "Không tìm thấy dữ liệu công việc."} onRetry={() => void loadJob()} />
         <div className="mt-3">
           <Link
@@ -154,8 +155,8 @@ export default function JobDetailPage() {
   const safeBenefits = sanitizeRichText(sections.benefits);
 
   return (
-    <main className="mx-auto min-h-screen max-w-5xl px-4 py-5">
-      <header className="rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-6 text-white shadow-soft">
+    <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4">
+      <header className="rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-5 text-white shadow-soft sm:p-6">
         <Link
           href="/"
           className="mb-3 inline-flex rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100 hover:bg-white/20"
@@ -177,7 +178,7 @@ export default function JobDetailPage() {
         </div>
       </header>
 
-      <section className="mt-4 grid gap-3 lg:grid-cols-[2fr,1fr]">
+      <section className="mt-3.5 grid gap-3 lg:grid-cols-[2fr,1fr]">
         <article className="grid gap-3">
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
             <h2 className="text-lg font-bold text-slate-900">Mô tả công việc</h2>
@@ -207,7 +208,7 @@ export default function JobDetailPage() {
           </section>
         </article>
 
-        <aside className="grid content-start gap-3">
+        <aside className="grid content-start gap-3 lg:sticky lg:top-20">
           <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
             <h2 className="text-base font-bold text-slate-900">Thông tin nhanh</h2>
             <p className="mt-2 text-sm text-slate-700">
