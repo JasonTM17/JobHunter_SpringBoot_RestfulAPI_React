@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.vn.son.jobhunter.domain.Company;
 import com.vn.son.jobhunter.domain.Job;
 import com.vn.son.jobhunter.domain.Skill;
@@ -54,6 +55,16 @@ public class JobService {
         }
         Job jobInDB = this.fetchJobById(job.getId());
 
+        jobInDB.setName(job.getName());
+        jobInDB.setLocation(job.getLocation());
+        jobInDB.setSalary(job.getSalary());
+        jobInDB.setQuantity(job.getQuantity());
+        jobInDB.setLevel(job.getLevel());
+        jobInDB.setActive(job.isActive());
+        jobInDB.setStartDate(job.getStartDate());
+        jobInDB.setEndDate(job.getEndDate());
+        jobInDB.setDescription(job.getDescription());
+
         if(job.getSkills() != null){
             List<Long> reqSkills = job.getSkills()
                     .stream().map(Skill::getId)
@@ -86,8 +97,14 @@ public class JobService {
         return currentJob.get();
     }
 
+    @Transactional(readOnly = true)
     public ResultPaginationResponse fetchAllJob(Specification<Job> spec, Pageable pageable){
         Page<Job> jobPage = this.jobRepository.findAll(spec, pageable);
+        jobPage.getContent().forEach(job -> {
+            if (job.getSkills() != null) {
+                job.getSkills().size();
+            }
+        });
         ResultPaginationResponse response = FormatResultPagaination.createPaginationResponse(jobPage);
         return response;
     }

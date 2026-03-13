@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import com.vn.son.jobhunter.domain.*;
 import com.vn.son.jobhunter.domain.res.ResultPaginationResponse;
@@ -63,6 +64,7 @@ public class ResumeController {
 
     @GetMapping("")
     @ApiMessage("fetch all resume")
+    @Transactional(readOnly = true)
     public ResponseEntity<ResultPaginationResponse> getAll(
             @Filter Specification<Resume> spec,
             Pageable pageable
