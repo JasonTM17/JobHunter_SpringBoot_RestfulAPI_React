@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="header(appName, previewText)">
+    <tr>
+        <td style="padding: 28px 32px 18px; background: linear-gradient(135deg, #0f172a, #1e293b);">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+                <tr>
+                    <td align="left">
+                        <p style="margin: 0; font-family: Arial, sans-serif; font-size: 12px; color: #fda4af; letter-spacing: .6px; text-transform: uppercase; font-weight: 700;">
+                            Thông báo từ hệ thống
+                        </p>
+                        <h1 style="margin: 10px 0 0; font-family: Arial, sans-serif; font-size: 24px; line-height: 1.3; color: #ffffff;" th:text="${appName}">
+                            Jobhunter
+                        </h1>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 12px;">
+                        <p style="margin: 0; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #e2e8f0;" th:text="${previewText}">
+                            Đây là bản cập nhật mới dành cho bạn từ Jobhunter.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</th:block>
+
+<th:block th:fragment="footer(currentYear, supportEmail, appName)">
+    <tr>
+        <td style="padding: 20px 32px 30px; background: #f8fafc; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #64748b;">
+                Email này được gửi tự động từ <strong th:text="${appName}">Jobhunter</strong>.
+                Nếu cần hỗ trợ, vui lòng liên hệ
+                <a th:href="'mailto:' + ${supportEmail}" th:text="${supportEmail}" style="color: #be123c; text-decoration: none;">support@jobhunter.local</a>.
+            </p>
+            <p style="margin: 10px 0 0; font-family: Arial, sans-serif; font-size: 12px; color: #94a3b8;">
+                © <span th:text="${currentYear}">2026</span> <span th:text="${appName}">Jobhunter</span>. Bảo lưu mọi quyền.
+            </p>
+        </td>
+    </tr>
+</th:block>
+</body>
+</html>
