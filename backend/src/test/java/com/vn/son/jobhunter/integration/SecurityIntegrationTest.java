@@ -40,4 +40,17 @@ class SecurityIntegrationTest {
                 .andExpect(jsonPath("$.statusCode").value(401))
                 .andExpect(jsonPath("$.message").value(containsString("Token is invalid")));
     }
+
+    @Test
+    void actuatorHealthShouldRemainPublic() throws Exception {
+        mockMvc.perform(get("/actuator/health"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void actuatorLoggersShouldRequireAuthentication() throws Exception {
+        mockMvc.perform(get("/actuator/loggers"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.statusCode").value(401));
+    }
 }
