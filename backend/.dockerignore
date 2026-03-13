@@ -1,0 +1,16 @@
+.git
+.idea
+.gradle
+build
+logs
+storage
+tmp
+temp
+
+.env
+.env.local
+.env.*
+!.env.example
+
+*.iml
+*.log
