@@ -13,5 +13,9 @@ import java.time.Instant;
 @AllArgsConstructor
 public class UploadFileResponse {
     private String fileName;
+    private String folder;
+    private String fileUrl;
+    private String contentType;
+    private long size;
     private Instant uploadedAt;
 }

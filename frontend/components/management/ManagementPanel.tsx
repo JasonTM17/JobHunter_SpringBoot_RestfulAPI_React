@@ -12,6 +12,7 @@ import {
   RoleOption,
   Skill,
   SkillUpsertPayload,
+  UploadFileResponse,
   UserActionCapability,
   UserCreatePayload,
   UserListItem,
@@ -64,7 +65,7 @@ interface ManagementPanelProps {
   onDeleteSkill: (skillId: number) => Promise<void>;
   onUpdateResumeStatus: (resume: ResumeItem, status: string) => Promise<void>;
   onDeleteResume: (resumeId: number) => Promise<void>;
-  onUploadCompanyLogo: (file: File) => Promise<string>;
+  onUploadCompanyLogo: (file: File) => Promise<UploadFileResponse>;
   onCreateUser: (payload: UserCreatePayload) => Promise<void>;
   onUpdateUser: (userId: number, payload: UserUpdatePayload) => Promise<void>;
   onDeleteUser: (userId: number) => Promise<void>;

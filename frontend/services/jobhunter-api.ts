@@ -183,16 +183,15 @@ export async function deleteSkill(skillId: number): Promise<void> {
   });
 }
 
-export async function uploadCompanyLogo(file: File): Promise<string> {
+export async function uploadCompanyLogo(file: File): Promise<UploadFileResponse> {
   const form = new FormData();
   form.append("file", file);
   form.append("folder", "company");
 
-  const result = await apiRequest<UploadFileResponse>(`${API_PREFIX}/files`, {
+  return apiRequest<UploadFileResponse>(`${API_PREFIX}/files`, {
     method: "POST",
     body: form
   });
-  return result.fileName;
 }
 
 export async function sendChat(message: string): Promise<ChatResponsePayload> {

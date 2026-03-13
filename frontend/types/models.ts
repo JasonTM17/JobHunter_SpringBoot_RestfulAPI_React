@@ -77,6 +77,10 @@ export interface Job extends BaseAudit {
 
 export interface UploadFileResponse {
   fileName: string;
+  folder: string;
+  fileUrl: string;
+  contentType?: string | null;
+  size: number;
   uploadedAt: string;
 }
 
