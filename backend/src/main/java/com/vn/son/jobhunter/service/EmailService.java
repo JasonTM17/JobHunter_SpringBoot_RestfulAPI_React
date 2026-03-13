@@ -3,6 +3,7 @@ package com.vn.son.jobhunter.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -15,6 +16,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import java.nio.charset.StandardCharsets;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class EmailService {
     private final ObjectProvider<JavaMailSender> javaMailSenderProvider;
@@ -24,7 +26,7 @@ public class EmailService {
                               boolean isHtml) {
         JavaMailSender javaMailSender = this.javaMailSenderProvider.getIfAvailable();
         if (javaMailSender == null) {
-            System.out.println("WARN: JavaMailSender not configured. Skip sending email.");
+            log.warn("JavaMailSender is not configured. Skip sending email to {}", to);
             return;
         }
 
@@ -38,7 +40,8 @@ public class EmailService {
             message.setText(content, isHtml);
             javaMailSender.send(mimeMessage);
         } catch (MailException | MessagingException e) {
-            System.out.println("ERROR SEND EMAIL: " + e);
+            log.error("Failed to send email to {} with subject '{}': {}", to, subject, e.getMessage());
+            log.debug("Email send exception detail", e);
         }
     }
 
