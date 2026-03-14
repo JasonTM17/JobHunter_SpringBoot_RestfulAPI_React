@@ -62,6 +62,8 @@ type MainTab = "browse" | "manage";
 type ManageModule = "jobs" | "companies" | "skills" | "resumes" | "users" | "roles" | "permissions";
 const UNKNOWN_LEVEL = "CHUA_CAP_NHAT";
 const JOBS_PER_PAGE = 12;
+const FEATURED_EMPLOYERS_LIMIT = 6;
+const SECONDARY_EMPLOYERS_LIMIT = 12;
 
 export default function HomePage() {
   const router = useRouter();
@@ -376,7 +378,7 @@ export default function HomePage() {
     return countMap;
   }, [jobs]);
   const isFilteringKeyword = keyword.trim().toLowerCase() !== deferredKeyword;
-  const featuredCompanies = useMemo(
+  const rankedCompanies = useMemo(
     () =>
       companies
         .map((company) => ({
@@ -388,9 +390,18 @@ export default function HomePage() {
           if (logoDelta !== 0) return logoDelta;
           if (b.activeJobs !== a.activeJobs) return b.activeJobs - a.activeJobs;
           return a.company.name.localeCompare(b.company.name);
-        })
-        .slice(0, 8),
+        }),
     [companies, activeJobsByCompanyId]
+  );
+
+  const featuredCompanies = useMemo(
+    () => rankedCompanies.slice(0, FEATURED_EMPLOYERS_LIMIT),
+    [rankedCompanies]
+  );
+
+  const secondaryCompanies = useMemo(
+    () => rankedCompanies.slice(FEATURED_EMPLOYERS_LIMIT, FEATURED_EMPLOYERS_LIMIT + SECONDARY_EMPLOYERS_LIMIT),
+    [rankedCompanies]
   );
 
   const filteredJobs = useMemo(() => {
@@ -771,23 +782,47 @@ export default function HomePage() {
             </aside>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-base font-bold text-slate-900">Nhà tuyển dụng nổi bật</h2>
-              <span className="text-xs font-semibold text-slate-500">{companies.length} công ty</span>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {companies.slice(0, 12).map((company) => (
-                <article key={company.id} className="min-w-[152px] rounded-xl border border-slate-200 bg-white p-2.5">
-                  <div className="mb-2 flex items-center gap-2">
-                    <CompanyLogo name={company.name} logo={company.logo} size="sm" />
-                    <h3 className="line-clamp-2 text-sm font-semibold text-slate-800">{company.name}</h3>
-                  </div>
-                  <p className="line-clamp-2 text-xs text-slate-500">{company.address || "Đang cập nhật địa chỉ"}</p>
-                </article>
-              ))}
-            </div>
-          </section>
+          {secondaryCompanies.length ? (
+            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Mở rộng hệ sinh thái tuyển dụng
+                  </p>
+                  <h2 className="mt-1 text-base font-bold text-slate-900">Khám phá thêm doanh nghiệp</h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Ngoài nhóm nổi bật phía trên, đây là những doanh nghiệp cũng đang tuyển dụng tích cực.
+                  </p>
+                </div>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+                  {secondaryCompanies.length} công ty
+                </span>
+              </div>
+              <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {secondaryCompanies.map(({ company, activeJobs }) => (
+                  <article
+                    key={company.id}
+                    className="min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <CompanyLogo name={company.name} logo={company.logo} size="sm" className="shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="line-clamp-2 text-sm font-semibold text-slate-800">{company.name}</h3>
+                          <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                            {activeJobs} vị trí
+                          </span>
+                        </div>
+                        <p className="mt-2 line-clamp-2 text-xs text-slate-500">
+                          {company.address || "Đang cập nhật địa chỉ"}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          ) : null}
         </section>
       ) : canAccessManagement ? (
         <section className="grid gap-3">
