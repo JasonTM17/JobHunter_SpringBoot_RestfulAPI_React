@@ -666,7 +666,7 @@ export default function HomePage() {
             onReset={resetFilters}
           />
 
-          <section className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.95fr)]">
+          <section className="grid min-w-0 items-start gap-4 min-[1440px]:grid-cols-[minmax(0,1.6fr)_minmax(320px,0.95fr)]">
             <section className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-4">
               <div className="mb-3 flex flex-wrap items-end justify-between gap-2.5">
                 <div>
@@ -739,7 +739,7 @@ export default function HomePage() {
               ) : null}
             </section>
 
-            <aside className="h-fit min-w-0 w-full xl:sticky xl:top-24">
+            <aside className="h-fit min-w-0 w-full min-[1440px]:sticky min-[1440px]:top-24">
               <JobQuickDetail job={selectedJob} />
             </aside>
           </section>
