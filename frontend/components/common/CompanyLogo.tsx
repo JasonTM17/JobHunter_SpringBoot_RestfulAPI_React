@@ -15,6 +15,12 @@ const sizeClassMap: Record<NonNullable<CompanyLogoProps["size"]>, string> = {
   lg: "h-16 w-16"
 };
 
+const imagePaddingClassMap: Record<NonNullable<CompanyLogoProps["size"]>, string> = {
+  sm: "p-1.5",
+  md: "p-2",
+  lg: "p-3"
+};
+
 export default function CompanyLogo({
   name,
   logo,
@@ -31,14 +37,17 @@ export default function CompanyLogo({
 
   const roundedClass = rounded === "full" ? "rounded-full" : "rounded-lg";
   const rootSize = sizeClassMap[size];
+  const imagePaddingClass = imagePaddingClassMap[size];
 
   if (src && !broken) {
     return (
-      <div className={`${rootSize} ${roundedClass} overflow-hidden border border-slate-200 bg-white ${className}`}>
+      <div
+        className={`${rootSize} ${roundedClass} grid place-items-center overflow-hidden border border-slate-200 bg-white shadow-sm ${className}`}
+      >
         <img
           src={src}
           alt={name ?? "Logo công ty"}
-          className="h-full w-full object-cover"
+          className={`h-full w-full object-contain ${imagePaddingClass}`}
           onError={() => setBroken(true)}
         />
       </div>
