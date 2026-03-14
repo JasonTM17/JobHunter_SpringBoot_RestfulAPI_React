@@ -47,10 +47,10 @@ export default function JobFilters({
   onReset
 }: JobFiltersProps) {
   const controlClassName =
-    "min-w-0 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-[13px] text-slate-700 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200";
+    "min-w-0 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-[13px] text-slate-700 transition focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200";
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-3.5">
+    <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-3.5">
       <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5">
         <div>
           <h2 className="text-sm font-bold text-slate-900">Bộ lọc việc làm</h2>
@@ -71,9 +71,9 @@ export default function JobFilters({
         </div>
       </div>
 
-      <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-[minmax(0,1.45fr)_repeat(2,minmax(0,1fr))] 2xl:grid-cols-[minmax(0,1.9fr)_repeat(4,minmax(0,1fr))]">
+      <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-4">
         <input
-          className={`${controlClassName} sm:col-span-2 xl:col-span-1`}
+          className={`${controlClassName} md:col-span-2 lg:col-span-2`}
           placeholder="Tìm theo vị trí, công ty, kỹ năng..."
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
@@ -106,7 +106,7 @@ export default function JobFilters({
         </select>
 
         <select
-          className={controlClassName}
+          className={`${controlClassName} lg:col-span-2`}
           value={skill}
           onChange={(event) => onSkillChange(event.target.value)}
         >
@@ -118,22 +118,20 @@ export default function JobFilters({
           ))}
         </select>
 
-        <div className="grid min-w-0 grid-cols-2 gap-2 sm:col-span-2 xl:col-span-3 2xl:col-span-1">
-          <input
-            className={controlClassName}
-            placeholder="Lương từ"
-            value={salaryMin}
-            inputMode="numeric"
-            onChange={(event) => onSalaryMinChange(numericOnly(event))}
-          />
-          <input
-            className={controlClassName}
-            placeholder="Lương đến"
-            value={salaryMax}
-            inputMode="numeric"
-            onChange={(event) => onSalaryMaxChange(numericOnly(event))}
-          />
-        </div>
+        <input
+          className={controlClassName}
+          placeholder="Lương từ"
+          value={salaryMin}
+          inputMode="numeric"
+          onChange={(event) => onSalaryMinChange(numericOnly(event))}
+        />
+        <input
+          className={controlClassName}
+          placeholder="Lương đến"
+          value={salaryMax}
+          inputMode="numeric"
+          onChange={(event) => onSalaryMaxChange(numericOnly(event))}
+        />
       </div>
     </section>
   );
