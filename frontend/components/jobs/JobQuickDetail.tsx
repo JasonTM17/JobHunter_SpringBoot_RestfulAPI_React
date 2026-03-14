@@ -17,8 +17,9 @@ interface JobQuickDetailProps {
 export default function JobQuickDetail({ job }: JobQuickDetailProps) {
   if (!job) {
     return (
-      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-3.5">
-        <h2 className="text-sm font-bold text-slate-900">Chi tiết nhanh</h2>
+      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Chi tiết nhanh</p>
+        <h2 className="mt-1 text-base font-bold text-slate-900">Chưa chọn việc làm</h2>
         <p className="mt-1.5 text-[13px] leading-5 text-slate-500">Chọn một việc làm trong danh sách để xem thông tin tóm tắt.</p>
       </section>
     );
@@ -28,41 +29,42 @@ export default function JobQuickDetail({ job }: JobQuickDetailProps) {
   const skillNames = (job.skills ?? []).map((item) => item.name);
 
   return (
-    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-3.5">
-      <h2 className="text-sm font-bold text-slate-900">Chi tiết nhanh</h2>
+    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Chi tiết nhanh</p>
+      <h2 className="mt-1 text-base font-bold text-slate-900">{job.name}</h2>
 
-      <div className="mt-2.5 flex items-start gap-2.5">
+      <div className="mt-3 flex items-start gap-2.5">
         <CompanyLogo name={companyName} logo={job.company?.logo} size="md" />
         <div className="min-w-0">
-          <h3 className="line-clamp-2 break-words text-[15px] font-bold leading-tight text-slate-900">{job.name}</h3>
-          <p className="mt-0.5 break-words text-[13px] font-medium text-slate-600">{companyName}</p>
+          <p className="break-words text-[13px] font-semibold text-slate-700">{companyName}</p>
+          <p className="mt-1 text-[12px] text-slate-500">Đang xem nhanh thông tin tuyển dụng</p>
         </div>
       </div>
 
-      <dl className="mt-2.5 grid grid-cols-2 gap-1.5">
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+      <dl className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
           <dt className="text-[11px] text-slate-500">Mức lương</dt>
           <dd className="mt-0.5 break-words text-[13px] font-semibold text-slate-800">{formatCurrencyVnd(job.salary)}</dd>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
           <dt className="text-[11px] text-slate-500">Địa điểm</dt>
           <dd className="mt-0.5 break-words text-[13px] font-semibold text-slate-800">{formatLocationLabel(job.location)}</dd>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
           <dt className="text-[11px] text-slate-500">Cấp độ</dt>
           <dd className="mt-0.5 break-words text-[13px] font-semibold text-slate-800">{formatLevelLabel(job.level)}</dd>
         </div>
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
           <dt className="text-[11px] text-slate-500">Hạn nộp</dt>
           <dd className="mt-0.5 break-words text-[13px] font-semibold text-slate-800">{formatDateVi(job.endDate)}</dd>
         </div>
       </dl>
 
-      <p className="mt-2 line-clamp-4 break-words text-[13px] leading-5 text-slate-600">
-        {shortText(stripHtml(job.description), 160) || "Nhà tuyển dụng đang cập nhật nội dung công việc."}
+      <p className="mt-3 line-clamp-4 break-words text-[13px] leading-5 text-slate-600">
+        {shortText(stripHtml(job.description), 180) || "Nhà tuyển dụng đang cập nhật nội dung công việc."}
       </p>
 
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
+      <div className="mt-3 flex flex-wrap gap-1.5">
         {skillNames.length > 0 ? (
           skillNames.slice(0, 6).map((name) => (
             <span
@@ -80,7 +82,7 @@ export default function JobQuickDetail({ job }: JobQuickDetailProps) {
         )}
       </div>
 
-      <div className="mt-3 grid gap-1.5 sm:grid-cols-2">
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 min-[1440px]:grid-cols-1">
         <Link
           href={`/jobs/${job.id}`}
           className="rounded-xl bg-rose-600 px-3 py-2 text-center text-[12px] font-semibold text-white hover:bg-rose-700"
