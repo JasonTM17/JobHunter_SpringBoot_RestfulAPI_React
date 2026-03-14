@@ -17,7 +17,7 @@ interface JobQuickDetailProps {
 export default function JobQuickDetail({ job }: JobQuickDetailProps) {
   if (!job) {
     return (
-      <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+      <section className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Chi tiết nhanh</p>
         <h2 className="mt-1 text-base font-bold text-slate-900">Chưa chọn việc làm</h2>
         <p className="mt-1.5 text-[13px] leading-5 text-slate-500">Chọn một việc làm trong danh sách để xem thông tin tóm tắt.</p>
@@ -29,7 +29,7 @@ export default function JobQuickDetail({ job }: JobQuickDetailProps) {
   const skillNames = (job.skills ?? []).map((item) => item.name);
 
   return (
-    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+    <section className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Chi tiết nhanh</p>
       <h2 className="mt-1 text-base font-bold text-slate-900">{job.name}</h2>
 
@@ -41,7 +41,7 @@ export default function JobQuickDetail({ job }: JobQuickDetailProps) {
         </div>
       </div>
 
-      <dl className="mt-3 grid grid-cols-2 gap-2">
+      <dl className="mt-3 grid gap-2 sm:grid-cols-2 2xl:grid-cols-1">
         <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
           <dt className="text-[11px] text-slate-500">Mức lương</dt>
           <dd className="mt-0.5 break-words text-[13px] font-semibold text-slate-800">{formatCurrencyVnd(job.salary)}</dd>
@@ -82,7 +82,7 @@ export default function JobQuickDetail({ job }: JobQuickDetailProps) {
         )}
       </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-2 min-[1440px]:grid-cols-1">
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 2xl:grid-cols-1">
         <Link
           href={`/jobs/${job.id}`}
           className="rounded-xl bg-rose-600 px-3 py-2 text-center text-[12px] font-semibold text-white hover:bg-rose-700"

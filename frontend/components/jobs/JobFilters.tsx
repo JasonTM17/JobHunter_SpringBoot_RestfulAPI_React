@@ -71,16 +71,16 @@ export default function JobFilters({
         </div>
       </div>
 
-      <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-12">
         <input
-          className={`${controlClassName} md:col-span-2 lg:col-span-2`}
+          className={`${controlClassName} md:col-span-2 xl:col-span-6`}
           placeholder="Tìm theo vị trí, công ty, kỹ năng..."
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
         />
 
         <select
-          className={controlClassName}
+          className={`${controlClassName} xl:col-span-3`}
           value={location}
           onChange={(event) => onLocationChange(event.target.value)}
         >
@@ -93,7 +93,7 @@ export default function JobFilters({
         </select>
 
         <select
-          className={controlClassName}
+          className={`${controlClassName} xl:col-span-3`}
           value={level}
           onChange={(event) => onLevelChange(event.target.value)}
         >
@@ -106,7 +106,7 @@ export default function JobFilters({
         </select>
 
         <select
-          className={`${controlClassName} lg:col-span-2`}
+          className={`${controlClassName} md:col-span-2 xl:col-span-6`}
           value={skill}
           onChange={(event) => onSkillChange(event.target.value)}
         >
@@ -119,14 +119,14 @@ export default function JobFilters({
         </select>
 
         <input
-          className={controlClassName}
+          className={`${controlClassName} xl:col-span-3`}
           placeholder="Lương từ"
           value={salaryMin}
           inputMode="numeric"
           onChange={(event) => onSalaryMinChange(numericOnly(event))}
         />
         <input
-          className={controlClassName}
+          className={`${controlClassName} xl:col-span-3`}
           placeholder="Lương đến"
           value={salaryMax}
           inputMode="numeric"
