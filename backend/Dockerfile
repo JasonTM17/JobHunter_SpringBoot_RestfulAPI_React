@@ -18,8 +18,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /workspace/build/libs/*.jar /app/app.jar
+COPY storage/company /opt/bootstrap-storage/company
+COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN mkdir -p /app/storage /app/logs
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV SERVER_PORT=8080 \
     SPRING_PROFILES_ACTIVE=dev \
@@ -30,4 +33,4 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=5 \
     CMD curl -fsS "http://localhost:${SERVER_PORT}/actuator/health" || exit 1
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

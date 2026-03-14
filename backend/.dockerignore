@@ -3,7 +3,9 @@
 .gradle
 build
 logs
-storage
+storage/*
+!storage/company/
+!storage/company/**
 tmp
 temp
 
