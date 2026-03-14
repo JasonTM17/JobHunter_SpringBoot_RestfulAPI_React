@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
+import DashboardHero from "../components/common/DashboardHero";
 import EmptyState from "../components/common/EmptyState";
 import ErrorState from "../components/common/ErrorState";
 import LoadingState from "../components/common/LoadingState";
@@ -69,7 +70,7 @@ export default function CandidateWorkspacePage() {
 
   if (status === "loading") {
     return (
-      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <LoadingState title="Đang khởi tạo không gian ứng viên..." rows={4} />
       </main>
     );
@@ -77,7 +78,7 @@ export default function CandidateWorkspacePage() {
 
   if (status !== "authenticated") {
     return (
-      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <EmptyState
           title="Bạn cần đăng nhập để vào không gian ứng viên"
           description="Đăng nhập để xem hồ sơ đã ứng tuyển và theo dõi tiến trình tuyển dụng của bạn."
@@ -94,7 +95,7 @@ export default function CandidateWorkspacePage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <LoadingState title="Đang tải dữ liệu ứng viên..." rows={5} />
       </main>
     );
@@ -102,7 +103,7 @@ export default function CandidateWorkspacePage() {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <ErrorState description={error} onRetry={() => void loadData()} />
       </main>
     );
@@ -122,49 +123,37 @@ export default function CandidateWorkspacePage() {
   const reviewingCount = resumes.filter((item) => item.status?.toUpperCase() === "REVIEWING").length;
 
   return (
-    <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
-      <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-5 text-white shadow-soft sm:p-6">
-        <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
-          Không gian ứng viên
-        </p>
-        <h1 className="mt-3 text-3xl font-extrabold">Xin chào {currentUser?.name ?? "bạn"}!</h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-200">
-          Theo dõi trạng thái hồ sơ ứng tuyển, khám phá việc làm mới và cập nhật thông tin tài khoản để tăng cơ hội phù hợp.
-        </p>
+    <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+      <DashboardHero
+        eyebrow="Không gian ứng viên"
+        title={`Xin chào ${currentUser?.name ?? "bạn"}!`}
+        description="Theo dõi trạng thái hồ sơ ứng tuyển, khám phá việc làm mới và cập nhật thông tin tài khoản để tăng cơ hội phù hợp."
+        stats={[
+          { label: "Hồ sơ đã nộp", value: resumes.length, caption: "Tổng số hồ sơ của bạn" },
+          { label: "Đang xem xét", value: reviewingCount, caption: "Nhà tuyển dụng đang phản hồi" },
+          { label: "Đạt vòng", value: approvedCount, caption: "Các hồ sơ có tín hiệu tích cực" },
+          { label: "Việc làm mở", value: jobs.length, caption: "Các cơ hội đang active trên hệ thống" }
+        ]}
+        actions={
+          <>
+            <Link
+              href="/"
+              className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
+            >
+              Khám phá việc làm
+            </Link>
+            <Link
+              href="/account"
+              className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
+            >
+              Cập nhật tài khoản
+            </Link>
+          </>
+        }
+      />
 
-        <div className="mt-5 grid gap-2 sm:grid-cols-3">
-          <article className="rounded-2xl border border-white/20 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Hồ sơ đã nộp</p>
-            <p className="mt-1 text-2xl font-extrabold">{resumes.length}</p>
-          </article>
-          <article className="rounded-2xl border border-white/20 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Đang xem xét</p>
-            <p className="mt-1 text-2xl font-extrabold">{reviewingCount}</p>
-          </article>
-          <article className="rounded-2xl border border-white/20 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Đạt vòng</p>
-            <p className="mt-1 text-2xl font-extrabold">{approvedCount}</p>
-          </article>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Link
-            href="/"
-            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700"
-          >
-            Khám phá việc làm
-          </Link>
-          <Link
-            href="/account"
-            className="rounded-xl border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
-          >
-            Cập nhật tài khoản
-          </Link>
-        </div>
-      </section>
-
-      <section className="mt-3.5 grid gap-3 lg:grid-cols-[1.35fr,1fr]">
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+      <section className="mt-4 grid gap-4 lg:grid-cols-[1.35fr,1fr]">
+        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">Hồ sơ ứng tuyển gần đây</h2>
           <p className="mt-1 text-sm text-slate-600">
             Tất cả trạng thái trong danh sách này được lấy trực tiếp từ hồ sơ của bạn.
@@ -180,34 +169,39 @@ export default function CandidateWorkspacePage() {
               />
             </div>
           ) : (
-            <div className="mt-3 grid gap-2">
+            <div className="mt-4 grid gap-2.5">
               {latestApplications.slice(0, 8).map((item) => (
-                <article key={item.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <article key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-sm font-bold text-slate-900">{item.job?.name || "Tin tuyển dụng"}</h3>
-                      <p className="text-xs text-slate-500">{item.companyName || "Đang cập nhật công ty"}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{item.companyName || "Đang cập nhật công ty"}</p>
                     </div>
                     <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass(item.status)}`}>
                       {statusLabel(item.status)}
                     </span>
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">
-                    Ngày nộp: {formatDateVi(item.createdDate)}
-                  </p>
+                  <p className="mt-2 text-xs text-slate-500">Ngày nộp: {formatDateVi(item.createdDate)}</p>
                 </article>
               ))}
             </div>
           )}
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-          <h2 className="text-lg font-bold text-slate-900">Việc làm gợi ý</h2>
-          <p className="mt-1 text-sm text-slate-600">Một số vị trí đang tuyển nổi bật để bạn tham khảo nhanh.</p>
+        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Việc làm gợi ý</h2>
+              <p className="mt-1 text-sm text-slate-600">Một số vị trí đang tuyển nổi bật để bạn tham khảo nhanh.</p>
+            </div>
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+              {suggestedJobs.length} vị trí
+            </span>
+          </div>
 
-          <div className="mt-3 grid gap-2">
+          <div className="mt-4 grid gap-2.5">
             {suggestedJobs.map((job) => (
-              <article key={job.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <article key={job.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5">
                 <h3 className="text-sm font-bold text-slate-900">{job.name}</h3>
                 <p className="mt-1 text-xs text-slate-500">{job.company?.name || "Đang cập nhật công ty"}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
