@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import AuthShell from "../components/common/AuthShell";
 import { useAuth } from "../contexts/auth-context";
 import { registerAccount } from "../services/auth-rbac-api";
 import { RegisterPayload } from "../types/models";
@@ -90,35 +91,17 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="mx-auto grid min-h-[calc(100vh-72px)] w-full max-w-[1180px] items-center px-3 py-6 sm:px-4 md:py-10">
-      <section className="mx-auto grid w-full max-w-4xl overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-soft lg:grid-cols-[1.04fr,1fr]">
-        <aside className="hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-8 text-slate-100 lg:block">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-rose-100">
-            <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
-            Jobhunter
-          </div>
-          <h2 className="mt-6 text-3xl font-extrabold leading-tight">Tạo tài khoản mới để bắt đầu tìm việc dễ hơn</h2>
-          <p className="mt-4 text-sm leading-relaxed text-slate-200">
-            Bước đầu chỉ cần thông tin tài khoản cơ bản. Thông tin hồ sơ cá nhân có thể bổ sung sau để tối ưu gợi ý công việc.
-          </p>
-          <div className="mt-8 grid gap-3 text-sm">
-            <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
-              Duyệt việc làm theo kỹ năng, mức lương và khu vực chỉ trong vài giây.
-            </div>
-            <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
-              Theo dõi hồ sơ ứng tuyển và trạng thái phản hồi minh bạch theo thời gian thực.
-            </div>
-          </div>
-        </aside>
-
-        <article className="p-5 sm:p-7 lg:p-8">
-          <div className="mb-4 md:hidden">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-              <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
-              Jobhunter
-            </div>
-          </div>
-
+    <AuthShell
+      eyebrow="Tạo tài khoản"
+      asideTitle="Tạo tài khoản mới để bắt đầu tìm việc dễ hơn"
+      asideDescription="Bước đầu chỉ cần thông tin tài khoản cơ bản. Thông tin hồ sơ cá nhân có thể bổ sung sau để tối ưu gợi ý công việc."
+      highlights={[
+        "Duyệt việc làm theo kỹ năng, mức lương và khu vực chỉ trong vài giây.",
+        "Theo dõi hồ sơ ứng tuyển và trạng thái phản hồi minh bạch theo thời gian thực.",
+        "Hoàn thiện hồ sơ sau khi đăng ký mà không làm gián đoạn hành trình tìm việc."
+      ]}
+    >
+      <div className="max-w-lg">
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Tạo tài khoản Jobhunter</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             Nhập thông tin tài khoản để bắt đầu. Các mục hồ sơ nâng cao là tùy chọn.
@@ -257,8 +240,7 @@ export default function RegisterPage() {
               Đăng nhập ngay
             </Link>
           </p>
-        </article>
-      </section>
-    </main>
+      </div>
+    </AuthShell>
   );
 }
