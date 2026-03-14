@@ -6,6 +6,7 @@ import EmptyState from "../components/common/EmptyState";
 import ErrorState from "../components/common/ErrorState";
 import LoadingState from "../components/common/LoadingState";
 import ToastViewport, { ToastItem, ToastType } from "../components/common/ToastViewport";
+import FeaturedEmployersStrip from "../components/jobs/FeaturedEmployersStrip";
 import JobCard from "../components/jobs/JobCard";
 import JobFilters from "../components/jobs/JobFilters";
 import JobQuickDetail from "../components/jobs/JobQuickDetail";
@@ -366,7 +367,31 @@ export default function HomePage() {
   );
 
   const activeJobsCount = useMemo(() => jobs.filter((job) => job.active).length, [jobs]);
+  const activeJobsByCompanyId = useMemo(() => {
+    const countMap = new Map<number, number>();
+    jobs.forEach((job) => {
+      if (!job.active || !job.company?.id) return;
+      countMap.set(job.company.id, (countMap.get(job.company.id) ?? 0) + 1);
+    });
+    return countMap;
+  }, [jobs]);
   const isFilteringKeyword = keyword.trim().toLowerCase() !== deferredKeyword;
+  const featuredCompanies = useMemo(
+    () =>
+      companies
+        .map((company) => ({
+          company,
+          activeJobs: activeJobsByCompanyId.get(company.id) ?? 0
+        }))
+        .sort((a, b) => {
+          const logoDelta = Number(Boolean(b.company.logo)) - Number(Boolean(a.company.logo));
+          if (logoDelta !== 0) return logoDelta;
+          if (b.activeJobs !== a.activeJobs) return b.activeJobs - a.activeJobs;
+          return a.company.name.localeCompare(b.company.name);
+        })
+        .slice(0, 8),
+    [companies, activeJobsByCompanyId]
+  );
 
   const filteredJobs = useMemo(() => {
     const min = salaryMin ? Number(salaryMin) : null;
@@ -645,6 +670,8 @@ export default function HomePage() {
         <ErrorState description={error} onRetry={() => void loadPublicData()} />
       ) : tab === "browse" ? (
         <section className="grid grid-cols-1 gap-4">
+          <FeaturedEmployersStrip items={featuredCompanies} totalCompanies={companies.length} />
+
           <JobFilters
             keyword={keyword}
             location={location}
