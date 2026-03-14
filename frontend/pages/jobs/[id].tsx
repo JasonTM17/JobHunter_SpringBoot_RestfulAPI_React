@@ -127,7 +127,7 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4">
+      <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <LoadingState title="Đang tải chi tiết công việc..." rows={5} />
       </main>
     );
@@ -135,7 +135,7 @@ export default function JobDetailPage() {
 
   if (error || !job) {
     return (
-      <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4">
+      <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <ErrorState description={error || "Không tìm thấy dữ liệu công việc."} onRetry={() => void loadJob()} />
         <div className="mt-3">
           <Link
@@ -153,10 +153,17 @@ export default function JobDetailPage() {
   const safeDescription = sanitizeRichText(sections.description);
   const safeRequirements = sanitizeRichText(sections.requirements);
   const safeBenefits = sanitizeRichText(sections.benefits);
+  const skillNames = (job.skills ?? []).map((item) => item.name);
+  const heroMetaItems = [
+    formatLocationLabel(job.location),
+    formatLevelLabel(job.level),
+    `${job.quantity} vị trí`,
+    `Hạn nộp ${formatDateVi(job.endDate)}`
+  ];
 
   return (
-    <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4">
-      <header className="rounded-3xl border border-slate-700 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-5 text-white shadow-soft sm:p-6">
+    <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+      <header className="rounded-[28px] border border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-5 text-white shadow-soft sm:p-6 lg:p-7">
         <Link
           href="/"
           className="mb-3 inline-flex rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold text-slate-100 hover:bg-white/20"
@@ -164,52 +171,111 @@ export default function JobDetailPage() {
           Quay lại danh sách việc làm
         </Link>
 
-        <div className="flex flex-wrap items-start gap-4">
-          <CompanyLogo name={job.company?.name} logo={job.company?.logo} size="lg" className="border-white/20" />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-extrabold md:text-4xl">{job.name}</h1>
-            <p className="mt-1 text-sm font-semibold text-slate-200">{job.company?.name ?? "Đang cập nhật"}</p>
-            <p className="mt-2 text-sm text-slate-100">
-              {formatCurrencyVnd(job.salary)} • {formatLocationLabel(job.location)} • {formatLevelLabel(job.level)} •{" "}
-              {job.quantity} vị trí
-            </p>
-            <p className="mt-1 text-sm text-slate-200">Hạn nộp: {formatDateVi(job.endDate)}</p>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
+          <div className="min-w-0">
+            <div className="flex items-start gap-4">
+              <CompanyLogo
+                name={job.company?.name}
+                logo={job.company?.logo}
+                size="lg"
+                className="border-white/20 bg-white/95 shadow-sm"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Chi tiết tuyển dụng</p>
+                <h1 className="mt-2 text-2xl font-extrabold leading-tight md:text-4xl">{job.name}</h1>
+                <p className="mt-2 text-sm font-semibold text-slate-200">{job.company?.name ?? "Đang cập nhật"}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {heroMetaItems.map((item) => (
+                    <span
+                      key={`${job.id}-${item}`}
+                      className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+                {skillNames.length ? (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {skillNames.slice(0, 6).map((name) => (
+                      <span
+                        key={`${job.id}-hero-${name}`}
+                        className="rounded-full border border-emerald-300/30 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-100"
+                      >
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-2.5 rounded-2xl border border-white/15 bg-white/10 p-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Mức lương</p>
+              <p className="mt-2 break-words text-2xl font-extrabold text-white">{formatCurrencyVnd(job.salary)}</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+              <div className="rounded-xl border border-white/10 bg-slate-950/20 px-3 py-2">
+                <p className="text-[11px] text-slate-300">Địa điểm</p>
+                <p className="mt-1 text-sm font-semibold text-white">{formatLocationLabel(job.location)}</p>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-slate-950/20 px-3 py-2">
+                <p className="text-[11px] text-slate-300">Hạn nộp</p>
+                <p className="mt-1 text-sm font-semibold text-white">{formatDateVi(job.endDate)}</p>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      <section className="mt-3.5 grid gap-3 lg:grid-cols-[2fr,1fr]">
-        <article className="grid gap-3">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-            <h2 className="text-lg font-bold text-slate-900">Mô tả công việc</h2>
+      <section className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.7fr)_360px] xl:gap-5">
+        <article className="grid gap-4">
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Tổng quan
+              </span>
+              <h2 className="text-lg font-bold text-slate-900">Mô tả công việc</h2>
+            </div>
             {safeDescription ? (
-              <div className="job-richtext mt-3 text-sm text-slate-700" dangerouslySetInnerHTML={{ __html: safeDescription }} />
+              <div className="job-richtext mt-4 text-sm text-slate-700" dangerouslySetInnerHTML={{ __html: safeDescription }} />
             ) : (
-              <p className="mt-3 text-sm text-slate-500">Đang cập nhật mô tả.</p>
+              <p className="mt-4 text-sm text-slate-500">Đang cập nhật mô tả.</p>
             )}
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-            <h2 className="text-lg font-bold text-slate-900">Yêu cầu</h2>
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+                Phù hợp nếu
+              </span>
+              <h2 className="text-lg font-bold text-slate-900">Yêu cầu</h2>
+            </div>
             {safeRequirements ? (
-              <div className="job-richtext mt-3 text-sm text-slate-700" dangerouslySetInnerHTML={{ __html: safeRequirements }} />
+              <div className="job-richtext mt-4 text-sm text-slate-700" dangerouslySetInnerHTML={{ __html: safeRequirements }} />
             ) : (
-              <p className="mt-3 text-sm text-slate-500">Đang cập nhật yêu cầu.</p>
+              <p className="mt-4 text-sm text-slate-500">Đang cập nhật yêu cầu.</p>
             )}
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-            <h2 className="text-lg font-bold text-slate-900">Quyền lợi</h2>
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">
+                Giá trị nhận được
+              </span>
+              <h2 className="text-lg font-bold text-slate-900">Quyền lợi</h2>
+            </div>
             {safeBenefits ? (
-              <div className="job-richtext mt-3 text-sm text-slate-700" dangerouslySetInnerHTML={{ __html: safeBenefits }} />
+              <div className="job-richtext mt-4 text-sm text-slate-700" dangerouslySetInnerHTML={{ __html: safeBenefits }} />
             ) : (
-              <p className="mt-3 text-sm text-slate-500">Đang cập nhật quyền lợi.</p>
+              <p className="mt-4 text-sm text-slate-500">Đang cập nhật quyền lợi.</p>
             )}
           </section>
         </article>
 
-        <aside className="grid content-start gap-3 lg:sticky lg:top-20">
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+        <aside className="grid content-start gap-3 xl:sticky xl:top-24">
+          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
             <h2 className="text-base font-bold text-slate-900">Thông tin nhanh</h2>
             <p className="mt-2 text-sm text-slate-700">
               <strong>Công ty:</strong> {job.company?.name ?? "Đang cập nhật"}
@@ -231,16 +297,16 @@ export default function JobDetailPage() {
             </p>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
             <h2 className="text-base font-bold text-slate-900">Kỹ năng liên quan</h2>
             <div className="mt-3 flex flex-wrap gap-2">
-              {(job.skills ?? []).length > 0 ? (
-                (job.skills ?? []).map((item) => (
+              {skillNames.length > 0 ? (
+                skillNames.map((name) => (
                   <span
-                    key={`${job.id}-${item.id}`}
+                    key={`${job.id}-${name}`}
                     className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800"
                   >
-                    {item.name}
+                    {name}
                   </span>
                 ))
               ) : (
@@ -249,7 +315,7 @@ export default function JobDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft">
             <h2 className="text-base font-bold text-slate-900">Hành động</h2>
             <div className="mt-3 grid gap-2">
               <Link
