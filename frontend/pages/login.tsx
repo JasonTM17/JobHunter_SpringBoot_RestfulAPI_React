@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import AuthShell from "../components/common/AuthShell";
 import { useAuth } from "../contexts/auth-context";
 import { getPostLoginRedirect, resolveSafeNextPath } from "../utils/auth-redirect";
 
@@ -97,42 +98,17 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="mx-auto grid min-h-[calc(100vh-72px)] w-full max-w-[1180px] items-center px-3 py-6 sm:px-4 md:py-10">
-      <section className="mx-auto grid w-full max-w-4xl overflow-hidden rounded-[26px] border border-slate-200 bg-white/95 shadow-soft backdrop-blur lg:grid-cols-[1.05fr,1fr]">
-        <aside className="relative hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-8 text-slate-100 lg:block">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-rose-100">
-            <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
-            Jobhunter
-          </div>
-
-          <h2 className="mt-5 text-[30px] font-extrabold leading-tight">
-            Chào mừng bạn quay lại với hành trình nghề nghiệp của mình
-          </h2>
-          <p className="mt-4 text-sm leading-relaxed text-slate-200">
-            Đăng nhập để theo dõi việc làm phù hợp, cập nhật hồ sơ và kết nối nhanh hơn với nhà tuyển dụng.
-          </p>
-
-          <div className="mt-8 grid gap-3 text-sm">
-            <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
-              Gợi ý việc làm theo kỹ năng, khu vực và cấp độ phù hợp.
-            </div>
-            <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
-              Quản lý hồ sơ ứng tuyển gọn gàng, rõ ràng, dễ theo dõi.
-            </div>
-            <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
-              Trải nghiệm tuyển dụng hiện đại, minh bạch và đáng tin cậy.
-            </div>
-          </div>
-        </aside>
-
-        <article className="p-5 sm:p-7 lg:p-8">
-          <div className="mb-5 md:hidden">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-              <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
-              Jobhunter
-            </div>
-          </div>
-
+    <AuthShell
+      eyebrow="Đăng nhập tài khoản"
+      asideTitle="Chào mừng bạn quay lại với hành trình nghề nghiệp của mình"
+      asideDescription="Đăng nhập để theo dõi việc làm phù hợp, cập nhật hồ sơ và kết nối nhanh hơn với nhà tuyển dụng."
+      highlights={[
+        "Gợi ý việc làm theo kỹ năng, khu vực và cấp độ phù hợp.",
+        "Quản lý hồ sơ ứng tuyển gọn gàng, rõ ràng, dễ theo dõi.",
+        "Trải nghiệm tuyển dụng hiện đại, minh bạch và đáng tin cậy."
+      ]}
+    >
+      <div className="max-w-md">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Đăng nhập vào Jobhunter</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             Tiếp tục với tài khoản của bạn để theo dõi việc làm phù hợp và quản lý hồ sơ ứng tuyển thuận tiện hơn.
@@ -206,8 +182,7 @@ export default function LoginPage() {
               Tạo tài khoản
             </Link>
           </p>
-        </article>
-      </section>
-    </main>
+      </div>
+    </AuthShell>
   );
 }
