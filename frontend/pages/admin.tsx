@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
+import DashboardHero from "../components/common/DashboardHero";
 import EmptyState from "../components/common/EmptyState";
 import ErrorState from "../components/common/ErrorState";
 import LoadingState from "../components/common/LoadingState";
@@ -79,7 +80,7 @@ export default function AdminWorkspacePage() {
 
   if (status === "loading") {
     return (
-      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <LoadingState title="Đang khởi tạo khu quản trị..." rows={4} />
       </main>
     );
@@ -87,7 +88,7 @@ export default function AdminWorkspacePage() {
 
   if (status !== "authenticated") {
     return (
-      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <EmptyState
           title="Bạn cần đăng nhập để vào khu quản trị"
           description="Vui lòng đăng nhập bằng tài khoản quản trị để truy cập các công cụ vận hành hệ thống."
@@ -104,7 +105,7 @@ export default function AdminWorkspacePage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <LoadingState title="Đang tải số liệu quản trị..." rows={5} />
       </main>
     );
@@ -112,82 +113,79 @@ export default function AdminWorkspacePage() {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <ErrorState description={error} onRetry={() => void loadData()} />
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-[1240px] px-3 py-5 sm:px-4">
-      <section className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-5 text-white shadow-soft sm:p-6">
-        <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
-          Khu quản trị hệ thống
-        </p>
-        <h1 className="mt-3 text-3xl font-extrabold">Bảng điều hành quản trị</h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-200">
-          Theo dõi nhanh trạng thái nền tảng và truy cập các nhóm chức năng vận hành người dùng, dữ liệu tuyển dụng và quy trình hồ sơ.
-        </p>
-
-        <div className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <article className="rounded-2xl border border-white/20 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Việc làm</p>
-            <p className="mt-1 text-2xl font-extrabold">{stats.jobs}</p>
-            <p className="text-xs text-slate-200">{stats.activeJobs} tin đang tuyển</p>
-          </article>
-          <article className="rounded-2xl border border-white/20 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Doanh nghiệp</p>
-            <p className="mt-1 text-2xl font-extrabold">{stats.companies}</p>
-            <p className="text-xs text-slate-200">Đang hiện trên cổng việc làm</p>
-          </article>
-          <article className="rounded-2xl border border-white/20 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Kỹ năng</p>
-            <p className="mt-1 text-2xl font-extrabold">{stats.skills}</p>
-            <p className="text-xs text-slate-200">Phục vụ tìm kiếm và lọc</p>
-          </article>
-          <article className="rounded-2xl border border-white/20 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Tài khoản</p>
-            <p className="mt-1 text-2xl font-extrabold">{stats.users ?? "Không có quyền"}</p>
-            <p className="text-xs text-slate-200">Theo quyền hiện tại</p>
-          </article>
-          <article className="rounded-2xl border border-white/20 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Hồ sơ ứng tuyển</p>
-            <p className="mt-1 text-2xl font-extrabold">{stats.resumes ?? "Không có quyền"}</p>
-            <p className="text-xs text-slate-200">Theo quyền hiện tại</p>
-          </article>
-        </div>
-      </section>
-
-      <section className="mt-3.5 grid gap-3 md:grid-cols-2">
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
-          <h2 className="text-lg font-bold text-slate-900">Điều hướng quản trị</h2>
-          <p className="mt-1 text-sm text-slate-600">
-            Truy cập nhanh vào khu thao tác quản lý dữ liệu và phân quyền.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+    <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+      <DashboardHero
+        eyebrow="Khu quản trị hệ thống"
+        title="Bảng điều hành quản trị"
+        description="Theo dõi nhanh trạng thái nền tảng và truy cập các nhóm chức năng vận hành người dùng, dữ liệu tuyển dụng và quy trình hồ sơ."
+        stats={[
+          { label: "Việc làm", value: stats.jobs, caption: `${stats.activeJobs} tin đang tuyển` },
+          { label: "Doanh nghiệp", value: stats.companies, caption: "Đang hiển thị trên cổng việc làm" },
+          { label: "Kỹ năng", value: stats.skills, caption: "Phục vụ tìm kiếm và lọc" },
+          { label: "Tài khoản", value: stats.users ?? "Không có quyền", caption: "Theo phạm vi quyền hiện tại" }
+        ]}
+        actions={
+          <>
             <Link
               href="/?tab=manage&module=users"
-              className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+              className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-100"
             >
               Mở cổng quản trị chi tiết
             </Link>
             <button
               type="button"
               onClick={() => void loadData()}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+              className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/20"
             >
               Làm mới số liệu
             </button>
+          </>
+        }
+      />
+
+      <section className="mt-4 grid gap-4 md:grid-cols-2">
+        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <h2 className="text-lg font-bold text-slate-900">Điều hướng quản trị</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Truy cập nhanh vào khu thao tác quản lý dữ liệu và phân quyền.
+          </p>
+          <div className="mt-4 grid gap-2">
+            <Link
+              href="/?tab=manage&module=users"
+              className="rounded-xl bg-slate-900 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              Mở cổng quản trị chi tiết
+            </Link>
+            <Link
+              href="/?tab=manage&module=roles"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              Xem vai trò và quyền
+            </Link>
           </div>
         </article>
 
-        <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-soft">
+        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">Kiểm soát truy cập</h2>
           <p className="mt-1 text-sm text-slate-600">
             Mọi thao tác tạo, sửa, xóa tiếp tục được kiểm tra quyền tại backend trước khi xử lý.
           </p>
-          <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-            Không sử dụng quyền từ frontend để cấp phép thao tác. Backend luôn là nguồn xác thực cuối cùng.
+          <div className="mt-4 grid gap-2.5">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-700">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Nguồn sự thật cuối cùng</span>
+              <span className="mt-1 block">Backend luôn là lớp xác thực và kiểm tra quyền quyết định.</span>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-sm text-slate-700">
+              <span className="block text-xs font-semibold uppercase tracking-wide text-slate-500">Số liệu hồ sơ</span>
+              <span className="mt-1 block">{stats.resumes ?? "Không có quyền truy cập dữ liệu hồ sơ ở tài khoản này."}</span>
+            </div>
           </div>
         </article>
       </section>
