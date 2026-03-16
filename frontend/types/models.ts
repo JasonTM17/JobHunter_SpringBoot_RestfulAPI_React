@@ -184,7 +184,7 @@ export interface ResumeItem extends BaseAudit {
   id: number;
   email: string;
   url: string;
-  status: ResumeStatus | string;
+  status: ResumeStatus;
   companyName?: string | null;
   user?: ResumeUserRef | null;
   job?: ResumeJobRef | null;
@@ -193,7 +193,7 @@ export interface ResumeItem extends BaseAudit {
 export interface ResumeCreatePayload {
   email: string;
   url: string;
-  status: ResumeStatus | string;
+  status: ResumeStatus;
   user: { id: number };
   job: { id: number };
 }
