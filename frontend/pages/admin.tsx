@@ -150,7 +150,7 @@ export default function AdminWorkspacePage() {
         }
       />
 
-      <section className="mt-4 grid gap-4 md:grid-cols-2">
+      <section className="mt-4 grid items-start gap-4 md:grid-cols-[minmax(0,1.05fr)_0.95fr]">
         <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">Điều hướng quản trị</h2>
           <p className="mt-1 text-sm text-slate-600">
