@@ -13,6 +13,23 @@ import { toUserErrorMessage } from "../utils/error-message";
 import { formatDateVi } from "../utils/format";
 import { canAccessRecruiterWorkspace } from "../utils/workspace";
 
+function statusLabel(status: string): string {
+  const normalized = (status || "").toUpperCase();
+  if (normalized === "PENDING") return "Đang chờ";
+  if (normalized === "REVIEWING") return "Đang xem xét";
+  if (normalized === "APPROVED") return "Đạt";
+  if (normalized === "REJECTED") return "Từ chối";
+  return "Đang xử lý";
+}
+
+function statusClass(status: string): string {
+  const normalized = (status || "").toUpperCase();
+  if (normalized === "APPROVED") return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (normalized === "REJECTED") return "border-rose-200 bg-rose-50 text-rose-700";
+  if (normalized === "REVIEWING") return "border-sky-200 bg-sky-50 text-sky-700";
+  return "border-amber-200 bg-amber-50 text-amber-700";
+}
+
 function statusCount(resumes: ResumeItem[], value: string): number {
   return resumes.filter((item) => item.status?.toUpperCase() === value).length;
 }
@@ -145,7 +162,7 @@ export default function RecruiterWorkspacePage() {
         }
       />
 
-      <section className="mt-4 grid gap-4 lg:grid-cols-[1.3fr,1fr]">
+      <section className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1.3fr)_360px]">
         <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">Luồng hồ sơ gần đây</h2>
           <p className="mt-1 text-sm text-slate-600">
@@ -168,10 +185,10 @@ export default function RecruiterWorkspacePage() {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <h3 className="text-sm font-bold text-slate-900">{resume.job?.name || "Tin tuyển dụng"}</h3>
-                      <p className="mt-0.5 text-xs text-slate-500">{resume.email}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{resume.email || "—"}</p>
                     </div>
-                    <span className="rounded-full border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700">
-                      {resume.status}
+                    <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${statusClass(resume.status)}`}>
+                      {statusLabel(resume.status)}
                     </span>
                   </div>
                   <p className="mt-2 text-xs text-slate-500">
