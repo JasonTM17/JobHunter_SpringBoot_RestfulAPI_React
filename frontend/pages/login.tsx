@@ -156,12 +156,9 @@ export default function LoginPage() {
             </label>
 
             <div className="mt-0.5 flex items-center justify-end">
-              <a
-                href="mailto:support@jobhunter.local"
-                className="text-xs font-medium text-slate-500 transition hover:text-rose-700 hover:underline"
-              >
-                Quên mật khẩu?
-              </a>
+              <span className="text-xs text-slate-400">
+                Quên mật khẩu? Liên hệ quản trị viên.
+              </span>
             </div>
 
             <button
