@@ -175,7 +175,7 @@ export default function AccountPage() {
               Theo dõi nhanh thông tin hồ sơ, phạm vi quyền hiện tại và các cài đặt ảnh hưởng trực tiếp tới trải nghiệm nhận việc làm phù hợp.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100">
+              <span className="max-w-full break-all rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100">
                 {currentUser.email}
               </span>
               <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100">
@@ -184,6 +184,21 @@ export default function AccountPage() {
               <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100">
                 {permissionCount} khóa quyền
               </span>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <article className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Vai trò</p>
+                <p className="mt-1 text-base font-bold text-white">{roleName ?? "Chưa gán"}</p>
+              </article>
+              <article className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Mức truy cập</p>
+                <p className="mt-1 text-base font-bold text-white">{levelText(permissionCount)}</p>
+              </article>
+              <article className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Email gợi ý</p>
+                <p className="mt-1 text-base font-bold text-white">{weeklyEmailEnabled ? "Đã bật" : "Đang tắt"}</p>
+              </article>
             </div>
           </div>
 
@@ -225,7 +240,7 @@ export default function AccountPage() {
             </article>
             <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</p>
-              <p className="mt-1 text-base font-bold text-slate-900 break-words">{currentUser.email}</p>
+              <p className="mt-1 break-all text-base font-bold text-slate-900">{currentUser.email}</p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Vai trò</p>
