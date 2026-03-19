@@ -46,6 +46,17 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=sha,prefix=
+          flavors: |
+            latest=true
+          flavor:
+            match: |
+              .*
+          labels: |
+            org.opencontainers.image.title=Jobhunter Backend API
+            org.opencontainers.image.description=Jobhunter REST API backend — Spring Boot 3.x với JWT authentication, role-based access control, và đầy đủ CRUD cho jobs, companies, skills, resumes, users, permissions.
+            org.opencontainers.image.source=https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.vendor=Jobhunter
 
       - name: Docker metadata (frontend)
         id: meta-frontend
@@ -56,6 +67,12 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=sha,prefix=
+          labels: |
+            org.opencontainers.image.title=Jobhunter Frontend Web
+            org.opencontainers.image.description=Jobhunter frontend — Next.js 15 với TypeScript, TailwindCSS, role-based routing, job search, AI chatbot assistant, và responsive ITviec-style UI.
+            org.opencontainers.image.source=https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.vendor=Jobhunter
 
       # ── Backend image ──────────────────────────────────
       - name: Build and push backend
