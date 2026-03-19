@@ -33,21 +33,56 @@ services:
       - path: ./.env
         required: false
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev,docker}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
       SERVER_PORT: 8080
+
+      # Database — use compose service name for internal connectivity.
       DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-jobhunter}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       DB_USERNAME: ${MYSQL_USER:-jobhunter}
       DB_PASSWORD: ${MYSQL_PASSWORD:-jobhunter}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001}
-      JWT_BASE64_SECRET: ${JWT_BASE64_SECRET:-g/AYKfaK6dDKXZFgopotLApRTC79KZo9uIWfWCXH/bKPDt3TgG4jEX5Dm+hboY2TJmEuyVPXbSrNpvgD/SGu4A==}
-      SON_JPA_DDL_AUTO: ${SON_JPA_DDL_AUTO:-update}
-      JOBHUNTER_SEED_ENABLED: ${JOBHUNTER_SEED_ENABLED:-true}
+
+      # Flyway — enabled for MySQL; Hibernate ddl-auto=none lets Flyway own schema.
+      FLYWAY_ENABLED: ${FLYWAY_ENABLED:-true}
+      SON_JPA_DDL_AUTO: ${SON_JPA_DDL_AUTO:-none}
+
+      # Admin bootstrap — MUST be set in .env for production.
+      JOBHUNTER_BOOTSTRAP_ADMIN_EMAIL: ${JOBHUNTER_BOOTSTRAP_ADMIN_EMAIL}
+      JOBHUNTER_BOOTSTRAP_ADMIN_PASSWORD: ${JOBHUNTER_BOOTSTRAP_ADMIN_PASSWORD}
+      JOBHUNTER_BOOTSTRAP_ADMIN_NAME: ${JOBHUNTER_BOOTSTRAP_ADMIN_NAME:-Super Admin}
+      JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED: ${JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED:-true}
+
+      # JWT — MUST be set in .env for production. No insecure defaults here.
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://your-domain.com}
+      JWT_BASE64_SECRET: ${JWT_BASE64_SECRET:?JWT_BASE64_SECRET must be set in .env for production}
+      JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-900}
+      JWT_REFRESH_TOKEN_TTL: ${JWT_REFRESH_TOKEN_TTL:-604800}
+      JWT_COOKIE_SECURE: ${JWT_COOKIE_SECURE:-true}
+      JWT_COOKIE_SAME_SITE: ${JWT_COOKIE_SAME_SITE:-Strict}
+
+      # Seed — disabled in production unless explicitly enabled.
+      JOBHUNTER_SEED_ENABLED: ${JOBHUNTER_SEED_ENABLED:-false}
+
+      # Upload / storage.
       UPLOAD_BASE_URI: ${UPLOAD_BASE_URI:-file:///app/storage/}
       UPLOAD_MAX_SIZE_BYTES: ${UPLOAD_MAX_SIZE_BYTES:-5242880}
       UPLOAD_MAX_FILE_SIZE: ${UPLOAD_MAX_FILE_SIZE:-10MB}
       UPLOAD_MAX_REQUEST_SIZE: ${UPLOAD_MAX_REQUEST_SIZE:-10MB}
-      MAIL_TEMPLATE_PORTAL_URL: ${MAIL_TEMPLATE_PORTAL_URL:-http://localhost:3001}
+
+      # Mail.
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      MAIL_TEMPLATE_PORTAL_URL: ${MAIL_TEMPLATE_PORTAL_URL:-https://your-domain.com}
       MANAGEMENT_HEALTH_MAIL_ENABLED: ${MANAGEMENT_HEALTH_MAIL_ENABLED:-false}
+
+      # Scheduler — disabled by default in production.
+      JOBHUNTER_SCHEDULER_ENABLED: ${JOBHUNTER_SCHEDULER_ENABLED:-false}
+      JOBHUNTER_MAIL_CRON_ENABLED: ${JOBHUNTER_MAIL_CRON_ENABLED:-false}
+      JOBHUNTER_WEEKLY_RECOMMENDATION_ENABLED: ${JOBHUNTER_WEEKLY_RECOMMENDATION_ENABLED:-false}
+      JOBHUNTER_LOG_CLEANUP_ENABLED: ${JOBHUNTER_LOG_CLEANUP_ENABLED:-false}
+
+      # Actuator health + Prometheus metrics.
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:-health,info,prometheus,metrics}
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: ${MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS:-never}
+      MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: ${MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED:-true}
     depends_on:
       db:
         condition: service_healthy
@@ -70,8 +105,8 @@ services:
     container_name: jobhunter-frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8080}
-      NEXT_PUBLIC_STORAGE_BASE_URL: ${NEXT_PUBLIC_STORAGE_BASE_URL:-http://localhost:8080}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://your-domain.com}
+      NEXT_PUBLIC_STORAGE_BASE_URL: ${NEXT_PUBLIC_STORAGE_BASE_URL:-https://your-domain.com}
       INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8080}
       INTERNAL_STORAGE_BASE_URL: ${INTERNAL_STORAGE_BASE_URL:-http://backend:8080}
       NODE_ENV: production
