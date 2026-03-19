@@ -2,6 +2,7 @@ package com.vn.son.jobhunter.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,24 @@ public class DatabaseInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RecruitmentDemoDataSeeder recruitmentDemoDataSeeder;
+
+    @Value("${jobhunter.bootstrap.admin.enabled:true}")
+    private boolean bootstrapAdminEnabled;
+
+    @Value("${jobhunter.bootstrap.admin.email:admin@jobhunter.local}")
+    private String bootstrapAdminEmail;
+
+    @Value("${jobhunter.bootstrap.admin.password:changeme}")
+    private String bootstrapAdminPassword;
+
+    @Value("${jobhunter.bootstrap.admin.name:Super Admin}")
+    private String bootstrapAdminName;
+
+    @Value("${jobhunter.bootstrap.admin.address:HN}")
+    private String bootstrapAdminAddress;
+
+    @Value("${jobhunter.bootstrap.admin.age:30}")
+    private int bootstrapAdminAge;
 
     @Override
     public void run(String... args) throws Exception {
@@ -117,13 +136,15 @@ public class DatabaseInitializer implements CommandLineRunner {
             if (superAdminRole.getDescription() == null || superAdminRole.getDescription().isBlank()) {
                 superAdminRole.setDescription("Super admin has full permissions");
             }
-            // Always re-sync permissions to avoid stale data and avoid lazy-read side effects during bootstrap.
             superAdminRole.setPermissions(allPermissions);
             superAdminRole = this.roleRepository.save(superAdminRole);
         }
 
-        ensureBootstrapAdminUser("admin@gmail.com", "I'm super admin", superAdminRole);
-        ensureBootstrapAdminUser("superadmin@jobhunter.local", "Super Admin Jobhunter", superAdminRole);
+        if (bootstrapAdminEnabled) {
+            ensureBootstrapAdminUser(bootstrapAdminEmail, bootstrapAdminName, superAdminRole);
+        } else {
+            log.info("Admin bootstrap is disabled via jobhunter.bootstrap.admin.enabled=false");
+        }
     }
 
     private void ensureBootstrapAdminUser(String email, String name, Role superAdminRole) {
@@ -131,19 +152,21 @@ public class DatabaseInitializer implements CommandLineRunner {
         if (existing == null) {
             User adminUser = new User();
             adminUser.setEmail(email);
-            adminUser.setAddress("HN");
-            adminUser.setAge(30);
+            adminUser.setAddress(bootstrapAdminAddress);
+            adminUser.setAge(bootstrapAdminAge);
             adminUser.setGender(GenderEnum.MALE);
             adminUser.setName(name);
-            adminUser.setPassword(this.passwordEncoder.encode("123456"));
+            adminUser.setPassword(this.passwordEncoder.encode(bootstrapAdminPassword));
             adminUser.setRole(superAdminRole);
             this.userRepository.save(adminUser);
+            log.info("Bootstrap admin created: {}", email);
             return;
         }
 
         if (existing.getRole() == null || !Objects.equals(existing.getRole().getId(), superAdminRole.getId())) {
             existing.setRole(superAdminRole);
             this.userRepository.save(existing);
+            log.info("Bootstrap admin role updated for: {}", email);
         }
     }
 
