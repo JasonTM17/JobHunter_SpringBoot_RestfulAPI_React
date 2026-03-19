@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { startTransition, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import FloatingChatWidget from "../components/chat/FloatingChatWidget";
 import CompanyLogo from "../components/common/CompanyLogo";
 import EmptyState from "../components/common/EmptyState";
@@ -102,6 +102,9 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const companiesSectionRef = useRef<HTMLDivElement>(null);
+  const jobsSectionRef = useRef<HTMLElement>(null);
 
   const deferredKeyword = useDeferredValue(keyword.trim().toLowerCase());
   const workspace = useMemo(
@@ -489,6 +492,16 @@ export default function HomePage() {
     setCurrentPage(1);
   }
 
+  function handleViewAllCompanies() {
+    companiesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function handleSelectCompany(company: Company) {
+    startTransition(() => setKeyword(company.name));
+    setCurrentPage(1);
+    setTimeout(() => jobsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  }
+
   function changeMainTab(nextTab: MainTab, module?: ManageModule) {
     if (nextTab === "manage" && !canAccessManagement) {
       addToast("error", "Bạn chưa có quyền truy cập khu vực quản trị.");
@@ -566,62 +579,106 @@ export default function HomePage() {
     <main className="mx-auto w-full max-w-[1180px] px-4 pb-24 pt-4 sm:px-5 xl:px-6">
       <ToastViewport toasts={toasts} onDismiss={removeToast} />
 
-      <header className="mb-3 rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-4 text-white shadow-soft sm:p-5">
-        <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
-          <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
-          Jobhunter
+      <header className="mb-5 rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 text-white shadow-soft sm:p-6 lg:p-7">
+        {/* Eyebrow label */}
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3.5 py-1.5 text-xs font-semibold text-rose-300">
+          <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
+          Việc làm IT dành cho bạn
         </div>
-        <h1 className="text-[27px] font-extrabold leading-tight sm:text-3xl lg:text-[34px]">
-          Nền tảng việc làm công nghệ dành cho ứng viên tại Việt Nam
+
+        {/* Headline */}
+        <h1 className="text-[26px] font-extrabold leading-tight tracking-tight sm:text-[30px] lg:text-[36px]">
+          Tìm việc IT phù hợp
+          <br />
+          <span className="brand-gradient">Nhanh hơn mọi nơi</span>
         </h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-200 md:text-[15px]">
-          Tìm vị trí phù hợp theo kỹ năng, mức lương và khu vực. Xem thông tin tuyển dụng rõ ràng, ứng tuyển nhanh và theo dõi cơ hội mới mỗi ngày.
+
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-[15px]">
+          Khám phá hàng trăm vị trí tuyển dụng từ các công ty công nghệ hàng đầu. Ứng tuyển dễ dàng, nhận phản hồi nhanh chóng.
         </p>
 
-        <div className="mt-3.5 grid gap-2 sm:grid-cols-3">
-          <article className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Việc đang tuyển</p>
-            <p className="mt-1 text-xl font-extrabold sm:text-2xl">{renderPublicStat(activeJobsCount)}</p>
-          </article>
-          <article className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Doanh nghiệp</p>
-            <p className="mt-1 text-xl font-extrabold sm:text-2xl">{renderPublicStat(companies.length)}</p>
-          </article>
-          <article className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3">
-            <p className="text-xs uppercase tracking-wide text-slate-200">Kỹ năng nổi bật</p>
-            <p className="mt-1 text-xl font-extrabold sm:text-2xl">{renderPublicStat(skills.length)}</p>
-          </article>
+        {/* Stats bar — ITviec style */}
+        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-3 sm:gap-4">
+          {[
+            {
+              icon: (
+                <svg className="h-5 w-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              ),
+              value: activeJobsCount,
+              label: "Việc đang tuyển",
+              fallback: "—"
+            },
+            {
+              icon: (
+                <svg className="h-5 w-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              ),
+              value: companies.length,
+              label: "Doanh nghiệp",
+              fallback: "—"
+            },
+            {
+              icon: (
+                <svg className="h-5 w-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              ),
+              value: skills.length,
+              label: "Kỹ năng",
+              fallback: "—"
+            }
+          ].map((stat, i) => (
+            <div key={i} className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/5 p-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                {stat.icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[17px] font-extrabold leading-none sm:text-xl">
+                  {loading ? stat.fallback : error ? stat.fallback : stat.value}
+                </p>
+                <p className="mt-0.5 truncate text-[11px] font-medium text-slate-300">{stat.label}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        {/* CTAs */}
+        <div className="mt-5 flex flex-wrap items-center gap-2.5">
           <button
             type="button"
             onClick={() => changeMainTab("browse")}
-            className="rounded-xl bg-rose-600 px-3.5 py-2 text-[13px] font-semibold text-white hover:bg-rose-700 sm:text-sm"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-rose-500/30 transition hover:from-rose-700 hover:to-pink-600 hover:shadow-xl"
           >
-            Khám phá việc làm
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            Tìm việc ngay
           </button>
+
           {authStatus === "authenticated" ? (
             <>
               <button
                 type="button"
                 onClick={() => void router.push(workspaceHref)}
-                className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
               >
                 {workspaceLabel}
               </button>
               <button
                 type="button"
                 onClick={() => void router.push("/account")}
-                className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
               >
-                Thông tin tài khoản
+                Tài khoản
               </button>
               {canAccessManagement ? (
                 <button
                   type="button"
                   onClick={() => changeMainTab("manage", manageModuleQuery ?? defaultManageModule)}
-                  className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
                 >
                   {manageCtaLabel}
                 </button>
@@ -632,16 +689,16 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => void router.push(`/login?next=${encodeURIComponent(router.asPath || "/")}`)}
-                className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
               >
-                Đăng nhập để ứng tuyển
+                Đăng nhập
               </button>
               <button
                 type="button"
                 onClick={() => void router.push(`/register?next=${encodeURIComponent(router.asPath || "/")}`)}
-                className="rounded-xl border border-white/30 bg-white/10 px-3.5 py-2 text-[13px] font-semibold text-slate-100 hover:bg-white/20 sm:text-sm"
+                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
               >
-                Tạo tài khoản
+                Đăng ký
               </button>
             </>
           )}
@@ -681,7 +738,12 @@ export default function HomePage() {
         <ErrorState description={error} onRetry={() => void loadPublicData()} />
       ) : tab === "browse" ? (
         <section className="grid grid-cols-1 gap-4">
-          <FeaturedEmployersStrip items={featuredCompanies} totalCompanies={companies.length} />
+          <FeaturedEmployersStrip
+            items={featuredCompanies}
+            totalCompanies={companies.length}
+            onViewAllCompanies={handleViewAllCompanies}
+            onSelectCompany={handleSelectCompany}
+          />
 
           <JobFilters
             keyword={keyword}
@@ -705,7 +767,10 @@ export default function HomePage() {
           />
 
           <section className="grid min-w-0 grid-cols-1 items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
-            <section className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-4">
+            <section
+              ref={jobsSectionRef}
+              className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-4"
+            >
               <div className="mb-3 flex flex-wrap items-end justify-between gap-2.5">
                 <div>
                   <h2 className="text-[17px] font-bold text-slate-900">Việc làm phù hợp</h2>
@@ -782,6 +847,53 @@ export default function HomePage() {
             </aside>
           </section>
 
+          {companies.length > 0 ? (
+            <section
+              ref={companiesSectionRef}
+              id="companies"
+              className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4"
+              aria-labelledby="companies-heading"
+            >
+              <h2 id="companies-heading" className="sr-only">
+                Tất cả doanh nghiệp
+              </h2>
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-500">
+                    Xem chi tiết từng doanh nghiệp
+                  </p>
+                  <h3 className="mt-1 text-base font-bold text-slate-900">Tất cả {companies.length} công ty</h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Bấm vào công ty để xem việc làm đang tuyển của công ty đó.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {rankedCompanies.map(({ company, activeJobs }) => (
+                  <button
+                    key={company.id}
+                    type="button"
+                    onClick={() => handleSelectCompany(company)}
+                    className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-rose-200 hover:bg-rose-50/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200"
+                  >
+                    <CompanyLogo name={company.name} logo={company.logo} size="sm" className="shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="line-clamp-2 text-sm font-semibold text-slate-800">{company.name}</h4>
+                        <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                          {activeJobs} vị trí
+                        </span>
+                      </div>
+                      <p className="mt-2 line-clamp-2 text-xs text-slate-500">
+                        {company.address || "Đang cập nhật địa chỉ"}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
+
           {secondaryCompanies.length ? (
             <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
               <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -800,9 +912,11 @@ export default function HomePage() {
               </div>
               <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {secondaryCompanies.map(({ company, activeJobs }) => (
-                  <article
+                  <button
                     key={company.id}
-                    className="min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 transition hover:border-slate-300 hover:bg-slate-50"
+                    type="button"
+                    onClick={() => handleSelectCompany(company)}
+                    className="min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-rose-200 hover:bg-rose-50/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200"
                   >
                     <div className="flex items-start gap-2.5">
                       <CompanyLogo name={company.name} logo={company.logo} size="sm" className="shrink-0" />
@@ -818,7 +932,7 @@ export default function HomePage() {
                         </p>
                       </div>
                     </div>
-                  </article>
+                  </button>
                 ))}
               </div>
             </section>
