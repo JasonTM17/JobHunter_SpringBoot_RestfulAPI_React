@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -129,10 +130,47 @@ export default function CandidateWorkspacePage() {
         title={`Xin chào ${currentUser?.name ?? "bạn"}!`}
         description="Theo dõi trạng thái hồ sơ ứng tuyển, khám phá việc làm mới và cập nhật thông tin tài khoản để tăng cơ hội phù hợp."
         stats={[
-          { label: "Hồ sơ đã nộp", value: resumes.length, caption: "Tổng số hồ sơ của bạn" },
-          { label: "Đang xem xét", value: reviewingCount, caption: "Nhà tuyển dụng đang phản hồi" },
-          { label: "Đạt vòng", value: approvedCount, caption: "Các hồ sơ có tín hiệu tích cực" },
-          { label: "Việc làm mở", value: jobs.length, caption: "Các cơ hội đang active trên hệ thống" }
+          {
+            label: "Hồ sơ đã nộp",
+            value: resumes.length,
+            caption: "Tổng số hồ sơ của bạn",
+            icon: (
+              <svg className="h-4 w-4 text-rose-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            )
+          },
+          {
+            label: "Đang xem xét",
+            value: reviewingCount,
+            caption: "Nhà tuyển dụng đang phản hồi",
+            icon: (
+              <svg className="h-4 w-4 text-sky-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            )
+          },
+          {
+            label: "Đạt vòng",
+            value: approvedCount,
+            caption: "Các hồ sơ có tín hiệu tích cực",
+            icon: (
+              <svg className="h-4 w-4 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )
+          },
+          {
+            label: "Việc làm mở",
+            value: jobs.length,
+            caption: "Các cơ hội đang active trên hệ thống",
+            icon: (
+              <svg className="h-4 w-4 text-rose-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            )
+          }
         ]}
         actions={
           <>

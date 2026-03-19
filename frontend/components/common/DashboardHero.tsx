@@ -4,6 +4,7 @@ interface DashboardHeroStat {
   label: string;
   value: string | number;
   caption?: string;
+  icon?: ReactNode;
 }
 
 interface DashboardHeroProps {
@@ -31,10 +32,17 @@ export default function DashboardHero({
 
       <div className="mt-5 grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((item) => (
-          <article key={item.label} className="rounded-2xl border border-white/20 bg-white/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-slate-200">{item.label}</p>
-            <p className="mt-1 text-2xl font-extrabold">{item.value}</p>
-            {item.caption ? <p className="mt-1 text-xs text-slate-200">{item.caption}</p> : null}
+          <article key={item.label} className="flex items-start gap-3 rounded-2xl border border-white/20 bg-white/10 p-4">
+            {item.icon ? (
+              <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                {item.icon}
+              </div>
+            ) : null}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs uppercase tracking-wide text-slate-200">{item.label}</p>
+              <p className="mt-1 text-2xl font-extrabold">{item.value}</p>
+              {item.caption ? <p className="mt-1 text-xs text-slate-200">{item.caption}</p> : null}
+            </div>
           </article>
         ))}
       </div>
