@@ -1,3 +1,4 @@
+import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -81,22 +82,28 @@ export default function RecruiterWorkspacePage() {
 
   if (status === "loading") {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <LoadingState title="Đang khởi tạo không gian tuyển dụng..." rows={4} />
-      </main>
+      <>
+        <Head><title>Không gian tuyển dụng — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <LoadingState title="Đang khởi tạo không gian tuyển dụng..." rows={4} />
+        </main>
+      </>
     );
   }
 
   if (status !== "authenticated") {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+      <>
+        <Head><title>Không gian tuyển dụng — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <EmptyState
           title="Bạn cần đăng nhập để vào khu tuyển dụng"
           description="Đăng nhập bằng tài khoản tuyển dụng để quản lý tin tuyển và theo dõi hồ sơ ứng viên."
           actionLabel="Đăng nhập"
           onAction={() => void router.push(loginHref)}
         />
-      </main>
+        </main>
+      </>
     );
   }
 
@@ -106,17 +113,23 @@ export default function RecruiterWorkspacePage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <LoadingState title="Đang tải dữ liệu tuyển dụng..." rows={5} />
-      </main>
+      <>
+        <Head><title>Không gian tuyển dụng — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <LoadingState title="Đang tải dữ liệu tuyển dụng..." rows={5} />
+        </main>
+      </>
     );
   }
 
   if (error) {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <ErrorState description={error} onRetry={() => void loadData()} />
-      </main>
+      <>
+        <Head><title>Không gian tuyển dụng — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <ErrorState description={error} onRetry={() => void loadData()} />
+        </main>
+      </>
     );
   }
 
@@ -131,7 +144,9 @@ export default function RecruiterWorkspacePage() {
   });
 
   return (
-    <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+    <>
+      <Head><title>Không gian tuyển dụng — Jobhunter</title></Head>
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
       <DashboardHero
         eyebrow="Không gian tuyển dụng"
         title="Bảng điều phối tuyển dụng"
@@ -279,5 +294,6 @@ export default function RecruiterWorkspacePage() {
         </article>
       </section>
     </main>
+    </>
   );
 }

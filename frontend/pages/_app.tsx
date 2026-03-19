@@ -1,5 +1,6 @@
 import type { AppProps } from "next/app";
 import Head from "next/head";
+import ErrorBoundary from "../components/common/ErrorBoundary";
 import AppHeader from "../components/layout/AppHeader";
 import SiteFooter from "../components/layout/SiteFooter";
 import { AuthProvider } from "../contexts/auth-context";
@@ -16,7 +17,9 @@ export default function App({ Component, pageProps }: AppProps) {
       <div className="min-h-screen flex flex-col">
         <AppHeader />
         <main className="flex-1">
-          <Component {...pageProps} />
+          <ErrorBoundary>
+            <Component {...pageProps} />
+          </ErrorBoundary>
         </main>
         <SiteFooter />
       </div>

@@ -8,9 +8,9 @@ const FOOTER_LINKS = {
     { label: "Việc làm theo mức lương", href: "/" }
   ],
   côngTy: [
-    { label: "Danh sách công ty", href: "/?tab=browse" },
-    { label: "Nhà tuyển dụng nổi bật", href: "/?tab=browse" },
-    { label: "Công ty IT hàng đầu", href: "/?tab=browse" }
+    { label: "Danh sách công ty", href: "/" },
+    { label: "Nhà tuyển dụng nổi bật", href: "/" },
+    { label: "Công ty IT hàng đầu", href: "/" }
   ],
   ứngViên: [
     { label: "Tạo tài khoản", href: "/register" },
@@ -19,10 +19,10 @@ const FOOTER_LINKS = {
     { label: "Trợ lý AI", href: "/chatbot" }
   ],
   hỗTrợ: [
-    { label: "Câu hỏi thường gặp", href: "/#faq" },
-    { label: "Chính sách bảo mật", href: "/#privacy" },
-    { label: "Điều khoản sử dụng", href: "/#terms" },
-    { label: "Liên hệ hỗ trợ", href: "/#contact" }
+    { label: "Câu hỏi thường gặp", href: "/support#faq" },
+    { label: "Chính sách bảo mật", href: "/support#privacy" },
+    { label: "Điều khoản sử dụng", href: "/support#terms" },
+    { label: "Liên hệ hỗ trợ", href: "/support#contact" }
   ]
 };
 

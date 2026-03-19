@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -71,22 +72,28 @@ export default function CandidateWorkspacePage() {
 
   if (status === "loading") {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <LoadingState title="Đang khởi tạo không gian ứng viên..." rows={4} />
-      </main>
+      <>
+        <Head><title>Không gian ứng viên — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <LoadingState title="Đang khởi tạo không gian ứng viên..." rows={4} />
+        </main>
+      </>
     );
   }
 
   if (status !== "authenticated") {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+      <>
+        <Head><title>Không gian ứng viên — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <EmptyState
           title="Bạn cần đăng nhập để vào không gian ứng viên"
           description="Đăng nhập để xem hồ sơ đã ứng tuyển và theo dõi tiến trình tuyển dụng của bạn."
           actionLabel="Đăng nhập"
           onAction={() => void router.push(loginHref)}
         />
-      </main>
+        </main>
+      </>
     );
   }
 
@@ -96,17 +103,23 @@ export default function CandidateWorkspacePage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <LoadingState title="Đang tải dữ liệu ứng viên..." rows={5} />
-      </main>
+      <>
+        <Head><title>Không gian ứng viên — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <LoadingState title="Đang tải dữ liệu ứng viên..." rows={5} />
+        </main>
+      </>
     );
   }
 
   if (error) {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <ErrorState description={error} onRetry={() => void loadData()} />
-      </main>
+      <>
+        <Head><title>Không gian ứng viên — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <ErrorState description={error} onRetry={() => void loadData()} />
+        </main>
+      </>
     );
   }
 
@@ -124,7 +137,9 @@ export default function CandidateWorkspacePage() {
   const reviewingCount = resumes.filter((item) => item.status?.toUpperCase() === "REVIEWING").length;
 
   return (
-    <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+    <>
+      <Head><title>Không gian ứng viên — Jobhunter</title></Head>
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
       <DashboardHero
         eyebrow="Không gian ứng viên"
         title={`Xin chào ${currentUser?.name ?? "bạn"}!`}
@@ -269,5 +284,6 @@ export default function CandidateWorkspacePage() {
         </article>
       </section>
     </main>
+    </>
   );
 }

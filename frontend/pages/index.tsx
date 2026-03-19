@@ -1,5 +1,6 @@
+import Head from "next/head";
 import { useRouter } from "next/router";
-import { startTransition, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import FloatingChatWidget from "../components/chat/FloatingChatWidget";
 import CompanyLogo from "../components/common/CompanyLogo";
 import EmptyState from "../components/common/EmptyState";
@@ -105,6 +106,9 @@ export default function HomePage() {
 
   const companiesSectionRef = useRef<HTMLDivElement>(null);
   const jobsSectionRef = useRef<HTMLElement>(null);
+  const secondaryCompaniesScrollRef = useRef<HTMLDivElement>(null);
+  const [secondaryScrollLeft, setSecondaryScrollLeft] = useState(false);
+  const [secondaryScrollRight, setSecondaryScrollRight] = useState(false);
 
   const deferredKeyword = useDeferredValue(keyword.trim().toLowerCase());
   const workspace = useMemo(
@@ -502,6 +506,25 @@ export default function HomePage() {
     setTimeout(() => jobsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
   }
 
+  const updateSecondaryScrollState = useCallback(() => {
+    const el = secondaryCompaniesScrollRef.current;
+    if (!el) return;
+    setSecondaryScrollLeft(el.scrollLeft > 4);
+    setSecondaryScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }, []);
+
+  function scrollSecondaryBy(direction: -1 | 1) {
+    const el = secondaryCompaniesScrollRef.current;
+    if (!el) return;
+    const cardWidth = 220 + 10; // min-w-[220px] + gap-2.5
+    el.scrollBy({ left: cardWidth * 3 * direction, behavior: "smooth" });
+    setTimeout(updateSecondaryScrollState, 350);
+  }
+
+  useEffect(() => {
+    if (secondaryCompanies.length) updateSecondaryScrollState();
+  }, [secondaryCompanies.length, updateSecondaryScrollState]);
+
   function changeMainTab(nextTab: MainTab, module?: ManageModule) {
     if (nextTab === "manage" && !canAccessManagement) {
       addToast("error", "Bạn chưa có quyền truy cập khu vực quản trị.");
@@ -576,7 +599,11 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1180px] px-4 pb-24 pt-4 sm:px-5 xl:px-6">
+    <>
+      <Head>
+        <title>Việc làm IT — Jobhunter</title>
+      </Head>
+      <main className="mx-auto w-full max-w-[1180px] px-4 pb-24 pt-4 sm:px-5 xl:px-6">
       <ToastViewport toasts={toasts} onDismiss={removeToast} />
 
       <header className="mb-5 rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 text-white shadow-soft sm:p-6 lg:p-7">
@@ -911,7 +938,7 @@ export default function HomePage() {
           ) : null}
 
           {secondaryCompanies.length ? (
-            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
               <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -922,17 +949,47 @@ export default function HomePage() {
                     Ngoài nhóm nổi bật phía trên, đây là những doanh nghiệp cũng đang tuyển dụng tích cực.
                   </p>
                 </div>
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-                  {secondaryCompanies.length} công ty
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+                    {secondaryCompanies.length} công ty
+                  </span>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      aria-label="Cuộn sang trái"
+                      onClick={() => scrollSecondaryBy(-1)}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={!secondaryScrollLeft}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Cuộn sang phải"
+                      onClick={() => scrollSecondaryBy(1)}
+                      disabled={!secondaryScrollRight}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                        <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div
+                ref={secondaryCompaniesScrollRef}
+                onScroll={updateSecondaryScrollState}
+                className="flex gap-2.5 overflow-x-auto pb-1 scroll-snap-x scroll-snap-mandatory [scroll-behavior:smooth] [scrollbar-width:thin] [scrollbar-color:theme(colors.slate.300)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
+              >
                 {secondaryCompanies.map(({ company, activeJobs }) => (
                   <button
                     key={company.id}
                     type="button"
                     onClick={() => handleSelectCompany(company)}
-                    className="min-w-[220px] rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-rose-200 hover:bg-rose-50/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200"
+                    className="min-w-[220px] shrink-0 snap-start rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-rose-200 hover:bg-rose-50/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200"
                   >
                     <div className="flex items-start gap-2.5">
                       <CompanyLogo name={company.name} logo={company.logo} size="sm" className="shrink-0" />
@@ -1058,5 +1115,6 @@ export default function HomePage() {
 
       {tab === "browse" ? <FloatingChatWidget /> : null}
     </main>
+    </>
   );
 }
