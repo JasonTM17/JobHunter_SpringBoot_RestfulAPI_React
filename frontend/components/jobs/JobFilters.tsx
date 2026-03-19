@@ -47,7 +47,7 @@ export default function JobFilters({
   onReset
 }: JobFiltersProps) {
   const controlClassName =
-    "min-w-0 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-[13px] text-slate-700 transition focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200";
+    "min-w-0 flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-[13px] text-slate-700 transition focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200 sm:flex-none";
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-3.5">
@@ -71,16 +71,21 @@ export default function JobFilters({
         </div>
       </div>
 
-      <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-12">
+      {/* Keyword — full width on all screen sizes */}
+      <div className="mb-2.5">
         <input
-          className={`${controlClassName} md:col-span-2 xl:col-span-6`}
+          className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 text-[13px] text-slate-700 transition focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200 sm:text-[14px]"
           placeholder="Tìm theo vị trí, công ty, kỹ năng..."
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
         />
+      </div>
 
+      {/* Dropdown row — responsive flex layout */}
+      <div className="flex flex-wrap gap-2">
         <select
-          className={`${controlClassName} xl:col-span-3`}
+          className={controlClassName}
+          style={{ minWidth: "140px", flex: "1 1 140px" }}
           value={location}
           onChange={(event) => onLocationChange(event.target.value)}
         >
@@ -93,7 +98,8 @@ export default function JobFilters({
         </select>
 
         <select
-          className={`${controlClassName} xl:col-span-3`}
+          className={controlClassName}
+          style={{ minWidth: "140px", flex: "1 1 140px" }}
           value={level}
           onChange={(event) => onLevelChange(event.target.value)}
         >
@@ -106,7 +112,8 @@ export default function JobFilters({
         </select>
 
         <select
-          className={`${controlClassName} md:col-span-2 xl:col-span-6`}
+          className={controlClassName}
+          style={{ minWidth: "140px", flex: "2 2 200px" }}
           value={skill}
           onChange={(event) => onSkillChange(event.target.value)}
         >
@@ -117,21 +124,30 @@ export default function JobFilters({
             </option>
           ))}
         </select>
+      </div>
 
-        <input
-          className={`${controlClassName} xl:col-span-3`}
-          placeholder="Lương từ"
-          value={salaryMin}
-          inputMode="numeric"
-          onChange={(event) => onSalaryMinChange(numericOnly(event))}
-        />
-        <input
-          className={`${controlClassName} xl:col-span-3`}
-          placeholder="Lương đến"
-          value={salaryMax}
-          inputMode="numeric"
-          onChange={(event) => onSalaryMaxChange(numericOnly(event))}
-        />
+      {/* Salary range row */}
+      <div className="mt-2 flex flex-wrap gap-2">
+        <div className="relative" style={{ minWidth: "120px", flex: "1 1 120px" }}>
+          <input
+            className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 pr-16 text-[13px] text-slate-700 transition focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            placeholder="Lương từ"
+            value={salaryMin}
+            inputMode="numeric"
+            onChange={(event) => onSalaryMinChange(numericOnly(event))}
+          />
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">VNĐ</span>
+        </div>
+        <div className="relative" style={{ minWidth: "120px", flex: "1 1 120px" }}>
+          <input
+            className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2.5 pr-16 text-[13px] text-slate-700 transition focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-200"
+            placeholder="Lương đến"
+            value={salaryMax}
+            inputMode="numeric"
+            onChange={(event) => onSalaryMaxChange(numericOnly(event))}
+          />
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-400">VNĐ</span>
+        </div>
       </div>
     </section>
   );
