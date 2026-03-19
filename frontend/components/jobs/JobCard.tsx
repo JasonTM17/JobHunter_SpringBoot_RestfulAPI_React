@@ -26,8 +26,8 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
     <article
       className={
         selected
-          ? "min-w-0 overflow-hidden rounded-2xl border border-rose-200 bg-white p-3 ring-1 ring-rose-100 transition"
-          : "min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md"
+          ? "min-h-[160px] rounded-2xl border border-rose-200 bg-white p-3 ring-1 ring-rose-100"
+          : "group relative min-h-[160px] rounded-2xl border border-slate-200 bg-white p-3"
       }
       onClick={() => onSelect(job.id)}
       role="button"
@@ -40,7 +40,12 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
         }
       }}
     >
-      <div className="grid gap-2.5 sm:grid-cols-[auto_minmax(0,1fr)]">
+      {/* Hover overlay uses box-shadow (no layout shift) */}
+      {!selected && (
+        <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100" />
+      )}
+
+      <div className="grid min-h-[140px] gap-2.5 sm:grid-cols-[auto_minmax(0,1fr)]">
         <div className="sm:pt-0.5">
           <CompanyLogo name={job.company?.name} logo={job.company?.logo} size="sm" />
         </div>
@@ -93,7 +98,7 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
           className={
             selected
               ? "shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100"
-              : "shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-100"
+              : "shrink-0 rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:border-slate-400 hover:bg-slate-50"
           }
           onClick={(event) => event.stopPropagation()}
         >
