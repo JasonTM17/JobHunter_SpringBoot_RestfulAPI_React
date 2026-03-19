@@ -72,7 +72,7 @@ public class SecurityConfiguration {
                         authz -> authz
                                 .requestMatchers(whiteList).permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/prometheus", "/actuator/metrics/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/companies/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/v1/skills/**").permitAll()
