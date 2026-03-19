@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { Company } from "../../types/models";
 import { shortText, stripHtml } from "../../utils/format";
 import CompanyLogo from "../common/CompanyLogo";
+import EmptyState from "../common/EmptyState";
 
 interface FeaturedEmployerItem {
   company: Company;
@@ -11,6 +12,7 @@ interface FeaturedEmployerItem {
 interface FeaturedEmployersStripProps {
   items: FeaturedEmployerItem[];
   totalCompanies: number;
+  loading?: boolean;
   onViewAllCompanies?: () => void;
   onSelectCompany?: (company: Company) => void;
 }
@@ -21,6 +23,7 @@ const CARD_GAP = 12;
 export default function FeaturedEmployersStrip({
   items,
   totalCompanies,
+  loading = false,
   onViewAllCompanies,
   onSelectCompany
 }: FeaturedEmployersStripProps) {
@@ -44,7 +47,63 @@ export default function FeaturedEmployersStrip({
     setTimeout(updateScrollState, 350);
   }
 
-  if (!items.length) return null;
+  // Loading skeleton — shown while companies are being fetched
+  if (loading) {
+    return (
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-card sm:p-4">
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <div className="mb-1 h-3 w-20 animate-pulse rounded-full bg-slate-200" />
+            <div className="mb-1 mt-1 h-5 w-52 animate-pulse rounded-full bg-slate-200" />
+            <div className="mt-1 h-3 w-72 animate-pulse rounded-full bg-slate-200" />
+          </div>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="w-60 shrink-0 animate-pulse rounded-2xl border border-slate-200 bg-slate-50 p-3.5"
+            >
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="h-10 w-10 rounded-xl bg-slate-200" />
+                <div className="h-5 w-14 rounded-full bg-slate-200" />
+              </div>
+              <div className="mb-2 h-4 w-3/4 animate-pulse rounded-full bg-slate-200" />
+              <div className="mb-1 h-3 w-1/2 animate-pulse rounded-full bg-slate-200" />
+              <div className="mt-3 h-3 w-full animate-pulse rounded-full bg-slate-200" />
+              <div className="mt-1 h-3 w-5/6 animate-pulse rounded-full bg-slate-200" />
+              <div className="mt-1 h-3 w-2/3 animate-pulse rounded-full bg-slate-200" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // No companies at all — show meaningful empty state instead of silent nothing
+  if (!items.length) {
+    return (
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-card sm:p-4">
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-rose-500">Doanh nghiệp tiêu biểu</p>
+            <h2 className="mt-1 text-lg font-extrabold text-slate-900">Nhà tuyển dụng nổi bật</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Những doanh nghiệp đang tuyển dụng tích cực và đáng chú ý trên hệ thống.
+            </p>
+          </div>
+        </div>
+        <EmptyState
+          title="Chưa có doanh nghiệp nào"
+          description={
+            totalCompanies > 0
+              ? "Không có công ty nào đủ điều kiện hiển thị tại mục nổi bật."
+              : "Hệ thống hiện chưa có doanh nghiệp nào. Hãy quay lại sau!"
+          }
+        />
+      </section>
+    );
+  }
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-card sm:p-4">
@@ -163,8 +222,7 @@ export default function FeaturedEmployersStrip({
           );
 
           const cardClass =
-            "group relative flex shrink-0 flex-col rounded-2xl border border-slate-200 bg-white p-3.5 text-left transition-all hover:border-rose-200 hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-rose-300 min-w-0";
-          const cardStyle = { width: CARD_MIN_WIDTH, scrollSnapAlign: "start" as const };
+            "group relative flex w-60 shrink-0 snap-start flex-col rounded-2xl border border-slate-200 bg-white p-3.5 text-left transition-all hover:border-rose-200 hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-rose-300 min-w-0";
 
           if (onSelectCompany) {
             return (
@@ -173,7 +231,6 @@ export default function FeaturedEmployersStrip({
                 type="button"
                 onClick={() => onSelectCompany(company)}
                 className={`cursor-pointer ${cardClass}`}
-                style={cardStyle}
                 aria-label={`Xem việc làm tại ${company.name}`}
               >
                 {cardContent}
@@ -182,7 +239,7 @@ export default function FeaturedEmployersStrip({
           }
 
           return (
-            <article key={company.id} className={cardClass} style={cardStyle}>
+            <article key={company.id} className={cardClass}>
               {cardContent}
             </article>
           );

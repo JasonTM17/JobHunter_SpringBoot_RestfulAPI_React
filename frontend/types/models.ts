@@ -223,7 +223,7 @@ export interface JobUpsertPayload {
 }
 
 export interface CompanyUpsertPayload {
-  id: number;
+  id?: number;
   name: string;
   address: string;
   description: string;
