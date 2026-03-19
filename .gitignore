@@ -42,6 +42,9 @@ out/
 .env
 .env.local
 .env.hub
+.env.hub.example
+cookies.txt
+*.session
 
 ### Runtime logs ###
 *.log
