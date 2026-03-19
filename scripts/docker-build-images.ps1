@@ -1,6 +1,6 @@
 param(
-    [Parameter(Mandatory = $true)]
-    [string]$DockerhubUsername,
+    # Để trống = build local: jobhunter-backend:tag và jobhunter-frontend:tag
+    [string]$DockerhubUsername = "",
 
     [string]$ImageTag = "latest",
 
@@ -19,8 +19,14 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $backendContext = Join-Path $repoRoot "backend"
 $frontendContext = Join-Path $repoRoot "frontend"
 
-$backendImage = "$DockerhubUsername/jobhunter-backend:$ImageTag"
-$frontendImage = "$DockerhubUsername/jobhunter-frontend:$ImageTag"
+if ([string]::IsNullOrWhiteSpace($DockerhubUsername)) {
+    $backendImage = "jobhunter-backend:$ImageTag"
+    $frontendImage = "jobhunter-frontend:$ImageTag"
+}
+else {
+    $backendImage = "$DockerhubUsername/jobhunter-backend:$ImageTag"
+    $frontendImage = "$DockerhubUsername/jobhunter-frontend:$ImageTag"
+}
 
 $commonBuildArgs = @()
 if ($NoCache) {
@@ -44,8 +50,14 @@ docker build @commonBuildArgs `
     $frontendContext
 
 if ($AlsoTagLatest -and $ImageTag -ne "latest") {
-    $backendLatest = "$DockerhubUsername/jobhunter-backend:latest"
-    $frontendLatest = "$DockerhubUsername/jobhunter-frontend:latest"
+    if ([string]::IsNullOrWhiteSpace($DockerhubUsername)) {
+        $backendLatest = "jobhunter-backend:latest"
+        $frontendLatest = "jobhunter-frontend:latest"
+    }
+    else {
+        $backendLatest = "$DockerhubUsername/jobhunter-backend:latest"
+        $frontendLatest = "$DockerhubUsername/jobhunter-frontend:latest"
+    }
 
     Write-Host "Tagging backend image: $backendImage -> $backendLatest"
     docker tag $backendImage $backendLatest

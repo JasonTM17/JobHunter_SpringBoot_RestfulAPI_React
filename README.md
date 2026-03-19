@@ -306,45 +306,80 @@ Coverage threshold hiện tại: 30% (branches, functions, lines, statements)
 
 ## Docker — Build và Push lên Docker Hub
 
-### Cách 1: Dùng script có sẵn
+**Yêu cầu:** Docker Engine / Docker Desktop đang chạy.
+
+### Cách 1: `docker compose` (image tên cố định)
+
+Tạo image `jobhunter-backend:latest` và `jobhunter-frontend:latest`:
 
 ```bash
-# Build (đặt DOCKERHUB_USERNAME trong .env trước)
-npm run docker:build-images
+# Đa nền tảng (Node/npm)
+npm run docker:build
 
-# Push
-npm run docker:push-images
+# Hoặc trực tiếp
+docker compose build backend frontend
 ```
 
-### Cách 2: Thủ công
+Đổi tên image (ví dụ chuẩn bị push Hub) — trong `.env` hoặc export trước khi build:
 
 ```bash
-# === BUILD & TAG ===
-docker build -t jobhunter-backend ./backend \
-  --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 \
-  --build-arg NEXT_PUBLIC_STORAGE_BASE_URL=http://localhost:8080
-
-docker build -t jobhunter-frontend ./frontend \
-  --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 \
-  --build-arg NEXT_PUBLIC_STORAGE_BASE_URL=http://localhost:8080
-
-# === TAG ===
-docker tag jobhunter-backend:latest nguyenson1710/jobhunter-backend:latest
-docker tag jobhunter-frontend:latest nguyenson1710/jobhunter-frontend:latest
-
-# === PUSH ===
-docker push nguyenson1710/jobhunter-backend:latest
-docker push nguyenson1710/jobhunter-frontend:latest
+export BACKEND_IMAGE=yourdockerhub/jobhunter-backend:v1.0.0
+export FRONTEND_IMAGE=yourdockerhub/jobhunter-frontend:v1.0.0
+docker compose build backend frontend
 ```
 
-### Cách 3: Tag version cụ thể
+### Cách 2: Script PowerShell (Windows)
+
+```powershell
+# Local (không cần Docker Hub username)
+.\scripts\docker-build-images.ps1
+
+# Tag theo namespace Docker Hub + version
+.\scripts\docker-build-images.ps1 -DockerhubUsername "yourdockerhub" -ImageTag "v1.0.0"
+```
+
+Push (sau khi `docker login`):
+
+```powershell
+.\scripts\docker-push-images.ps1 -DockerhubUsername "yourdockerhub" -ImageTags @("v1.0.0","latest")
+```
+
+### Cách 3: Script Bash (Linux/macOS)
+
+```bash
+chmod +x scripts/docker-build-images.sh
+./scripts/docker-build-images.sh                    # local tags
+./scripts/docker-build-images.sh yourdockerhub v1.0.0
+```
+
+### Cách 4: Thủ công từng image
+
+```bash
+# Backend (không cần build-arg Next)
+docker build -t jobhunter-backend:latest ./backend
+
+# Frontend (build-time env cho browser)
+docker build -t jobhunter-frontend:latest ./frontend \
+  --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 \
+  --build-arg NEXT_PUBLIC_STORAGE_BASE_URL=http://localhost:8080 \
+  --build-arg INTERNAL_API_BASE_URL=http://backend:8080 \
+  --build-arg INTERNAL_STORAGE_BASE_URL=http://backend:8080
+
+# Tag + push Docker Hub
+docker tag jobhunter-backend:latest yourdockerhub/jobhunter-backend:latest
+docker tag jobhunter-frontend:latest yourdockerhub/jobhunter-frontend:latest
+docker push yourdockerhub/jobhunter-backend:latest
+docker push yourdockerhub/jobhunter-frontend:latest
+```
+
+### Tag thêm version rồi push
 
 ```bash
 VERSION=v1.0.0
-docker tag jobhunter-backend:latest nguyenson1710/jobhunter-backend:$VERSION
-docker tag jobhunter-frontend:latest nguyenson1710/jobhunter-frontend:$VERSION
-docker push nguyenson1710/jobhunter-backend:$VERSION
-docker push nguyenson1710/jobhunter-frontend:$VERSION
+docker tag jobhunter-backend:latest yourdockerhub/jobhunter-backend:$VERSION
+docker tag jobhunter-frontend:latest yourdockerhub/jobhunter-frontend:$VERSION
+docker push yourdockerhub/jobhunter-backend:$VERSION
+docker push yourdockerhub/jobhunter-frontend:$VERSION
 ```
 
 ---

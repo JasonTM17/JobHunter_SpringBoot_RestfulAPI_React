@@ -26,6 +26,7 @@ services:
       - jobhunter-net
 
   backend:
+    image: ${BACKEND_IMAGE:-jobhunter-backend:latest}
     container_name: jobhunter-backend
     build:
       context: ./backend
@@ -103,6 +104,7 @@ services:
       - jobhunter-net
 
   frontend:
+    image: ${FRONTEND_IMAGE:-jobhunter-frontend:latest}
     container_name: jobhunter-frontend
     build:
       context: ./frontend
