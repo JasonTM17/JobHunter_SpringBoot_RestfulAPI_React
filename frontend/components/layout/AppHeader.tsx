@@ -25,8 +25,8 @@ function getInitials(name?: string | null): string {
 
 function navClass(active: boolean): string {
   return active
-    ? "rounded-full bg-slate-900 px-3 py-1.5 text-[11px] font-semibold text-white sm:text-xs"
-    : "rounded-full px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 sm:text-xs";
+    ? "rounded-full bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm"
+    : "rounded-full px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900";
 }
 
 function workspaceLabel(kind: WorkspaceKind): string {
@@ -102,6 +102,19 @@ export default function AppHeader() {
     setMenuOpen(false);
   }, [router.asPath]);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      if (!target.closest("[data-user-menu]")) {
+        setMenuOpen(false);
+      }
+    }
+    if (menuOpen) {
+      document.addEventListener("click", handleClickOutside);
+    }
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [menuOpen]);
+
   async function handleLogout() {
     await logout();
     setMenuOpen(false);
@@ -127,110 +140,179 @@ export default function AppHeader() {
           ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex w-full max-w-[1180px] items-center justify-between gap-2 px-4 py-2.5 sm:px-5 xl:px-6">
-        <div className="flex items-center gap-2">
-          <Link href="/" className="inline-flex items-center gap-2 rounded-full px-2 py-1 hover:bg-slate-100">
-            <img src="/favicon.svg" alt="Jobhunter" className="h-5 w-5 sm:h-6 sm:w-6" />
-            <span className="text-sm font-extrabold text-slate-900 md:text-base">Jobhunter</span>
+    <header className="sticky top-0 z-40">
+      {/* ── Top brand strip ─────────────────────────────── */}
+      <div className="bg-gradient-to-r from-rose-600 via-rose-500 to-pink-500 px-4 py-1.5 text-center text-xs font-semibold tracking-wide text-white shadow-sm">
+        <span className="hidden sm:inline">
+          Tìm việc IT nhanh hơn cùng Jobhunter — hơn 95 việc làm đang tuyển
+        </span>
+        <span className="inline sm:hidden">Jobhunter — Việc làm IT cho mọi cấp độ</span>
+      </div>
+
+      {/* ── Main header ───────────────────────────────── */}
+      <div className="border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
+        <div className="mx-auto flex w-full max-w-[1200px] items-center justify-between gap-3 px-4 py-3 sm:px-5 lg:px-6">
+          {/* Brand — favicon.svg (mark J + accent) + wordmark như bản gốc */}
+          <Link
+            href="/"
+            className="flex shrink-0 items-center gap-2 rounded-full px-2 py-1 hover:bg-slate-100 sm:gap-2.5"
+            aria-label="Jobhunter — Trang chủ"
+          >
+            <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100 sm:h-10 sm:w-10">
+              <img src="/favicon.svg" alt="" className="h-full w-full object-cover" width={40} height={40} />
+            </span>
+            <span className="text-sm font-extrabold tracking-tight text-slate-900 sm:text-base">Jobhunter</span>
           </Link>
 
-          <nav className="hidden items-center gap-1 lg:flex">
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-1.5 lg:flex">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={navClass(item.active)}>
                 {item.label}
               </Link>
             ))}
           </nav>
-        </div>
 
-        <div className="flex items-center gap-2">
-          {status === "loading" ? (
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
-              Đang tải phiên...
-            </span>
-          ) : null}
+          {/* Auth area */}
+          <div className="flex items-center gap-2.5">
+            {status === "loading" ? (
+              <span className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-medium text-slate-400">
+                Đang tải...
+              </span>
+            ) : null}
 
-          {status !== "authenticated" ? (
-            <>
-              <Link
-                href={authLinks.login}
-                className="rounded-full border border-slate-300 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-xs"
-              >
-                Đăng nhập
-              </Link>
-              <Link
-                href={authLinks.register}
-                className="rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 sm:px-3 sm:text-xs"
-              >
-                Đăng ký
-              </Link>
-            </>
-          ) : null}
+            {status !== "authenticated" ? (
+              <>
+                <Link
+                  href={authLinks.login}
+                  className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:border-slate-400 hover:bg-slate-50"
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  href={authLinks.register}
+                  className="rounded-xl bg-gradient-to-r from-rose-600 to-pink-500 px-3.5 py-2 text-xs font-semibold text-white shadow-sm shadow-rose-500/25 transition hover:from-rose-700 hover:to-pink-600 hover:shadow-md"
+                >
+                  Đăng ký
+                </Link>
+              </>
+            ) : null}
 
-          {status === "authenticated" ? (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setMenuOpen((prev) => !prev)}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-2 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 sm:text-xs"
-              >
-                <span className="grid h-7 w-7 place-items-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
-                  {getInitials(currentUser?.name)}
-                </span>
-                <span className="hidden max-w-40 truncate md:inline">{currentUser?.name ?? "Tài khoản"}</span>
-              </button>
-
-              {menuOpen ? (
-                <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
-                  <p className="text-sm font-bold text-slate-900">{currentUser?.name ?? "Tài khoản"}</p>
-                  <p className="mt-1 text-xs text-slate-500">{currentUser?.email ?? "Không có email"}</p>
-                  <p className="mt-1 text-xs text-slate-500">Vai trò: {roleName ?? "Chưa gán vai trò"}</p>
-
-                  <div className="mt-3 grid gap-1.5">
-                    {workspaceHref ? (
-                      <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700">
-                        {workspaceText}
-                      </p>
-                    ) : null}
-                    {quickWorkspaceLinks.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                    <Link
-                      href="/chatbot"
-                      className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                    >
-                      Trợ lý AI
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => void handleLogout()}
-                      className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-left text-xs font-semibold text-rose-700 hover:bg-rose-100"
-                    >
-                      Đăng xuất
-                    </button>
+            {status === "authenticated" ? (
+              <div className="relative" data-user-menu>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((prev) => !prev)}
+                  className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+                >
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 text-xs font-bold text-white shadow-inner">
+                    {getInitials(currentUser?.name)}
                   </div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
-      </div>
+                  <span className="hidden max-w-36 truncate md:block">{currentUser?.name ?? "Tài khoản"}</span>
+                  <svg
+                    className={`hidden h-3 w-3 text-slate-400 transition ${menuOpen ? "rotate-180" : ""}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
-      <div className="mx-auto w-full max-w-[1180px] px-4 pb-2 sm:px-5 xl:px-6 lg:hidden">
-        <nav className="flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {navItems.map((item) => (
-            <Link key={`mobile-${item.href}`} href={item.href} className={`${navClass(item.active)} whitespace-nowrap`}>
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+                {menuOpen ? (
+                  <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60">
+                    {/* User info */}
+                    <div className="border-b border-slate-100 p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 text-sm font-bold text-white shadow-inner">
+                          {getInitials(currentUser?.name)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-semibold text-slate-900">{currentUser?.name ?? "Tài khoản"}</p>
+                          <p className="truncate text-xs text-slate-500">{currentUser?.email ?? ""}</p>
+                        </div>
+                      </div>
+                      {roleName ? (
+                        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          {roleName.replace(/_/g, " ")}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Quick links */}
+                    <div className="grid gap-1 p-2">
+                      {workspaceHref ? (
+                        <div className="mb-1 px-2.5 py-1">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                            {workspaceText}
+                          </p>
+                        </div>
+                      ) : null}
+                      {quickWorkspaceLinks.map((item) => (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                        >
+                          <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                          </svg>
+                          {item.label}
+                        </Link>
+                      ))}
+                      <div className="my-1 border-t border-slate-100" />
+                      <Link
+                        href="/chatbot"
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-1.1 3 3 0 00-4.133 1.345A8.963 8.963 0 0012 20c4.97 0 9-3.582 9-8 0-4.418-4.03-8-9-8" />
+                        </svg>
+                        Trợ lý AI
+                      </Link>
+                      <Link
+                        href="/account"
+                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      >
+                        <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        Thông tin tài khoản
+                      </Link>
+                    </div>
+
+                    {/* Logout */}
+                    <div className="border-t border-slate-100 p-2">
+                      <button
+                        type="button"
+                        onClick={() => void handleLogout()}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        Đăng xuất
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Mobile nav */}
+        <div className="mx-auto w-full max-w-[1200px] px-4 pb-2 lg:hidden sm:px-5 sm:pb-2.5">
+          <nav className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {navItems.map((item) => (
+              <Link key={`mobile-${item.href}`} href={item.href} className={`${navClass(item.active)} whitespace-nowrap`}>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </div>
     </header>
   );
