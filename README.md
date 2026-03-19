@@ -1,102 +1,409 @@
-# Jobhunter
+# Jobhunter — Nền tảng Tuyển dụng Công nghệ
 
-Jobhunter là hệ thống tuyển dụng fullstack gồm cổng công khai, xác thực theo vai trò và khu quản trị.
+> Nền tảng tuyển dụng công nghệ dành cho sinh viên và kỹ sư phần mềm tại Việt Nam.
+> Dự án thực tập cá nhân — Spring Boot + Next.js + MySQL + Redis + Docker.
+
+---
+
+## Mục lục
+
+1. [Giới thiệu](#giới-thiệu)
+2. [Kiến trúc](#kiến-trúc)
+3. [Công nghệ sử dụng](#công-nghệ-sử-dụng)
+4. [Cấu trúc dự án](#cấu-trúc-dự-án)
+5. [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
+6. [Cài đặt Local](#cài-đặt-local)
+   - [Backend — Java 21 + Gradle](#backend--java-21--gradle)
+   - [Frontend — Node.js + Next.js](#frontend--nodejs--nextjs)
+7. [Chạy bằng Docker / Docker Compose](#chạy-bằng-docker--docker-compose)
+8. [Biến môi trường](#biến-môi-trường)
+9. [Database migrations (Flyway)](#database-migrations-flyway)
+10. [Chạy tests](#chạy-tests)
+    - [Backend tests](#backend-tests)
+    - [Frontend tests](#frontend-tests)
+11. [Docker — Build và Push lên Docker Hub](#docker--build-và-push-lên-docker-hub)
+12. [Monitoring / Health Endpoints](#monitoring--health-endpoints)
+13. [CI/CD](#cicd)
+14. [Bảo mật](#bảo-mật)
+15. [Đóng góp](#đóng-góp)
+
+---
+
+## Giới thiệu
+
+**Jobhunter** là một nền tảng tuyển dụng công nghệ thực tế, được xây dựng theo kiến trúc **fullstack** với:
+
+- Trang việc làm công khai (danh sách, bộ lọc, chi tiết, ứng tuyển)
+- Workspace dành cho **Ứng viên** — theo dõi hồ sơ đã nộp
+- Workspace dành cho **Nhà tuyển dụng** — quản lý tin tuyển, xử lý hồ sơ
+- Workspace dành cho **Quản trị viên** — RBAC, quản lý người dùng, dữ liệu
+- Chatbot AI tư vấn việc làm (OpenAI GPT-4 / Google Gemini)
+- Email tự động: nhắc nhở định kỳ, gợi ý việc làm hàng tuần
+- Hệ thống phân quyền RBAC đầy đủ
+- Docker hóa hoàn chỉnh — build và chạy trong container
+
+---
+
+## Kiến trúc
+
+```
+┌──────────────────────────────────────────────────────┐
+│                    Client (Browser)                  │
+│              Next.js (Port 3000/3001)                │
+└──────────────────┬───────────────────────────────────┘
+                   │ HTTP / REST
+┌──────────────────▼───────────────────────────────────┐
+│             API Gateway (Spring Boot)                 │
+│              Backend (Port 8080)                     │
+│  Controllers → Services → Repositories → MySQL      │
+│           JWT Auth | RBAC | Flyway Migrations        │
+└──────────────────┬───────────────────────────────────┘
+                   │
+        ┌──────────┴──────────┐
+        ▼                      ▼
+┌───────────────┐   ┌─────────────────┐
+│    MySQL 8.4  │   │  Redis (cache)   │
+│  jobhunter_db │   │   (optional)      │
+└───────────────┘   └─────────────────┘
+```
+
+---
 
 ## Công nghệ sử dụng
-- Backend: Spring Boot, Spring Security, JPA, MySQL, Swagger, Thymeleaf.
-- Frontend: Next.js, TypeScript, TailwindCSS.
-- Hạ tầng chạy cục bộ: Docker Compose.
 
-## Cấu trúc thư mục chính
-- `backend`: mã nguồn backend.
-- `frontend`: mã nguồn frontend.
-- `scripts`: script hỗ trợ vận hành cục bộ.
+| Layer     | Công nghệ                  |
+|-----------|----------------------------|
+| Frontend  | Next.js 16 + React 19 + TypeScript + TailwindCSS 3 |
+| Backend   | Spring Boot 4.0 + Java 21 + Gradle                |
+| Database  | MySQL 8.4                                          |
+| Cache     | Redis (tùy chọn)                                  |
+| Migrations| Flyway                                             |
+| ORM       | Spring Data JPA / Hibernate                        |
+| Security  | Spring Security + JWT (HS512)                      |
+| Docs      | SpringDoc OpenAPI (Swagger UI)                    |
+| Container | Docker + Docker Compose                            |
+| CI/CD     | GitHub Actions                                     |
+| Email     | Spring Mail (SMTP Gmail)                          |
+| AI        | OpenAI GPT-4 + Google Gemini                       |
 
-## Chạy cục bộ từ mã nguồn
-1. Backend
-```powershell
+---
+
+## Cấu trúc dự án
+
+```
+jobhunter/
+├── .github/workflows/          # GitHub Actions CI/CD
+│   ├── ci.yml                  # Lint, test, Docker build check
+│   └── cd.yml                  # Push Docker images to Docker Hub
+├── backend/
+│   ├── src/main/java/.../       # Java source
+│   │   ├── controller/         # REST controllers (13 file)
+│   │   ├── service/            # Business logic (16 file)
+│   │   ├── repository/         # JPA repositories
+│   │   ├── domain/             # Entities, DTOs, responses
+│   │   ├── config/             # Security, CORS, Flyway, etc.
+│   │   └── util/               # Helpers, constants, exceptions
+│   ├── src/main/resources/
+│   │   ├── db/migration/      # Flyway migration scripts
+│   │   └── application*.properties  # Spring profiles
+│   ├── src/test/               # 17 unit + integration tests
+│   ├── Dockerfile
+│   ├── build.gradle
+│   └── docker/entrypoint.sh
+├── frontend/
+│   ├── pages/                  # Next.js pages (12 route)
+│   ├── components/             # React components (24 file)
+│   │   ├── common/            # Shell, Logo, Toast, etc.
+│   │   ├── jobs/              # JobCard, Filters, QuickDetail
+│   │   ├── management/        # CRUD panels (admin/recruiter)
+│   │   └── chat/              # FloatingChatWidget
+│   ├── services/              # API client, RBAC helpers
+│   ├── contexts/              # AuthContext
+│   ├── utils/                # Formatting, permissions
+│   ├── types/                # TypeScript models
+│   ├── __tests__/             # Jest tests
+│   ├── jest.config.ts
+│   ├── jest.setup.ts
+│   ├── Dockerfile
+│   └── package.json
+├── docker-compose.yml         # Local build (builds images)
+├── docker-compose.hub.yml     # Pull images from Docker Hub
+├── scripts/                   # Dev ops scripts
+├── .env.example               # Template cho .env
+└── README.md
+```
+
+---
+
+## Yêu cầu hệ thống
+
+- **Java**: 21 (JDK 21 — Temurin / Eclipse Temurin)
+- **Node.js**: 22.x
+- **Gradle**: 9.x (wrapper có sẵn)
+- **MySQL**: 8.4+
+- **Docker**: 24.x + Docker Compose v2
+- **Git**
+
+---
+
+## Cài đặt Local
+
+### Backend — Java 21 + Gradle
+
+```bash
 cd backend
-Copy-Item .env.example .env
-.\gradlew.bat bootRun
+
+# Cài dependencies và chạy (dev mode với seed data)
+./gradlew bootRun
+
+# Hoặc build JAR rồi chạy
+./gradlew bootJar
+java -jar build/libs/jobhunter-*.jar
 ```
-2. Frontend
-```powershell
+
+Backend chạy tại: `http://localhost:8080`
+Swagger UI: `http://localhost:8080/swagger-ui.html`
+
+### Frontend — Node.js + Next.js
+
+```bash
 cd frontend
-Copy-Item .env.example .env.local
+
+# Cài dependencies
 npm install
+
+# Chạy dev server (port 3000)
 npm run dev
+
+# Hoặc dev server turbo (nhanh hơn)
+npm run dev:turbo
 ```
 
-## Chạy bằng Docker Compose (xây dựng image tại máy)
-```powershell
-Copy-Item .env.example .env
-docker compose up --build -d
+Frontend chạy tại: `http://localhost:3000`
+
+---
+
+## Chạy bằng Docker / Docker Compose
+
+### 1. Local build (build từ source)
+
+```bash
+# Copy template và chỉnh sửa biến môi trường
+cp .env.example .env
+
+# Build và chạy toàn bộ stack
+docker compose up -d
+
+# Xem logs
+docker compose logs -f backend
+docker compose logs -f frontend
 ```
 
-## Chạy bằng image từ Docker Hub
-1. Chuẩn bị tệp biến môi trường cho chế độ Docker Hub:
-```powershell
-Copy-Item .env.hub.example .env.hub
-```
-2. Cập nhật ít nhất hai biến trong `.env.hub`:
-- `DOCKERHUB_USERNAME`
-- `IMAGE_TAG`
+**Services sau khi khởi động:**
 
-3. Khởi chạy stack:
-```powershell
-docker compose --env-file .env.hub -f docker-compose.hub.yml up -d
-```
+| Service  | URL                      |
+|----------|--------------------------|
+| Frontend | http://localhost:3001    |
+| Backend  | http://localhost:8080     |
+| MySQL    | localhost:3307 (host)    |
+| Swagger  | http://localhost:8080/swagger-ui.html |
 
-## Chuẩn hóa và đẩy image lên Docker Hub
-Không lưu mật khẩu hoặc token Docker Hub trong mã nguồn.
+### 2. Pull từ Docker Hub
 
-1. Đăng nhập Docker Hub:
-```powershell
-docker login
+```bash
+# Chỉnh sửa DOCKERHUB_USERNAME trong .env
+cp .env.hub.example .env
+# Sửa DOCKERHUB_USERNAME=nguyenson1710
+
+docker compose -f docker-compose.hub.yml up -d
 ```
 
-2. Xây dựng image backend và frontend:
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/docker-build-images.ps1 `
-  -DockerhubUsername DOCKERHUB_USERNAME `
-  -ImageTag IMAGE_TAG `
-  -AlsoTagLatest
+---
+
+## Biến môi trường
+
+| Biến                          | Mặc định                          | Mô tả                                    |
+|-------------------------------|------------------------------------|------------------------------------------|
+| `DB_URL`                      | `jdbc:mysql://localhost:3306/...` | JDBC connection string                    |
+| `DB_USERNAME`                 | `jobhunter`                        | Tên user MySQL                          |
+| `DB_PASSWORD`                 | `jobhunter`                        | Mật khẩu MySQL                          |
+| `JWT_BASE64_SECRET`           | *(bắt buộc đặt trong prod)*        | Secret key cho JWT (base64 64-byte)      |
+| `FLYWAY_ENABLED`              | `true`                             | Bật/tắt Flyway migrations               |
+| `SON_JPA_DDL_AUTO`            | `none` (prod) / `update` (dev)    | Hibernate DDL strategy                   |
+| `JOBHUNTER_SEED_ENABLED`     | `true`                             | Chạy seed data khi khởi động            |
+| `JOBHUNTER_BOOTSTRAP_ADMIN_EMAIL` | `admin@jobhunter.local`       | Email tài khoản bootstrap admin          |
+| `JOBHUNTER_BOOTSTRAP_ADMIN_PASSWORD` | `changeme`                  | Mật khẩu bootstrap admin                |
+| `JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED` | `true`                       | Bật/tắt bootstrap admin                  |
+| `MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE` | `health,info,prometheus,metrics` | Actuator endpoints         |
+| `MAIL_ENABLED`               | `false`                            | Bật gửi email SMTP                      |
+
+> **Lưu ý bảo mật:** Thay đổi `JWT_BASE64_SECRET`, `DB_PASSWORD`, và `JOBHUNTER_BOOTSTRAP_ADMIN_PASSWORD` trước khi deploy production.
+> Sau lần đầu chạy thành công, đặt `JOBHUNTER_SEED_ENABLED=false` để tránh seed ghi đè dữ liệu đã tạo thủ công.
+
+---
+
+## Database Migrations (Flyway)
+
+Schema được quản lý bằng **Flyway**. Scripts migration nằm trong:
+
+```
+backend/src/main/resources/db/migration/
+└── V1__init_schema.sql    # Tạo toàn bộ bảng, index, FK
 ```
 
-3. Đẩy image lên Docker Hub:
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/docker-push-images.ps1 `
-  -DockerhubUsername DOCKERHUB_USERNAME `
-  -ImageTags IMAGE_TAG,latest
+**Quy tắc:**
+
+- Mỗi thay đổi schema → tạo script mới (`V2__*.sql`, `V3__*.sql`, ...)
+- **KHÔNG** sửa script đã commit (Flyway checksum sẽ lỗi)
+- Dev: `SON_JPA_DDL_AUTO=update` cho phép Hibernate tự sync thêm cột mới sau migration
+- Prod: `SON_JPA_DDL_AUTO=none` — Flyway hoàn toàn sở hữu schema
+
+**Chạy migration thủ công:**
+
+```bash
+# Sau khi start Docker, backend tự động chạy Flyway
+# Kiểm tra trong logs backend:
+# Flyway: Successfully applied 1 migration to schema
 ```
 
-Tên image chuẩn:
-- `DOCKERHUB_USERNAME/jobhunter-backend:IMAGE_TAG`
-- `DOCKERHUB_USERNAME/jobhunter-frontend:IMAGE_TAG`
+---
 
-Database dùng image chính thức `mysql:8.4`, không cần đẩy image riêng.
+## Chạy Tests
 
-## Biến môi trường quan trọng
-- `MYSQL_ROOT_PASSWORD`: bắt buộc để MySQL khởi tạo.
-- `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`: tài khoản cơ sở dữ liệu cho ứng dụng.
-- `JWT_BASE64_SECRET`: khóa JWT dạng base64.
-- `NEXT_PUBLIC_API_BASE_URL`: địa chỉ API cho trình duyệt.
-- `INTERNAL_API_BASE_URL`: địa chỉ API nội bộ giữa container.
+### Backend tests
 
-## Địa chỉ kiểm tra nhanh
-- Giao diện frontend: `http://localhost:3001`
-- Backend API: `http://localhost:8080`
-- Swagger: `http://localhost:8080/swagger-ui/index.html`
+```bash
+cd backend
 
-## Gửi thư và tác vụ định kỳ
-- Có thể bật hoặc tắt gửi thư và tác vụ định kỳ bằng các biến `MAIL_*` và `JOBHUNTER_*` trong tệp `.env`.
-- Khuyến nghị việc làm theo tuần và dọn log định kỳ chỉ nên bật khi đã cấu hình đầy đủ.
+# Chạy tất cả tests (JUnit 5 + Spring Boot Test)
+./gradlew test
 
-## Dọn file tạm và log cục bộ
-```powershell
-npm run clean
+# Chạy tests kèm coverage
+./gradlew test jacocoTestReport
+
+# Báo cáo coverage
+open build/reports/jacoco/test/html/index.html
 ```
 
-## Lưu ý an toàn
-- Không commit các tệp `.env`, `.env.local`, `.env.hub`.
-- Không ghi mật khẩu, token hoặc khóa bí mật trong Dockerfile, script và README.
+### Frontend tests
+
+```bash
+cd frontend
+
+# Cài testing dependencies (lần đầu)
+npm install
+
+# Chạy tests
+npm test
+
+# Chạy tests với coverage
+npm run test:coverage
+```
+
+Coverage threshold hiện tại: 30% (branches, functions, lines, statements)
+
+---
+
+## Docker — Build và Push lên Docker Hub
+
+### Cách 1: Dùng script có sẵn
+
+```bash
+# Build (đặt DOCKERHUB_USERNAME trong .env trước)
+npm run docker:build-images
+
+# Push
+npm run docker:push-images
+```
+
+### Cách 2: Thủ công
+
+```bash
+# === BUILD & TAG ===
+docker build -t jobhunter-backend ./backend \
+  --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 \
+  --build-arg NEXT_PUBLIC_STORAGE_BASE_URL=http://localhost:8080
+
+docker build -t jobhunter-frontend ./frontend \
+  --build-arg NEXT_PUBLIC_API_BASE_URL=http://localhost:8080 \
+  --build-arg NEXT_PUBLIC_STORAGE_BASE_URL=http://localhost:8080
+
+# === TAG ===
+docker tag jobhunter-backend:latest nguyenson1710/jobhunter-backend:latest
+docker tag jobhunter-frontend:latest nguyenson1710/jobhunter-frontend:latest
+
+# === PUSH ===
+docker push nguyenson1710/jobhunter-backend:latest
+docker push nguyenson1710/jobhunter-frontend:latest
+```
+
+### Cách 3: Tag version cụ thể
+
+```bash
+VERSION=v1.0.0
+docker tag jobhunter-backend:latest nguyenson1710/jobhunter-backend:$VERSION
+docker tag jobhunter-frontend:latest nguyenson1710/jobhunter-frontend:$VERSION
+docker push nguyenson1710/jobhunter-backend:$VERSION
+docker push nguyenson1710/jobhunter-frontend:$VERSION
+```
+
+---
+
+## Monitoring / Health Endpoints
+
+Backend expose các actuator endpoint sau (công khai):
+
+| Endpoint                        | Mô tả                          |
+|--------------------------------|--------------------------------|
+| `GET /actuator/health`         | Health check                  |
+| `GET /actuator/info`           | Thông tin ứng dụng             |
+| `GET /actuator/prometheus`     | Prometheus metrics (nếu bật)   |
+| `GET /actuator/metrics`        | Danh sách metrics              |
+| `GET /actuator/metrics/{name}` | Chi tiết metric cụ thể        |
+
+**Bật Prometheus metrics:**
+
+```bash
+# Trong .env hoặc biến môi trường
+MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true
+MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,prometheus,metrics
+```
+
+---
+
+## CI/CD
+
+GitHub Actions workflows tự động chạy:
+
+| Workflow | Trigger                    | Jobs                                      |
+|----------|----------------------------|-------------------------------------------|
+| `ci.yml` | Push / PR vào `master`    | backend test, frontend lint+build, Docker build check |
+| `cd.yml` | Push tag `v*.*.*` vào `master` | Build và push Docker images lên Docker Hub |
+
+**Secrets cần thiết cho CD (GitHub → Settings → Secrets):**
+
+- `DOCKERHUB_USERNAME` — Username Docker Hub
+- `DOCKERHUB_PASSWORD` — Password hoặc Access Token Docker Hub
+
+---
+
+## Bảo mật
+
+- **JWT (HS512)**: Token có TTL 15 phút, refresh token 7 ngày
+- **RBAC**: Phân quyền theo role + permission key tại tất cả endpoint
+- **Seed Admin**: Credentials mặc định được externalize qua env vars; tắt sau lần đầu boot
+- **Env vars**: Không bao giờ commit `.env` vào repo — `.gitignore` đã được cấu hình
+- **SQL Injection**: An toàn qua JPA / parameterized queries
+- **CORS**: Chỉ whitelist các origin được cấu hình trong `CORS_ALLOWED_ORIGINS`
+
+---
+
+## Đóng góp
+
+Dự án này phục vụ mục đích học tập và thực tập cá nhân. Mọi góp ý và đề xuất cải tiến đều được hoan nghênh qua Pull Request.
+
+---
+
+## License
+
+MIT License
