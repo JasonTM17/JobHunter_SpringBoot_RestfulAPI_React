@@ -1,3 +1,4 @@
+import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -127,25 +128,31 @@ export default function JobDetailPage() {
 
   if (loading) {
     return (
-      <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <LoadingState title="Đang tải chi tiết công việc..." rows={5} />
-      </main>
+      <>
+        <Head><title>Đang tải — Jobhunter</title></Head>
+        <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <LoadingState title="Đang tải chi tiết công việc..." rows={5} />
+        </main>
+      </>
     );
   }
 
   if (error || !job) {
     return (
-      <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <ErrorState description={error || "Không tìm thấy dữ liệu công việc."} onRetry={() => void loadJob()} />
-        <div className="mt-3">
-          <Link
-            href="/"
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-          >
-            Quay lại danh sách
-          </Link>
-        </div>
-      </main>
+      <>
+        <Head><title>Chi tiết công việc — Jobhunter</title></Head>
+        <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <ErrorState description={error || "Không tìm thấy dữ liệu công việc."} onRetry={() => void loadJob()} />
+          <div className="mt-3">
+            <Link
+              href="/"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            >
+              Quay lại danh sách
+            </Link>
+          </div>
+        </main>
+      </>
     );
   }
 
@@ -170,7 +177,11 @@ export default function JobDetailPage() {
   ];
 
   return (
-    <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+    <>
+      <Head>
+        <title>{job.name} — Jobhunter</title>
+      </Head>
+      <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
       <header className="relative overflow-hidden rounded-[28px] border border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 text-white shadow-soft sm:p-6 lg:p-7">
         {/* Decorative glow */}
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-rose-500/10 blur-3xl" />
@@ -441,5 +452,6 @@ export default function JobDetailPage() {
         </aside>
       </section>
     </main>
+    </>
   );
 }

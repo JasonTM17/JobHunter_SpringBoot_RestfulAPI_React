@@ -1,4 +1,5 @@
-﻿import Link from "next/link";
+import Head from "next/head";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { fetchAiAvailability, sendChat } from "../services/jobhunter-api";
@@ -218,7 +219,11 @@ export default function ChatbotPage() {
   const statusTone = statusClasses(aiStatus);
 
   return (
-    <main className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8">
+    <>
+      <Head>
+        <title>Trợ lý AI — Jobhunter</title>
+      </Head>
+      <main className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8">
       <section className="grid gap-6 xl:grid-cols-[1.3fr,0.7fr]">
         <article className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-soft">
           <header className="border-b border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-5 py-5 text-white sm:px-6 sm:py-6">
@@ -402,5 +407,6 @@ export default function ChatbotPage() {
         </aside>
       </section>
     </main>
+    </>
   );
 }

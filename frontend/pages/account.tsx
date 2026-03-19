@@ -1,3 +1,4 @@
+import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -81,18 +82,23 @@ export default function AccountPage() {
 
   if (status === "loading") {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
-        <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
-          <p className="text-sm text-slate-600">Đang tải thông tin tài khoản...</p>
-        </section>
-      </main>
+      <>
+        <Head><title>Cài đặt tài khoản — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
+          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+            <p className="text-sm text-slate-600">Đang tải thông tin tài khoản...</p>
+          </section>
+        </main>
+      </>
     );
   }
 
   if (status !== "authenticated" || !currentUser) {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
-        <section className="grid gap-4 rounded-[30px] border border-slate-200 bg-white p-5 shadow-soft sm:p-6 lg:grid-cols-[1.08fr,0.92fr] lg:p-8">
+      <>
+        <Head><title>Cài đặt tài khoản — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
+          <section className="grid gap-4 rounded-[30px] border border-slate-200 bg-white p-5 shadow-soft sm:p-6 lg:grid-cols-[1.08fr,0.92fr] lg:p-8">
           <article className="rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-6 text-white sm:p-7">
             <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
               Tài khoản Jobhunter
@@ -147,7 +153,8 @@ export default function AccountPage() {
             </div>
           </article>
         </section>
-      </main>
+        </main>
+      </>
     );
   }
 
@@ -163,7 +170,9 @@ export default function AccountPage() {
         : "Vào không gian ứng viên";
 
   return (
-    <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
+    <>
+      <Head><title>Cài đặt tài khoản — Jobhunter</title></Head>
+      <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
       <section className="rounded-[30px] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-5 text-white shadow-soft sm:p-6 lg:p-7">
         <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
           Hồ sơ tài khoản
@@ -304,5 +313,6 @@ export default function AccountPage() {
         </article>
       </section>
     </main>
+    </>
   );
 }

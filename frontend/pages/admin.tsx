@@ -1,3 +1,4 @@
+import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -80,22 +81,28 @@ export default function AdminWorkspacePage() {
 
   if (status === "loading") {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <LoadingState title="Đang khởi tạo khu quản trị..." rows={4} />
-      </main>
+      <>
+        <Head><title>Khu quản trị — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <LoadingState title="Đang khởi tạo khu quản trị..." rows={4} />
+        </main>
+      </>
     );
   }
 
   if (status !== "authenticated") {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+      <>
+        <Head><title>Khu quản trị — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <EmptyState
           title="Bạn cần đăng nhập để vào khu quản trị"
           description="Vui lòng đăng nhập bằng tài khoản quản trị để truy cập các công cụ vận hành hệ thống."
           actionLabel="Đăng nhập"
           onAction={() => void router.push(loginHref)}
         />
-      </main>
+        </main>
+      </>
     );
   }
 
@@ -105,22 +112,30 @@ export default function AdminWorkspacePage() {
 
   if (loading) {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <LoadingState title="Đang tải số liệu quản trị..." rows={5} />
-      </main>
+      <>
+        <Head><title>Khu quản trị — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <LoadingState title="Đang tải số liệu quản trị..." rows={5} />
+        </main>
+      </>
     );
   }
 
   if (error) {
     return (
-      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
-        <ErrorState description={error} onRetry={() => void loadData()} />
-      </main>
+      <>
+        <Head><title>Khu quản trị — Jobhunter</title></Head>
+        <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+          <ErrorState description={error} onRetry={() => void loadData()} />
+        </main>
+      </>
     );
   }
 
   return (
-    <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
+    <>
+      <Head><title>Khu quản trị — Jobhunter</title></Head>
+      <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
       <DashboardHero
         eyebrow="Khu quản trị hệ thống"
         title="Bảng điều hành quản trị"
@@ -226,5 +241,6 @@ export default function AdminWorkspacePage() {
         </article>
       </section>
     </main>
+    </>
   );
 }
