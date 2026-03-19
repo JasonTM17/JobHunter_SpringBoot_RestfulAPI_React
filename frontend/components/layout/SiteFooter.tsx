@@ -8,7 +8,7 @@ const FOOTER_LINKS = {
     { label: "Việc làm theo mức lương", href: "/" }
   ],
   côngTy: [
-    { label: "Danh sách công ty", href: "/" },
+    { label: "Danh sách công ty", href: "/#companies" },
     { label: "Nhà tuyển dụng nổi bật", href: "/" },
     { label: "Công ty IT hàng đầu", href: "/" }
   ],
@@ -56,11 +56,59 @@ const SOCIAL_LINKS = [
   }
 ];
 
+function sectionTitleLabel(key: string): string {
+  if (key === "việcLàm") return "Việc làm";
+  if (key === "côngTy") return "Công ty";
+  if (key === "ứngViên") return "Ứng viên";
+  return "Hỗ trợ";
+}
+
+function FooterLinkColumn({ sectionKey, links }: { sectionKey: string; links: { label: string; href: string }[] }) {
+  const title = sectionTitleLabel(sectionKey);
+  return (
+    <details className="group/section sm:contents">
+      <summary className="flex cursor-pointer items-center justify-between py-2 text-[12px] font-semibold uppercase tracking-widest text-slate-900 sm:hidden">
+        {title}
+        <svg
+          className="h-4 w-4 shrink-0 transition-transform group-open/section:rotate-180"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+          aria-hidden
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </summary>
+      <ul className="grid gap-2 pb-2 sm:hidden">
+        {links.map((link) => (
+          <li key={link.label}>
+            <Link href={link.href} className="text-[13px] text-slate-500 transition hover:text-rose-500">
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <h3 className="mb-3 hidden text-[12px] font-semibold uppercase tracking-widest text-slate-900 sm:block">
+        {title}
+      </h3>
+      <ul className="hidden flex-col gap-2 sm:flex">
+        {links.map((link) => (
+          <li key={link.label}>
+            <Link href={link.href} className="text-[13px] text-slate-500 transition hover:text-rose-500">
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
 export default function SiteFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-white">
-      {/* Main footer content */}
-      <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-5 lg:px-6">
+    <footer className="border-t border-slate-200 bg-slate-50">
+      <div className="mx-auto max-w-[1200px] px-4 py-12 sm:px-5 lg:px-6">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           {/* Brand column */}
           <div className="lg:col-span-1">
@@ -73,7 +121,6 @@ export default function SiteFooter() {
             <p className="mt-3 text-[13px] leading-relaxed text-slate-500">
               Nền tảng tuyển dụng công nghệ hàng đầu dành cho ứng viên và nhà tuyển dụng tại Việt Nam.
             </p>
-            {/* Social icons */}
             <div className="mt-4 flex items-center gap-2.5">
               {SOCIAL_LINKS.map((social) => (
                 <a
@@ -82,7 +129,7 @@ export default function SiteFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500"
                 >
                   {social.icon}
                 </a>
@@ -90,46 +137,21 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          {/* Link columns */}
-          {Object.entries(FOOTER_LINKS).map(([section, links]) => (
-            <div key={section}>
-              <h3 className="mb-3 text-[12px] font-semibold uppercase tracking-widest text-slate-900">
-                {section === "việcLàm"
-                  ? "Việc làm"
-                  : section === "côngTy"
-                    ? "Công ty"
-                    : section === "ứngViên"
-                      ? "Ứng viên"
-                      : "Hỗ trợ"}
-              </h3>
-              <ul className="grid gap-2">
-                {links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-[13px] text-slate-500 transition hover:text-rose-500"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {Object.entries(FOOTER_LINKS).map(([sectionKey, links]) => (
+            <FooterLinkColumn key={sectionKey} sectionKey={sectionKey} links={links} />
           ))}
         </div>
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-slate-100">
-        <div className="mx-auto max-w-[1200px] px-4 py-4 sm:px-5 lg:px-6">
-          <div className="flex flex-col items-center justify-between gap-3 text-center sm:flex-row sm:text-left">
-            <p className="text-[12px] text-slate-400">
-              © {new Date().getFullYear()} Jobhunter. Tất cả quyền được bảo lưu.
-            </p>
-            <p className="text-[12px] text-slate-400">
-              Nền tảng tuyển dụng công nghệ hàng đầu Việt Nam
-            </p>
-          </div>
+      <div className="border-t border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-2 px-4 py-4 text-center sm:flex-row sm:px-5 sm:text-left lg:px-6">
+          <p className="text-[12px] text-slate-400">
+            © {new Date().getFullYear()} Jobhunter. Tất cả quyền được bảo lưu.
+          </p>
+          <p className="text-[12px] text-slate-400">
+            Nền tảng tuyển dụng công nghệ hàng đầu Việt Nam
+          </p>
         </div>
       </div>
     </footer>

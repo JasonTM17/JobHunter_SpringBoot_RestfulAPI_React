@@ -222,6 +222,7 @@ export default function ChatbotPage() {
     <>
       <Head>
         <title>Trợ lý AI — Jobhunter</title>
+        <meta name="description" content="Trợ lý AI của Jobhunter giúp bạn chuẩn bị CV, thư ứng tuyển, phân tích JD và luyện phỏng vấn hiệu quả." />
       </Head>
       <main className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8">
       <section className="grid gap-6 xl:grid-cols-[1.3fr,0.7fr]">

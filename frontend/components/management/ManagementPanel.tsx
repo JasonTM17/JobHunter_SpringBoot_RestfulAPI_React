@@ -138,6 +138,32 @@ export default function ManagementPanel({
     target: null
   });
 
+  const [jobSearch, setJobSearch] = useState("");
+  const [showInactiveJobs, setShowInactiveJobs] = useState(false);
+  const [companySearch, setCompanySearch] = useState("");
+
+  const filteredJobs = useMemo(
+    () =>
+      jobs.filter((j) => {
+        const q = jobSearch.toLowerCase();
+        if (q && !j.name.toLowerCase().includes(q) && !j.company?.name?.toLowerCase().includes(q)) return false;
+        if (!showInactiveJobs && !j.active) return false;
+        return true;
+      }),
+    [jobs, jobSearch, showInactiveJobs]
+  );
+
+  const filteredCompanies = useMemo(
+    () =>
+      companies.filter(
+        (c) =>
+          !companySearch ||
+          c.name.toLowerCase().includes(companySearch.toLowerCase()) ||
+          c.address?.toLowerCase().includes(companySearch.toLowerCase())
+      ),
+    [companies, companySearch]
+  );
+
   const canCreateJob = can("/api/v1/jobs", "POST");
   const canUpdateJob = can("/api/v1/jobs", "PUT");
   const canDeleteJob = can("/api/v1/jobs/{id}", "DELETE");
@@ -413,9 +439,24 @@ export default function ManagementPanel({
           {publicTab === "jobs" ? (
             <section>
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <p className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                  Danh sách luôn hiển thị. Nút tạo, sửa, xóa chỉ bật khi tài khoản có quyền tương ứng.
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="search"
+                    value={jobSearch}
+                    onChange={(e) => setJobSearch(e.target.value)}
+                    placeholder="Tìm kiếm việc làm..."
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                  />
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+                    <input
+                      type="checkbox"
+                      checked={showInactiveJobs}
+                      onChange={(e) => setShowInactiveJobs(e.target.checked)}
+                      className="rounded"
+                    />
+                    Hiển thị đã đóng ({jobs.filter((j) => !j.active).length})
+                  </label>
+                </div>
                 <button
                   type="button"
                   disabled={!canCreateJob}
@@ -427,8 +468,8 @@ export default function ManagementPanel({
                 </button>
               </div>
 
-              {jobs.length === 0 ? (
-                <EmptyState title="Chưa có việc làm" description="Bạn có thể tạo một công việc mới." />
+              {filteredJobs.length === 0 ? (
+                <EmptyState title="Không tìm thấy việc làm phù hợp" description="Thử thay đổi từ khóa tìm kiếm." />
               ) : (
                 <div className="w-full overflow-x-auto rounded-2xl border border-slate-200">
                   <table className="min-w-full divide-y divide-slate-200 text-xs sm:text-sm">
@@ -438,12 +479,13 @@ export default function ManagementPanel({
                         <th className="px-3 py-2 text-left font-bold text-slate-700">Công ty</th>
                         <th className="px-3 py-2 text-left font-bold text-slate-700">Khu vực</th>
                         <th className="px-3 py-2 text-left font-bold text-slate-700">Lương</th>
+                        <th className="px-3 py-2 text-left font-bold text-slate-700">Trạng thái</th>
                         <th className="px-3 py-2 text-left font-bold text-slate-700">Hành động</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                      {jobs.map((job) => (
-                        <tr key={job.id}>
+                      {filteredJobs.map((job) => (
+                        <tr key={job.id} className={!job.active ? "opacity-50" : ""}>
                           <td className="px-3 py-2">
                             <p className="font-semibold text-slate-900">{job.name}</p>
                             <p className="text-xs text-slate-500">{shortText(stripHtml(job.description), 80)}</p>
@@ -451,6 +493,13 @@ export default function ManagementPanel({
                           <td className="px-3 py-2">{job.company?.name ?? "Chưa cập nhật"}</td>
                           <td className="px-3 py-2">{job.location}</td>
                           <td className="px-3 py-2">{formatCurrencyVnd(job.salary)}</td>
+                          <td className="px-3 py-2">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-semibold ${job.active ? "border border-emerald-200 bg-emerald-50 text-emerald-700" : "border border-slate-200 bg-slate-100 text-slate-500"}`}
+                            >
+                              {job.active ? "Đang tuyển" : "Đã đóng"}
+                            </span>
+                          </td>
                           <td className="px-3 py-2">
                             <div className="flex flex-wrap gap-1.5">
                               <button
@@ -490,7 +539,14 @@ export default function ManagementPanel({
 
           {publicTab === "companies" ? (
             <section>
-              <div className="mb-3 flex justify-end">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <input
+                  type="search"
+                  value={companySearch}
+                  onChange={(e) => setCompanySearch(e.target.value)}
+                  placeholder="Tìm kiếm công ty..."
+                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                />
                 <button
                   type="button"
                   disabled={!canCreateCompany}
@@ -502,11 +558,15 @@ export default function ManagementPanel({
                 </button>
               </div>
 
-              {companies.length === 0 ? (
+              {companies.length === 0 && !companySearch ? (
                 <EmptyState title="Chưa có công ty" description="Bạn có thể tạo công ty mới." />
+              ) : filteredCompanies.length === 0 ? (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-600">
+                  Không tìm thấy công ty phù hợp.
+                </div>
               ) : (
                 <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                  {companies.map((company) => (
+                  {filteredCompanies.map((company) => (
                     <article key={company.id} className="rounded-2xl border border-slate-200 bg-white p-3">
                       <div className="flex items-start gap-3">
                         <CompanyLogo name={company.name} logo={company.logo} size="md" />
@@ -531,9 +591,7 @@ export default function ManagementPanel({
                           disabled={!canDeleteCompany}
                           title={canDeleteCompany ? "Xóa công ty" : noPermissionTitle}
                           className="rounded border border-rose-300 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
-                          onClick={() =>
-                            setConfirmTarget({ entity: "companies", id: company.id, name: company.name })
-                          }
+                          onClick={() => setConfirmTarget({ entity: "companies", id: company.id, name: company.name })}
                         >
                           Xóa
                         </button>

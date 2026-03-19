@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { Job } from "../../types/models";
 import {
   formatCurrencyVnd,
@@ -8,6 +10,7 @@ import {
   shortText,
   stripHtml
 } from "../../utils/format";
+import { addBookmark, getBookmarks, removeBookmark } from "../../utils/bookmarks";
 import CompanyLogo from "../common/CompanyLogo";
 
 interface JobCardProps {
@@ -17,12 +20,35 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job, selected, onSelect }: JobCardProps) {
+  const router = useRouter();
   const summary = shortText(stripHtml(job.description), 140) || "Nhà tuyển dụng đang cập nhật mô tả chi tiết.";
   const skillNames = (job.skills ?? []).map((skill) => skill.name);
 
   const isExpiringSoon = job.endDate
     ? new Date(job.endDate).getTime() - Date.now() < 7 * 24 * 60 * 60 * 1000
     : false;
+
+  const [bookmarked, setBookmarked] = useState(false);
+
+  useEffect(() => {
+    setBookmarked(getBookmarks().includes(job.id));
+  }, [job.id]);
+
+  function toggleBookmark(event: React.MouseEvent) {
+    event.stopPropagation();
+    if (bookmarked) {
+      removeBookmark(job.id);
+      setBookmarked(false);
+    } else {
+      addBookmark(job.id);
+      setBookmarked(true);
+    }
+  }
+
+  function quickApply(event: React.MouseEvent) {
+    event.stopPropagation();
+    void router.push(`/jobs/${job.id}`);
+  }
 
   return (
     <article
@@ -42,7 +68,7 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
         }
       }}
     >
-      {/* Left accent bar — ITviec style */}
+      {/* Left accent bar */}
       <div
         className={`absolute left-0 top-0 h-full w-1 rounded-l-2xl ${selected ? "bg-gradient-to-b from-rose-500 to-pink-500" : "bg-transparent group-hover:bg-gradient-to-b group-hover:from-rose-400 group-hover:to-pink-400"}`}
       />
@@ -66,7 +92,6 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
               <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-slate-900">{job.name}</h3>
               <p className="mt-0.5 line-clamp-1 text-[13px] font-medium text-slate-500">{job.company?.name ?? "Đang cập nhật công ty"}</p>
             </div>
-            {/* Salary — ITviec style highlight */}
             <div className="salary-badge shrink-0 rounded-xl px-2.5 py-1.5 text-right">
               <p className="text-[13px] font-extrabold leading-none">{formatCurrencyVnd(job.salary)}</p>
               <p className="mt-0.5 text-[10px] font-medium opacity-70">/ tháng</p>
@@ -124,7 +149,7 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
             )}
           </div>
 
-          {/* Row 4: deadline + action */}
+          {/* Row 4: deadline + actions */}
           <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5">
             <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -134,17 +159,50 @@ export default function JobCard({ job, selected, onSelect }: JobCardProps) {
                 Còn {formatDateVi(job.endDate)}
               </span>
             </div>
-            <Link
-              href={`/jobs/${job.id}`}
-              className={
-                selected
-                  ? "shrink-0 rounded-xl border-2 border-rose-500 bg-rose-50 px-3 py-1.5 text-[11px] font-bold text-rose-600 transition hover:border-rose-600 hover:bg-rose-100"
-                  : "shrink-0 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-bold text-rose-600 transition hover:border-rose-400 hover:bg-rose-100"
-              }
-              onClick={(event) => event.stopPropagation()}
-            >
-              Xem chi tiết
-            </Link>
+            <div className="flex items-center gap-1.5">
+              {/* Bookmark */}
+              <button
+                type="button"
+                onClick={toggleBookmark}
+                aria-label={bookmarked ? "Bỏ lưu việc làm" : "Lưu việc làm"}
+                className="shrink-0 rounded-lg p-1.5 transition hover:bg-slate-100"
+              >
+                <svg
+                  className="h-3.5 w-3.5"
+                  fill={bookmarked ? "currentColor" : "none"}
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                </svg>
+              </button>
+              {/* Quick apply */}
+              <button
+                type="button"
+                onClick={quickApply}
+                className={
+                  selected
+                    ? "shrink-0 rounded-xl border-2 border-rose-500 bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:border-rose-600 hover:bg-rose-700"
+                    : "shrink-0 rounded-xl bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-rose-700"
+                }
+              >
+                Ứng tuyển ngay
+              </button>
+              {/* View detail */}
+              <Link
+                href={`/jobs/${job.id}`}
+                className={
+                  selected
+                    ? "shrink-0 rounded-xl border-2 border-rose-500 bg-rose-50 px-3 py-1.5 text-[11px] font-bold text-rose-600 transition hover:border-rose-600 hover:bg-rose-100"
+                    : "shrink-0 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-bold text-rose-600 transition hover:border-rose-400 hover:bg-rose-100"
+                }
+                onClick={(event) => event.stopPropagation()}
+              >
+                Chi tiết
+              </Link>
+            </div>
           </div>
         </div>
       </div>

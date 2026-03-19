@@ -7,10 +7,10 @@ import { createId } from "../../utils/format";
 const AI_NOT_CONFIGURED_MESSAGE = "Tính năng AI hiện chưa được cấu hình trên máy chủ. Vui lòng thử lại sau.";
 const AI_EMPTY_REPLY_MESSAGE = "Trợ lý AI chưa phản hồi được ở thời điểm này.";
 const AI_UNAVAILABLE_FRIENDLY = "Trợ lý AI hiện chưa sẵn sàng. Vui lòng thử lại sau.";
-const CHAT_PLACEHOLDER_DEFAULT = "Nhập câu hỏi về CV, phỏng vấn hoặc công việc...";
+const CHAT_PLACEHOLDER_DEFAULT = "Nhập câu hỏi của bạn...";
 const CHAT_PLACEHOLDER_CHECKING = "Đang kiểm tra trạng thái trợ lý AI...";
 const CHAT_PLACEHOLDER_UNAVAILABLE = "Trợ lý AI hiện chưa sẵn sàng.";
-const DEFAULT_GREETING = "Xin chào, mình là trợ lý Jobhunter. Bạn cần hỗ trợ gì cho quá trình tìm việc?";
+const DEFAULT_GREETING = "Xin chào, mình là trợ lý Jobhunter. Bạn muốn tối ưu CV, chuẩn bị phỏng vấn hay phân tích JD?";
 
 type AiStatus = "checking" | "ready" | "unavailable";
 
@@ -23,28 +23,22 @@ export default function FloatingChatWidget() {
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: createId("chat"),
-      role: "assistant",
-      text: DEFAULT_GREETING
-    }
+    { id: createId("chat"), role: "assistant", text: DEFAULT_GREETING }
   ]);
+  const timeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
     let active = true;
-
     async function loadAiStatus() {
       setAiStatus("checking");
       try {
         const status = await fetchAiAvailability();
         if (!active) return;
-
         if (status.available) {
           setAiStatus("ready");
           setAiNotice("");
           return;
         }
-
         setAiStatus("unavailable");
         setAiNotice(status.message?.trim() || AI_UNAVAILABLE_FRIENDLY);
       } catch {
@@ -53,7 +47,6 @@ export default function FloatingChatWidget() {
         setAiNotice(AI_UNAVAILABLE_FRIENDLY);
       }
     }
-
     void loadAiStatus();
     return () => {
       active = false;
@@ -67,17 +60,18 @@ export default function FloatingChatWidget() {
     container.scrollTop = container.scrollHeight;
   }, [messages, sending, aiStatus, open]);
 
+  useEffect(() => {
+    return () => {
+      timeoutsRef.current.forEach((t) => clearTimeout(t));
+    };
+  }, []);
+
   function resetConversation() {
     setInput("");
     setSending(false);
     setLastFailedMessage(null);
-    setMessages([
-      {
-        id: createId("chat"),
-        role: "assistant",
-        text: DEFAULT_GREETING
-      }
-    ]);
+    setMessages([{ id: createId("chat"), role: "assistant", text: DEFAULT_GREETING }]);
+    timeoutsRef.current.forEach((t) => clearTimeout(t));
   }
 
   async function submitMessage(rawMessage: string) {
@@ -101,16 +95,10 @@ export default function FloatingChatWidget() {
         setLastFailedMessage(null);
         return;
       }
-
       setLastFailedMessage(message);
       setMessages((prev) => [
         ...prev,
-        {
-          id: createId("chat"),
-          role: "assistant",
-          isError: true,
-          text: userMessage
-        }
+        { id: createId("chat"), role: "assistant", isError: true, text: userMessage }
       ]);
     } finally {
       setSending(false);
@@ -132,6 +120,13 @@ export default function FloatingChatWidget() {
       event.preventDefault();
       void submit();
     }
+    if (event.key === "Escape") {
+      setOpen(false);
+    }
+  }
+
+  function handleInputChange(value: string) {
+    if (value.length <= 500) setInput(value);
   }
 
   const inputDisabled = sending || aiStatus !== "ready";
@@ -143,7 +138,7 @@ export default function FloatingChatWidget() {
         : CHAT_PLACEHOLDER_DEFAULT;
 
   return (
-    <div className="fixed bottom-3 right-3 z-40 sm:bottom-4 sm:right-4">
+    <div className="fixed bottom-16 right-3 z-40 pb-[env(safe-area-inset-bottom)] sm:bottom-4 sm:right-4">
       {open ? (
         <section className="grid h-[min(500px,calc(100vh-6rem))] w-[min(330px,calc(100vw-1rem))] grid-rows-[auto,1fr,auto] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:w-[330px]">
           <header className="flex items-center justify-between border-b border-slate-200 bg-slate-900 px-3 py-2.5 text-white">
@@ -166,7 +161,12 @@ export default function FloatingChatWidget() {
             </div>
           </header>
 
-          <div ref={messagesContainerRef} className="grid gap-2 overflow-y-auto bg-slate-50 p-3">
+          <div
+            ref={messagesContainerRef}
+            className="grid gap-2 overflow-y-auto bg-slate-50 p-3"
+            aria-live="polite"
+            aria-label="Tin nhắn trợ lý AI"
+          >
             {aiStatus !== "ready" ? (
               <article className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
                 {aiStatus === "checking" ? "Đang kiểm tra trạng thái trợ lý AI..." : aiNotice || AI_UNAVAILABLE_FRIENDLY}
@@ -200,23 +200,34 @@ export default function FloatingChatWidget() {
             ) : null}
           </div>
 
-          <form className="grid grid-cols-[1fr,auto] gap-2 border-t border-slate-200 bg-white p-3" onSubmit={submit}>
-            <textarea
-              className="min-h-[56px] resize-none rounded-xl border border-slate-300 p-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:cursor-not-allowed disabled:bg-slate-100"
-              disabled={inputDisabled}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={onKeyDown}
-              placeholder={placeholder}
-              rows={2}
-              value={input}
-            />
-            <button
-              className="rounded-xl bg-rose-600 px-4 text-sm font-bold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={inputDisabled || input.trim().length === 0}
-              type="submit"
-            >
-              Gửi
-            </button>
+          <form className="grid gap-2 border-t border-slate-200 bg-white p-3" onSubmit={submit}>
+            <div className="flex items-center justify-end">
+              <span className={`text-[11px] ${input.length > 400 ? "font-semibold text-rose-500" : "text-slate-400"}`}>
+                {input.length}/500
+              </span>
+            </div>
+            <div className="grid grid-cols-[1fr,auto] gap-2">
+              <textarea
+                className="min-h-[56px] resize-none rounded-xl border border-slate-300 p-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                disabled={inputDisabled}
+                onChange={(event) => handleInputChange(event.target.value)}
+                onKeyDown={onKeyDown}
+                placeholder={placeholder}
+                rows={2}
+                value={input}
+                aria-label="Tin nhắn trợ lý AI"
+              />
+              <button
+                className="rounded-xl bg-rose-600 px-4 text-sm font-bold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={inputDisabled || input.trim().length === 0}
+                type="submit"
+              >
+                Gửi
+              </button>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-400" aria-hidden="true">
+              Enter để gửi · Shift+Enter để xuống dòng · Esc để đóng
+            </p>
           </form>
         </section>
       ) : (
@@ -226,7 +237,7 @@ export default function FloatingChatWidget() {
           type="button"
           aria-label="Mở trợ lý AI"
         >
-          <img src="/chat-icon.svg" alt="Biểu tượng chat" className="h-5 w-5" />
+          <img src="/chat-icon.svg" alt="" className="h-5 w-5" />
         </button>
       )}
     </div>

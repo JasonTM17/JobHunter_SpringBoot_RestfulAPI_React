@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
+import CompanyLogo from "../components/common/CompanyLogo";
 import DashboardHero from "../components/common/DashboardHero";
 import EmptyState from "../components/common/EmptyState";
 import ErrorState from "../components/common/ErrorState";
@@ -11,8 +12,9 @@ import { useAuth } from "../contexts/auth-context";
 import { fetchCurrentUserResumesWithAuth } from "../services/auth-rbac-api";
 import { fetchAllJobs } from "../services/jobhunter-api";
 import { Job, ResumeItem } from "../types/models";
+import { getBookmarks, removeBookmark } from "../utils/bookmarks";
 import { toUserErrorMessage } from "../utils/error-message";
-import { formatCurrencyVnd, formatDateVi } from "../utils/format";
+import { formatCurrencyVnd, formatDateVi, shortText, stripHtml } from "../utils/format";
 import { canAccessCandidateWorkspace } from "../utils/workspace";
 
 function statusLabel(status: string): string {
@@ -39,6 +41,7 @@ export default function CandidateWorkspacePage() {
   const [error, setError] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
+  const [savedJobs, setSavedJobs] = useState<Job[]>([]);
 
   const loginHref = useMemo(() => `/login?next=${encodeURIComponent(router.asPath || "/candidate")}`, [router.asPath]);
   const isAllowed = canAccessCandidateWorkspace(roleName, canAccessManagement);
@@ -57,6 +60,11 @@ export default function CandidateWorkspacePage() {
       const [jobData, resumeData] = await Promise.all([fetchAllJobs(), fetchCurrentUserResumesWithAuth()]);
       setJobs(jobData.filter((item) => item.active));
       setResumes(resumeData);
+
+      // Load saved job bookmarks
+      const bookmarkIds = getBookmarks();
+      const allJobsForBookmark = jobData;
+      setSavedJobs(allJobsForBookmark.filter((j) => bookmarkIds.includes(j.id)));
     } catch (loadError) {
       setError(toUserErrorMessage(loadError, "Không thể tải dữ liệu ứng viên lúc này."));
     } finally {
@@ -73,7 +81,7 @@ export default function CandidateWorkspacePage() {
   if (status === "loading") {
     return (
       <>
-        <Head><title>Không gian ứng viên — Jobhunter</title></Head>
+        <Head><title>Không gian ứng viên — Jobhunter</title><meta name="description" content="Theo dõi hồ sơ đã ứng tuyển, trạng thái phản hồi và xem nhanh việc làm phù hợp dành cho ứng viên." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <LoadingState title="Đang khởi tạo không gian ứng viên..." rows={4} />
         </main>
@@ -84,7 +92,7 @@ export default function CandidateWorkspacePage() {
   if (status !== "authenticated") {
     return (
       <>
-        <Head><title>Không gian ứng viên — Jobhunter</title></Head>
+        <Head><title>Không gian ứng viên — Jobhunter</title><meta name="description" content="Theo dõi hồ sơ đã ứng tuyển, trạng thái phản hồi và xem nhanh việc làm phù hợp dành cho ứng viên." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <EmptyState
           title="Bạn cần đăng nhập để vào không gian ứng viên"
@@ -104,7 +112,7 @@ export default function CandidateWorkspacePage() {
   if (loading) {
     return (
       <>
-        <Head><title>Không gian ứng viên — Jobhunter</title></Head>
+        <Head><title>Không gian ứng viên — Jobhunter</title><meta name="description" content="Theo dõi hồ sơ đã ứng tuyển, trạng thái phản hồi và xem nhanh việc làm phù hợp dành cho ứng viên." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <LoadingState title="Đang tải dữ liệu ứng viên..." rows={5} />
         </main>
@@ -115,7 +123,7 @@ export default function CandidateWorkspacePage() {
   if (error) {
     return (
       <>
-        <Head><title>Không gian ứng viên — Jobhunter</title></Head>
+        <Head><title>Không gian ứng viên — Jobhunter</title><meta name="description" content="Theo dõi hồ sơ đã ứng tuyển, trạng thái phản hồi và xem nhanh việc làm phù hợp dành cho ứng viên." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <ErrorState description={error} onRetry={() => void loadData()} />
         </main>
@@ -204,6 +212,61 @@ export default function CandidateWorkspacePage() {
           </>
         }
       />
+
+      {/* Saved jobs section */}
+      {savedJobs.length > 0 && (
+        <section className="mt-4">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Việc làm đã lưu</h2>
+                <p className="mt-0.5 text-sm text-slate-500">{savedJobs.length} việc làm đã được bookmark</p>
+              </div>
+            </div>
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+              {savedJobs.slice(0, 6).map((job) => (
+                <article key={job.id} className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                  <div className="flex items-start gap-2.5">
+                    <CompanyLogo name={job.company?.name} logo={job.company?.logo} size="sm" className="shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <h3 className="line-clamp-2 text-sm font-semibold text-slate-800">{job.name}</h3>
+                      <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{job.company?.name ?? "Công ty"}</p>
+                      <p className="mt-1 text-xs font-bold text-rose-600">{formatCurrencyVnd(job.salary)}/tháng</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        removeBookmark(job.id);
+                        setSavedJobs((prev) => prev.filter((j) => j.id !== job.id));
+                      }}
+                      className="shrink-0 rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-500"
+                      aria-label="Bỏ lưu việc làm"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Link
+                      href={`/jobs/${job.id}`}
+                      className="flex-1 rounded-xl bg-rose-600 px-2 py-1.5 text-center text-xs font-bold text-white transition hover:bg-rose-700"
+                    >
+                      Ứng tuyển
+                    </Link>
+                    <Link
+                      href={`/jobs/${job.id}`}
+                      className="flex-1 rounded-xl border border-slate-300 px-2 py-1.5 text-center text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                      Chi tiết
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_360px]">
         <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
