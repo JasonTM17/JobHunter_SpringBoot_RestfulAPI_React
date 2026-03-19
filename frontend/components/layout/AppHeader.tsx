@@ -144,7 +144,7 @@ export default function AppHeader() {
       {/* ── Top brand strip ─────────────────────────────── */}
       <div className="bg-gradient-to-r from-rose-600 via-rose-500 to-pink-500 px-4 py-1.5 text-center text-xs font-semibold tracking-wide text-white shadow-sm">
         <span className="hidden sm:inline">
-          Tìm việc IT nhanh hơn cùng Jobhunter — hơn 95 việc làm đang tuyển
+          Nền tảng tuyển dụng IT hàng đầu — cập nhật việc làm mới mỗi ngày
         </span>
         <span className="inline sm:hidden">Jobhunter — Việc làm IT cho mọi cấp độ</span>
       </div>

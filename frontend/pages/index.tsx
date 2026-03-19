@@ -741,6 +741,7 @@ export default function HomePage() {
           <FeaturedEmployersStrip
             items={featuredCompanies}
             totalCompanies={companies.length}
+            loading={loading}
             onViewAllCompanies={handleViewAllCompanies}
             onSelectCompany={handleSelectCompany}
           />
@@ -892,6 +893,21 @@ export default function HomePage() {
                 ))}
               </div>
             </section>
+          ) : !loading ? (
+            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-500">
+                    Xem chi tiết từng doanh nghiệp
+                  </p>
+                  <h3 className="mt-1 text-base font-bold text-slate-900">Tất cả công ty</h3>
+                </div>
+              </div>
+              <EmptyState
+                title="Chưa có doanh nghiệp nào"
+                description="Hệ thống hiện chưa có doanh nghiệp nào. Hãy quay lại sau!"
+              />
+            </section>
           ) : null}
 
           {secondaryCompanies.length ? (
@@ -935,6 +951,24 @@ export default function HomePage() {
                   </button>
                 ))}
               </div>
+            </section>
+          ) : !loading && companies.length > FEATURED_EMPLOYERS_LIMIT ? (
+            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                    Mở rộng hệ sinh thái tuyển dụng
+                  </p>
+                  <h2 className="mt-1 text-base font-bold text-slate-900">Khám phá thêm doanh nghiệp</h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Ngoài nhóm nổi bật phía trên, đây là những doanh nghiệp cũng đang tuyển dụng tích cực.
+                  </p>
+                </div>
+              </div>
+              <EmptyState
+                title="Không còn doanh nghiệp nào khác"
+                description="Đã hiển thị toàn bộ doanh nghiệp trên hệ thống."
+              />
             </section>
           ) : null}
         </section>
