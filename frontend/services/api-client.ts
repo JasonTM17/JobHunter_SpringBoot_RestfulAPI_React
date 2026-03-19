@@ -174,18 +174,35 @@ async function refreshSession(): Promise<boolean> {
 
 export async function apiRequest<T>(
   path: string,
-  init?: RequestInit,
+  options?: {
+    method?: string;
+    headers?: HeadersInit;
+    body?: unknown;
+    signal?: AbortSignal;
+  },
   query?: Record<string, QueryValue>
 ): Promise<T> {
-  const headers = new Headers(init?.headers);
-  if (shouldSetJsonHeader(init?.body) && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
+  const headers = new Headers(options?.headers);
+
+  let finalBody: BodyInit | undefined = undefined;
+  const rawBody = options?.body;
+  if (shouldSetJsonHeader(rawBody as BodyInit)) {
+    if (typeof rawBody === "object" && rawBody !== null && !(rawBody instanceof FormData)) {
+      finalBody = JSON.stringify(rawBody);
+    } else {
+      finalBody = rawBody as BodyInit;
+    }
+    if (!headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
   }
 
   const url = withQuery(path, query);
 
   const requestInit: RequestInit = {
-    ...init,
+    method: options?.method,
+    signal: options?.signal,
+    body: finalBody,
     credentials: "include",
     headers
   };
