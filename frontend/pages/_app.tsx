@@ -16,11 +16,11 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
       <div className="min-h-screen flex flex-col">
         <AppHeader />
-        <main className="flex-1">
+        <div className="flex-1">
           <ErrorBoundary>
             <Component {...pageProps} />
           </ErrorBoundary>
-        </main>
+        </div>
         <SiteFooter />
       </div>
     </AuthProvider>

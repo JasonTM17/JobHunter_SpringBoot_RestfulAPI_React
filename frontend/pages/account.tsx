@@ -83,7 +83,7 @@ export default function AccountPage() {
   if (status === "loading") {
     return (
       <>
-        <Head><title>Cài đặt tài khoản — Jobhunter</title></Head>
+        <Head><title>Cài đặt tài khoản — Jobhunter</title><meta name="description" content="Quản lý thông tin tài khoản, cài đặt email gợi ý việc làm và xem nhanh workspace phù hợp với vai trò của bạn." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
           <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
             <p className="text-sm text-slate-600">Đang tải thông tin tài khoản...</p>
@@ -96,7 +96,7 @@ export default function AccountPage() {
   if (status !== "authenticated" || !currentUser) {
     return (
       <>
-        <Head><title>Cài đặt tài khoản — Jobhunter</title></Head>
+        <Head><title>Cài đặt tài khoản — Jobhunter</title><meta name="description" content="Quản lý thông tin tài khoản, cài đặt email gợi ý việc làm và xem nhanh workspace phù hợp với vai trò của bạn." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
           <section className="grid gap-4 rounded-[30px] border border-slate-200 bg-white p-5 shadow-soft sm:p-6 lg:grid-cols-[1.08fr,0.92fr] lg:p-8">
           <article className="rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-6 text-white sm:p-7">

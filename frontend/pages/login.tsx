@@ -103,6 +103,7 @@ export default function LoginPage() {
     <>
       <Head>
         <title>Đăng nhập — Jobhunter</title>
+        <meta name="description" content="Đăng nhập vào Jobhunter để theo dõi việc làm phù hợp, quản lý hồ sơ ứng tuyển và kết nối nhanh với nhà tuyển dụng." />
       </Head>
     <AuthShell
       eyebrow="Đăng nhập tài khoản"
@@ -182,9 +183,9 @@ export default function LoginPage() {
             </label>
 
             <div className="mt-0.5 flex items-center justify-end">
-              <span className="text-xs text-slate-400">
-                Quên mật khẩu? Liên hệ quản trị viên.
-              </span>
+              <Link href="/forgot-password" className="text-xs font-semibold text-rose-600 transition hover:text-rose-700 hover:underline">
+                Quên mật khẩu?
+              </Link>
             </div>
 
             <button

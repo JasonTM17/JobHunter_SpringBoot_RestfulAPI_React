@@ -82,7 +82,7 @@ export default function AdminWorkspacePage() {
   if (status === "loading") {
     return (
       <>
-        <Head><title>Khu quản trị — Jobhunter</title></Head>
+        <Head><title>Khu quản trị — Jobhunter</title><meta name="description" content="Bảng điều hành quản trị hệ thống Jobhunter — quản lý việc làm, công ty, kỹ năng, tài khoản và phân quyền người dùng." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <LoadingState title="Đang khởi tạo khu quản trị..." rows={4} />
         </main>
@@ -93,7 +93,7 @@ export default function AdminWorkspacePage() {
   if (status !== "authenticated") {
     return (
       <>
-        <Head><title>Khu quản trị — Jobhunter</title></Head>
+        <Head><title>Khu quản trị — Jobhunter</title><meta name="description" content="Bảng điều hành quản trị hệ thống Jobhunter — quản lý việc làm, công ty, kỹ năng, tài khoản và phân quyền người dùng." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <EmptyState
           title="Bạn cần đăng nhập để vào khu quản trị"
@@ -113,7 +113,7 @@ export default function AdminWorkspacePage() {
   if (loading) {
     return (
       <>
-        <Head><title>Khu quản trị — Jobhunter</title></Head>
+        <Head><title>Khu quản trị — Jobhunter</title><meta name="description" content="Bảng điều hành quản trị hệ thống Jobhunter — quản lý việc làm, công ty, kỹ năng, tài khoản và phân quyền người dùng." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <LoadingState title="Đang tải số liệu quản trị..." rows={5} />
         </main>
@@ -124,7 +124,7 @@ export default function AdminWorkspacePage() {
   if (error) {
     return (
       <>
-        <Head><title>Khu quản trị — Jobhunter</title></Head>
+        <Head><title>Khu quản trị — Jobhunter</title><meta name="description" content="Bảng điều hành quản trị hệ thống Jobhunter — quản lý việc làm, công ty, kỹ năng, tài khoản và phân quyền người dùng." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <ErrorState description={error} onRetry={() => void loadData()} />
         </main>

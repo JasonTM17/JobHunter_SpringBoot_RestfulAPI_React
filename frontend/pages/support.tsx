@@ -45,6 +45,7 @@ export default function SupportPage() {
     <>
       <Head>
         <title>Hỗ trợ — Jobhunter</title>
+        <meta name="description" content="Câu hỏi thường gặp, chính sách bảo mật, điều khoản sử dụng và thông tin liên hệ hỗ trợ của Jobhunter." />
       </Head>
       <main className="mx-auto max-w-[720px] px-4 py-10 sm:px-6">
         <div className="mb-8">

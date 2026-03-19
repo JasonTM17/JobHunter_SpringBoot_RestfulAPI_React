@@ -83,7 +83,7 @@ export default function RecruiterWorkspacePage() {
   if (status === "loading") {
     return (
       <>
-        <Head><title>Không gian tuyển dụng — Jobhunter</title></Head>
+        <Head><title>Không gian tuyển dụng — Jobhunter</title><meta name="description" content="Quản lý tin tuyển dụng, theo dõi hồ sơ ứng viên và điều phối quy trình tuyển dụng hiệu quả." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <LoadingState title="Đang khởi tạo không gian tuyển dụng..." rows={4} />
         </main>
@@ -94,7 +94,7 @@ export default function RecruiterWorkspacePage() {
   if (status !== "authenticated") {
     return (
       <>
-        <Head><title>Không gian tuyển dụng — Jobhunter</title></Head>
+        <Head><title>Không gian tuyển dụng — Jobhunter</title><meta name="description" content="Quản lý tin tuyển dụng, theo dõi hồ sơ ứng viên và điều phối quy trình tuyển dụng hiệu quả." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
         <EmptyState
           title="Bạn cần đăng nhập để vào khu tuyển dụng"
@@ -114,7 +114,7 @@ export default function RecruiterWorkspacePage() {
   if (loading) {
     return (
       <>
-        <Head><title>Không gian tuyển dụng — Jobhunter</title></Head>
+        <Head><title>Không gian tuyển dụng — Jobhunter</title><meta name="description" content="Quản lý tin tuyển dụng, theo dõi hồ sơ ứng viên và điều phối quy trình tuyển dụng hiệu quả." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <LoadingState title="Đang tải dữ liệu tuyển dụng..." rows={5} />
         </main>
@@ -125,7 +125,7 @@ export default function RecruiterWorkspacePage() {
   if (error) {
     return (
       <>
-        <Head><title>Không gian tuyển dụng — Jobhunter</title></Head>
+        <Head><title>Không gian tuyển dụng — Jobhunter</title><meta name="description" content="Quản lý tin tuyển dụng, theo dõi hồ sơ ứng viên và điều phối quy trình tuyển dụng hiệu quả." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <ErrorState description={error} onRetry={() => void loadData()} />
         </main>

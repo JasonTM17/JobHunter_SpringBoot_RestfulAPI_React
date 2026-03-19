@@ -6,6 +6,7 @@ export default function NotFoundPage() {
     <>
       <Head>
         <title>Trang không tồn tại — Jobhunter</title>
+        <meta name="description" content="Trang bạn đang tìm không còn tồn tại trên Jobhunter. Quay về trang chủ để tiếp tục tìm việc IT." />
       </Head>
       <SystemPageShell
       label="Trang không tồn tại"

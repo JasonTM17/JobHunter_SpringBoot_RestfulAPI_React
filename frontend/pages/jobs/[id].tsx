@@ -29,6 +29,17 @@ export default function JobDetailPage() {
   const [applying, setApplying] = useState(false);
   const [applyError, setApplyError] = useState("");
   const [applySuccess, setApplySuccess] = useState("");
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  async function copyJobLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      // clipboard not available
+    }
+  }
 
   const jobId = useMemo(() => {
     const raw = router.query.id;
@@ -129,7 +140,7 @@ export default function JobDetailPage() {
   if (loading) {
     return (
       <>
-        <Head><title>Đang tải — Jobhunter</title></Head>
+        <Head><title>Đang tải — Jobhunter</title><meta name="description" content="Đang tải chi tiết công việc trên Jobhunter." /></Head>
         <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <LoadingState title="Đang tải chi tiết công việc..." rows={5} />
         </main>
@@ -140,7 +151,7 @@ export default function JobDetailPage() {
   if (error || !job) {
     return (
       <>
-        <Head><title>Chi tiết công việc — Jobhunter</title></Head>
+        <Head><title>Chi tiết công việc — Jobhunter</title><meta name="description" content="Không tìm thấy công việc này trên Jobhunter." /></Head>
         <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
           <ErrorState description={error || "Không tìm thấy dữ liệu công việc."} onRetry={() => void loadJob()} />
           <div className="mt-3">
@@ -180,21 +191,45 @@ export default function JobDetailPage() {
     <>
       <Head>
         <title>{job.name} — Jobhunter</title>
+        <meta name="description" content={`${job.name} — ${companyName}. Mức lương ${formatCurrencyVnd(job.salary)}/tháng tại ${formatLocationLabel(job.location)}. Ứng tuyển ngay trên Jobhunter.`} />
       </Head>
       <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
       <header className="relative overflow-hidden rounded-[28px] border border-slate-700 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 text-white shadow-soft sm:p-6 lg:p-7">
         {/* Decorative glow */}
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-rose-500/10 blur-3xl" />
 
-        <Link
-          href="/"
-          className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-slate-100 backdrop-blur transition hover:bg-white/20"
-        >
-          <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Quay lại danh sách việc làm
-        </Link>
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-slate-100 backdrop-blur transition hover:bg-white/20"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Quay lại
+          </Link>
+          <button
+            type="button"
+            onClick={copyJobLink}
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-semibold text-slate-100 backdrop-blur transition hover:bg-white/20"
+          >
+            {linkCopied ? (
+              <>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Đã sao chép!
+              </>
+            ) : (
+              <>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Chia sẻ
+              </>
+            )}
+          </button>
+        </div>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
           <div className="min-w-0">

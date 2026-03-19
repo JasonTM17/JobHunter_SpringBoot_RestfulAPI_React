@@ -25,6 +25,7 @@ export default function ForbiddenPage() {
     <>
       <Head>
         <title>Không có quyền truy cập — Jobhunter</title>
+        <meta name="description" content="Bạn không có quyền truy cập khu vực này trên Jobhunter. Quay về workspace phù hợp với vai trò của bạn." />
       </Head>
       <SystemPageShell
       label="Mã lỗi 403"
