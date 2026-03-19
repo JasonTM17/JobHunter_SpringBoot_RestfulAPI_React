@@ -63,14 +63,14 @@ async function fetchAllPagesWithAuth<T>(
 export async function loginWithPassword(username: string, password: string): Promise<AuthLoginResponse> {
   return apiRequest<AuthLoginResponse>(`${API_PREFIX}/auth/login`, {
     method: "POST",
-    body: JSON.stringify({ username, password })
+    body: { username, password }
   });
 }
 
 export async function registerAccount(payload: RegisterPayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/auth/register`, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 
@@ -89,7 +89,7 @@ export async function fetchEmailPreferences(): Promise<EmailPreferenceSetting> {
 export async function updateEmailPreferences(weeklyJobRecommendationEnabled: boolean): Promise<EmailPreferenceSetting> {
   return apiRequest<EmailPreferenceSetting>(`${API_PREFIX}/auth/preferences/email`, {
     method: "PATCH",
-    body: JSON.stringify({ weeklyJobRecommendationEnabled })
+    body: { weeklyJobRecommendationEnabled }
   });
 }
 
@@ -118,14 +118,14 @@ export async function fetchUsersWithAuth(): Promise<UserListItem[]> {
 export async function createUserWithAuth(payload: UserCreatePayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/users`, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 
 export async function updateUserWithAuth(userId: number, payload: UserUpdatePayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/users/${userId}`, {
     method: "PUT",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 
@@ -154,14 +154,14 @@ export async function fetchCurrentUserResumesWithAuth(): Promise<ResumeItem[]> {
 export async function createResumeWithAuth(payload: ResumeCreatePayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/resumes`, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 
 export async function updateResumeWithAuth(payload: ResumeUpdatePayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/resumes`, {
     method: "PUT",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 

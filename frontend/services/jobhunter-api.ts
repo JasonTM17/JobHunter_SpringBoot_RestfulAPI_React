@@ -126,14 +126,14 @@ export async function fetchJobDetail(jobId: number): Promise<Job> {
 export async function createJob(payload: JobUpsertPayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/jobs`, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 
 export async function updateJob(payload: JobUpsertPayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/jobs`, {
     method: "PUT",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 
@@ -146,14 +146,14 @@ export async function deleteJob(jobId: number): Promise<void> {
 export async function createCompany(payload: Omit<CompanyUpsertPayload, "id">): Promise<void> {
   await apiRequest(`${API_PREFIX}/companies`, {
     method: "POST",
-    body: JSON.stringify({ ...payload, id: 0 })
+    body: { ...payload, id: 0 }
   });
 }
 
 export async function updateCompany(payload: CompanyUpsertPayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/companies`, {
     method: "PUT",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 
@@ -166,14 +166,14 @@ export async function deleteCompany(companyId: number): Promise<void> {
 export async function createSkill(payload: SkillUpsertPayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/skills`, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 
 export async function updateSkill(payload: SkillUpsertPayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/skills`, {
     method: "PUT",
-    body: JSON.stringify(payload)
+    body: payload
   });
 }
 
@@ -198,7 +198,7 @@ export async function sendChat(message: string): Promise<ChatResponsePayload> {
   try {
     return await apiRequest<ChatResponsePayload>(`${API_PREFIX}/ai/chat`, {
       method: "POST",
-      body: JSON.stringify({ message })
+      body: { message }
     });
   } catch (error) {
     throw normalizeChatError(error);
