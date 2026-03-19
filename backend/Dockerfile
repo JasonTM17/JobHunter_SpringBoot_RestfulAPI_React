@@ -25,7 +25,7 @@ RUN mkdir -p /app/storage /app/logs
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 ENV SERVER_PORT=8080 \
-    SPRING_PROFILES_ACTIVE=dev \
+    SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-dev} \
     UPLOAD_BASE_URI=file:///app/storage/
 
 EXPOSE 8080
