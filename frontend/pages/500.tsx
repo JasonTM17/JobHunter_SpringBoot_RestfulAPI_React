@@ -6,6 +6,7 @@ export default function ServerErrorPage() {
     <>
       <Head>
         <title>Lỗi hệ thống — Jobhunter</title>
+        <meta name="description" content="Máy chủ Jobhunter tạm thời gặp sự cố. Vui lòng thử lại sau hoặc quay về trang chủ." />
       </Head>
       <SystemPageShell
         label="Lỗi hệ thống"

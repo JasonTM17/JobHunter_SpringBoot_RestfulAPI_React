@@ -27,6 +27,7 @@ export default function RegisterPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const nextPath = useMemo(() => {
     const raw = router.query.next;
@@ -55,6 +56,29 @@ export default function RegisterPage() {
       }
     }
     return null;
+  }
+
+  function validateField(name: string, value: string): string | null {
+    if (name === "name") {
+      if (!value.trim()) return "Vui lòng nhập họ tên.";
+    }
+    if (name === "email") {
+      if (!value.trim()) return "Vui lòng nhập email.";
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value.trim())) return "Email không đúng định dạng.";
+    }
+    if (name === "password") {
+      if (value.length > 0 && value.length < 6) return "Mật khẩu cần ít nhất 6 ký tự.";
+    }
+    if (name === "confirmPassword") {
+      if (value.length > 0 && value !== password) return "Mật khẩu xác nhận không khớp.";
+    }
+    return null;
+  }
+
+  function handleBlur(name: string, value: string) {
+    const err = validateField(name, value);
+    setFieldErrors((prev) => ({ ...prev, [name]: err ?? "" }));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -96,6 +120,7 @@ export default function RegisterPage() {
     <>
       <Head>
         <title>Tạo tài khoản — Jobhunter</title>
+        <meta name="description" content="Đăng ký tài khoản Jobhunter miễn phí để tìm việc IT, ứng tuyển nhanh và nhận gợi ý việc làm phù hợp mỗi tuần." />
       </Head>
     <AuthShell
       eyebrow="Tạo tài khoản"
@@ -136,10 +161,12 @@ export default function RegisterPage() {
                   <input
                     value={name}
                     onChange={(event) => setName(event.target.value)}
+                    onBlur={(e) => handleBlur("name", e.target.value)}
                     placeholder="Ví dụ: Nguyễn Minh Anh"
                     autoComplete="name"
-                    className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                    className={`rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.name ? "border-rose-400" : "border-slate-300"}`}
                   />
+                  {fieldErrors.name ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.name}</p> : null}
                 </label>
 
                 <label className="grid gap-1.5 text-sm">
@@ -148,10 +175,12 @@ export default function RegisterPage() {
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
+                    onBlur={(e) => handleBlur("email", e.target.value)}
                     placeholder="you@example.com"
                     autoComplete="email"
-                    className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                    className={`rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.email ? "border-rose-400" : "border-slate-300"}`}
                   />
+                  {fieldErrors.email ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.email}</p> : null}
                 </label>
 
                 <label className="grid gap-1.5 text-sm">
@@ -161,9 +190,10 @@ export default function RegisterPage() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
+                      onBlur={(e) => handleBlur("password", e.target.value)}
                       placeholder="Tối thiểu 6 ký tự"
                       autoComplete="new-password"
-                      className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                      className={`w-full rounded-xl border bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.password ? "border-rose-400" : "border-slate-300"}`}
                     />
                     <button
                       type="button"
@@ -184,6 +214,7 @@ export default function RegisterPage() {
                       )}
                     </button>
                   </div>
+                  {fieldErrors.password ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.password}</p> : null}
                 </label>
 
                 <label className="grid gap-1.5 text-sm">
@@ -193,9 +224,10 @@ export default function RegisterPage() {
                       type={showPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(event) => setConfirmPassword(event.target.value)}
+                      onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
                       placeholder="Nhập lại mật khẩu"
                       autoComplete="new-password"
-                      className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100"
+                      className={`w-full rounded-xl border bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.confirmPassword ? "border-rose-400" : "border-slate-300"}`}
                     />
                     <button
                       type="button"
@@ -216,6 +248,7 @@ export default function RegisterPage() {
                       )}
                     </button>
                   </div>
+                  {fieldErrors.confirmPassword ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.confirmPassword}</p> : null}
                 </label>
               </div>
             </section>

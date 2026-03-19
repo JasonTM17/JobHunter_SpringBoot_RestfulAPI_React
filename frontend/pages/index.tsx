@@ -602,6 +602,7 @@ export default function HomePage() {
     <>
       <Head>
         <title>Việc làm IT — Jobhunter</title>
+        <meta name="description" content="Tìm việc IT nhanh chóng, ứng tuyển dễ dàng. Khám phá hàng trăm vị trí tuyển dụng từ các công ty công nghệ hàng đầu Việt Nam." />
       </Head>
       <main className="mx-auto w-full max-w-[1180px] px-4 pb-24 pt-4 sm:px-5 xl:px-6">
       <ToastViewport toasts={toasts} onDismiss={removeToast} />
@@ -832,9 +833,18 @@ export default function HomePage() {
               {filteredJobs.length > JOBS_PER_PAGE ? (
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
                   <p className="text-xs text-slate-500">
-                    Trang {currentPage}/{totalPages}
+                    Hiển thị trang {currentPage} / {totalPages} ({filteredJobs.length} việc làm)
                   </p>
                   <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage(1)}
+                      disabled={currentPage <= 1}
+                      className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label="Trang đầu tiên"
+                    >
+                      «
+                    </button>
                     <button
                       type="button"
                       onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
@@ -864,6 +874,15 @@ export default function HomePage() {
                       className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Sau
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage(totalPages)}
+                      disabled={currentPage >= totalPages}
+                      className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label="Trang cuối cùng"
+                    >
+                      »
                     </button>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Company } from "../../types/models";
 import { shortText, stripHtml } from "../../utils/format";
 import CompanyLogo from "../common/CompanyLogo";
@@ -37,6 +37,10 @@ export default function FeaturedEmployersStrip({
     setCanScrollLeft(el.scrollLeft > 4);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
   }, []);
+
+  useEffect(() => {
+    updateScrollState();
+  }, [updateScrollState, items.length]);
 
   function scrollBy(direction: -1 | 1) {
     const el = scrollRef.current;
@@ -165,8 +169,7 @@ export default function FeaturedEmployersStrip({
       <div
         ref={scrollRef}
         onScroll={updateScrollState}
-        className="flex gap-3 overflow-x-auto pb-1 [scroll-behavior:smooth] [scrollbar-width:thin] [scrollbar-color:theme(colors.slate.300)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
-        style={{ scrollSnapType: "x mandatory" }}
+        className="flex gap-3 overflow-x-auto pb-1 snap-x [scroll-behavior:smooth] [scrollbar-width:thin] [scrollbar-color:theme(colors.slate.300)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
       >
         {items.map(({ company, activeJobs }) => {
           const cardContent = (
