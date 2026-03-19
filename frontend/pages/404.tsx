@@ -1,8 +1,13 @@
-﻿import SystemPageShell from "../components/common/SystemPageShell";
+import Head from "next/head";
+import SystemPageShell from "../components/common/SystemPageShell";
 
 export default function NotFoundPage() {
   return (
-    <SystemPageShell
+    <>
+      <Head>
+        <title>Trang không tồn tại — Jobhunter</title>
+      </Head>
+      <SystemPageShell
       label="Trang không tồn tại"
       code="404"
       title="Bạn vừa đi lạc khỏi Jobhunter"
@@ -19,5 +24,6 @@ export default function NotFoundPage() {
       ]}
       tone="slate"
     />
+    </>
   );
 }

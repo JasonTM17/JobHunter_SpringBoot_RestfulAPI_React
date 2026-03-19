@@ -1,4 +1,5 @@
-﻿import { useRouter } from "next/router";
+import Head from "next/head";
+import { useRouter } from "next/router";
 import { useMemo } from "react";
 import SystemPageShell from "../components/common/SystemPageShell";
 import { useAuth } from "../contexts/auth-context";
@@ -21,7 +22,11 @@ export default function ForbiddenPage() {
   }, [router.query.next]);
 
   return (
-    <SystemPageShell
+    <>
+      <Head>
+        <title>Không có quyền truy cập — Jobhunter</title>
+      </Head>
+      <SystemPageShell
       label="Mã lỗi 403"
       code="403"
       title="Bạn không có quyền truy cập khu vực này"
@@ -49,5 +54,6 @@ export default function ForbiddenPage() {
         ) : null
       }
     />
+    </>
   );
 }
