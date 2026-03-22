@@ -44,14 +44,14 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Grant Gradle wrapper execute permission
-        run: chmod +x backend/gradlew
+        run: chmod +x ./gradlew
 
       - name: Build (no test)
-        run: ./gradlew --no-daemon -p backend classes testClasses --info 2>&1 | tail -20
+        run: ./gradlew --no-daemon classes testClasses --info 2>&1 | tail -20
         shell: bash
 
       - name: Run backend tests
-        run: ./gradlew --no-daemon -p backend test
+        run: ./gradlew --no-daemon test
         shell: bash
 
       - name: Upload backend test results
