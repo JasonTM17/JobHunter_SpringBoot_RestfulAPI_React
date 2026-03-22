@@ -37,7 +37,8 @@ jobs:
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Docker Hub publish skipped::Add secrets DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD (recommended: Docker Hub access token) under Settings → Secrets and variables → Actions to enable CD push."
+            echo "::notice title=Docker Hub publish skipped::Add secrets DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD (recommended: Docker Hub access token) under Settings - Secrets and variables - Actions to enable CD push."
+          fi
 
   # ─────────────────────────────────────────────────────
   # Publish Docker images to Docker Hub
