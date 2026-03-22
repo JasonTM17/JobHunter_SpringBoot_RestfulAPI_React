@@ -46,11 +46,8 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=sha,prefix=
-          flavors: |
+          flavor: |
             latest=true
-          flavor:
-            match: |
-              .*
           labels: |
             org.opencontainers.image.title=Jobhunter Backend API
             org.opencontainers.image.description=Jobhunter REST API backend — Spring Boot 3.x với JWT authentication, role-based access control, và đầy đủ CRUD cho jobs, companies, skills, resumes, users, permissions.
@@ -67,6 +64,8 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=sha,prefix=
+          flavor: |
+            latest=true
           labels: |
             org.opencontainers.image.title=Jobhunter Frontend Web
             org.opencontainers.image.description=Jobhunter frontend — Next.js 15 với TypeScript, TailwindCSS, role-based routing, job search, AI chatbot assistant, và responsive ITviec-style UI.
