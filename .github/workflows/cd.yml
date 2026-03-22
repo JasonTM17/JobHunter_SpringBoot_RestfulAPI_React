@@ -14,15 +14,43 @@ env:
 
 jobs:
   # ─────────────────────────────────────────────────────
+  # Gate: avoid failing the whole workflow when Hub secrets are missing
+  # (GitHub forbids using secrets in job-level `if`, so we probe in bash.)
+  # ─────────────────────────────────────────────────────
+  docker-hub-check:
+    name: Check Docker Hub credentials
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' ||
+       startsWith(github.ref, 'refs/tags/v'))
+    outputs:
+      should_publish: ${{ steps.gate.outputs.should_publish }}
+    steps:
+      - name: Evaluate secrets
+        id: gate
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DH_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
+        run: |
+          if [ -n "$DH_USER" ] && [ -n "$DH_PASS" ]; then
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Docker Hub publish skipped::Add secrets DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD (recommended: Docker Hub access token) under Settings → Secrets and variables → Actions to enable CD push."
+
+  # ─────────────────────────────────────────────────────
   # Publish Docker images to Docker Hub
   # ─────────────────────────────────────────────────────
   publish:
     name: Publish to Docker Hub
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v'))
-
-    outputs:
-      dockerhub_username: ${{ steps.vars.outputs.dockerhub_username }}
+    needs: docker-hub-check
+    if: >-
+      needs.docker-hub-check.outputs.should_publish == 'true' &&
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' ||
+       startsWith(github.ref, 'refs/tags/v'))
 
     steps:
       - name: Checkout
