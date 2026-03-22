@@ -38,6 +38,10 @@ out/
 ### VS Code ###
 .vscode/
 
+### Cursor / Claude agent internals ###
+.claude/
+.cursor/
+
 ### Local secrets / env ###
 .env
 .env.local
