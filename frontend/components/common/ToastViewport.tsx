@@ -96,7 +96,7 @@ export default function ToastViewport({ toasts, onDismiss }: ToastViewportProps)
           <article
             key={toast.id}
             role="alert"
-            className={`toast-enter rounded-xl border px-3 py-2 shadow-soft ${classByType(toast.type)}`}
+            className={`toast-enter rounded-md border px-3 py-2 shadow-soft ${classByType(toast.type)}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-2">

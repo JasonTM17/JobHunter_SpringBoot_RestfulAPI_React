@@ -191,20 +191,12 @@ export interface ResumeItem extends BaseAudit {
 }
 
 export interface ResumeCreatePayload {
-  email: string;
+  jobId: number;
   url: string;
-  status: ResumeStatus;
-  user: { id: number };
-  job: { id: number };
 }
 
-export interface ResumeUpdatePayload {
-  id: number;
-  email: string;
-  url: string;
+export interface ResumeStatusUpdatePayload {
   status: ResumeStatus | string;
-  user?: { id: number } | null;
-  job?: { id: number } | null;
 }
 
 export interface JobUpsertPayload {

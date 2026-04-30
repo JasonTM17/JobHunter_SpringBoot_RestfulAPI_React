@@ -49,7 +49,7 @@ export default function ForbiddenPage() {
       tone="amber"
       notice={
         nextPath ? (
-          <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+          <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
             Đường dẫn vừa bị chặn: <span className="font-semibold text-slate-700">{nextPath}</span>
           </p>
         ) : null

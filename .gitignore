@@ -79,5 +79,10 @@ frontend/.next/
 frontend/out/
 frontend/.turbo/
 frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
+frontend/visual-tests/**/*-win32.png
+frontend/visual-tests/**/*-linux.png
+frontend/visual-tests/**/*-darwin.png
 backend/build/
 backend/.gradle/

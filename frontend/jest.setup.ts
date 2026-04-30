@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import React from 'react';
 
 // ── Next.js router mock ──────────────────────────────────────────────────────
 const mockRouter = {
@@ -35,9 +36,7 @@ jest.mock('next/router', () => ({
 // ── Next.js Image mock ───────────────────────────────────────────────────────
 jest.mock('next/image', () => ({
   __esModule: true,
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    <img {...props} />
-  ),
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => React.createElement('img', props),
 }));
 
 // ── next/link mock ─────────────────────────────────────────────────────────
@@ -47,9 +46,8 @@ jest.mock('next/link', () => ({
     children,
     href,
     ...rest
-  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { children?: React.ReactNode }) => (
-    <a href={href} {...rest}>{children}</a>
-  ),
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { children?: React.ReactNode }) =>
+    React.createElement('a', { href, ...rest }, children),
 }));
 
 // ── window.matchMedia mock ─────────────────────────────────────────────────

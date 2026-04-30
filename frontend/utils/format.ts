@@ -84,6 +84,8 @@ export function formatPermissionName(value?: string | null): string {
   match = normalized.match(/^update a (.+)$/);
   if (match?.[1]) return `Cập nhật ${normalizeEntityName(match[1])}`;
 
+  if (normalized === "update resume status") return "Cập nhật trạng thái hồ sơ ứng tuyển";
+
   match = normalized.match(/^delete a (.+)$/);
   if (match?.[1]) return `Xóa ${normalizeEntityName(match[1])}`;
 
@@ -200,17 +202,26 @@ export function splitDescriptionSections(html?: string | null): {
   return { description, requirements, benefits };
 }
 
+export function resolveStorageUrl(fileUrl?: string | null): string | null {
+  if (!fileUrl) return null;
+  if (fileUrl.startsWith("blob:") || fileUrl.startsWith("data:")) return fileUrl;
+  if (/^https?:\/\//i.test(fileUrl)) return fileUrl;
+  if (fileUrl.startsWith("/storage/")) return `${STORAGE_BASE_URL}${fileUrl}`;
+  if (fileUrl.startsWith("storage/")) return `${STORAGE_BASE_URL}/${fileUrl}`;
+  return `${STORAGE_BASE_URL}/storage/${fileUrl.replace(/^\/+/, "")}`;
+}
+
 export function resolveCompanyLogo(logo?: string | null): string | null {
   if (!logo) return null;
   if (logo.startsWith("blob:") || logo.startsWith("data:")) return logo;
   if (/^https?:\/\//i.test(logo)) return logo;
-  if (logo.startsWith("/storage/")) return `${STORAGE_BASE_URL}${logo}`;
-  if (logo.startsWith("storage/")) return `${STORAGE_BASE_URL}/${logo}`;
+  if (logo.startsWith("/storage/") || logo.startsWith("storage/")) return resolveStorageUrl(logo);
   return `${STORAGE_BASE_URL}/storage/company/${logo}`;
 }
 
 export function getInitials(name?: string | null): string {
-  const safeName = name?.trim() || "JT";
+  const safeName = name?.trim();
+  if (!safeName) return "JT";
   return safeName
     .split(" ")
     .filter(Boolean)

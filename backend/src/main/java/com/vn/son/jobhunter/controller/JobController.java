@@ -25,7 +25,7 @@ public class JobController {
 
     @PostMapping("")
     @ApiMessage("Tạo việc làm")
-    public ResponseEntity<CreatedJobResponse> create(@Valid @RequestBody Job job){
+    public ResponseEntity<CreatedJobResponse> create(@Valid @RequestBody Job job) throws Exception {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 this.jobService.create(job)
         );
@@ -54,8 +54,22 @@ public class JobController {
     @ApiMessage("Lấy danh sách việc làm")
     public ResponseEntity<ResultPaginationResponse> getAll(
             @Filter Specification<Job> spec,
-            Pageable pageable
+            Pageable pageable,
+            @RequestParam(name = "q", required = false) String keyword,
+            @RequestParam(name = "location", required = false) String location,
+            @RequestParam(name = "level", required = false) String level,
+            @RequestParam(name = "skill", required = false) String skill,
+            @RequestParam(name = "salaryMin", required = false) Double salaryMin,
+            @RequestParam(name = "salaryMax", required = false) Double salaryMax,
+            @RequestParam(name = "sort", required = false) String sort
     ){
+        boolean hasPublicFilters =
+                keyword != null || location != null || level != null || skill != null || salaryMin != null || salaryMax != null || sort != null;
+        if (hasPublicFilters) {
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    this.jobService.searchPublicJobs(keyword, location, level, skill, salaryMin, salaryMax, sort, pageable)
+            );
+        }
         return ResponseEntity.status(HttpStatus.OK).body(
                 this.jobService.fetchAllJob(spec, pageable)
         );

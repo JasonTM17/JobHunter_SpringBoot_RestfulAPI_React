@@ -9,6 +9,7 @@ import {
   sanitizeRichText,
   splitDescriptionSections,
   resolveCompanyLogo,
+  resolveStorageUrl,
   getInitials,
   formatPermissionName,
   formatModuleName,
@@ -31,28 +32,28 @@ describe("format utilities", () => {
   });
 
   describe("formatCurrencyVnd", () => {
-    it("returns 'Thoa thuan' for null/undefined/NaN", () => {
-      expect(formatCurrencyVnd(null)).toBe("Thoa thuan");
-      expect(formatCurrencyVnd(undefined)).toBe("Thoa thuan");
-      expect(formatCurrencyVnd(NaN)).toBe("Thoa thuan");
+    it("returns 'Thỏa thuận' for null/undefined/NaN", () => {
+      expect(formatCurrencyVnd(null)).toBe("Thỏa thuận");
+      expect(formatCurrencyVnd(undefined)).toBe("Thỏa thuận");
+      expect(formatCurrencyVnd(NaN)).toBe("Thỏa thuận");
     });
 
     it("formats a number in VND currency", () => {
       const result = formatCurrencyVnd(15000000);
       expect(result).toContain("15");
-      expect(result).toContain("VND");
+      expect(result).toContain("₫");
     });
 
-    it("returns 'Thoa thuan' for 0", () => {
-      expect(formatCurrencyVnd(0)).toBe("Thoa thuan");
+    it("returns 'Thỏa thuận' for 0", () => {
+      expect(formatCurrencyVnd(0)).toBe("Thỏa thuận");
     });
   });
 
   describe("formatDateVi", () => {
-    it("returns 'Dang cap nhat' for null/undefined/invalid date", () => {
-      expect(formatDateVi(null)).toBe("Dang cap nhat");
-      expect(formatDateVi(undefined)).toBe("Dang cap nhat");
-      expect(formatDateVi("invalid-date")).toBe("Dang cap nhat");
+    it("returns 'Đang cập nhật' for null/undefined/invalid date", () => {
+      expect(formatDateVi(null)).toBe("Đang cập nhật");
+      expect(formatDateVi(undefined)).toBe("Đang cập nhật");
+      expect(formatDateVi("invalid-date")).toBe("Đang cập nhật");
     });
 
     it("formats a valid ISO date string", () => {
@@ -63,18 +64,18 @@ describe("format utilities", () => {
   });
 
   describe("formatLevelLabel", () => {
-    it("returns 'Chua cap nhat' for null/undefined", () => {
-      expect(formatLevelLabel(null)).toBe("Chua cap nhat");
-      expect(formatLevelLabel(undefined)).toBe("Chua cap nhat");
+    it("returns 'Chưa cập nhật' for null/undefined", () => {
+      expect(formatLevelLabel(null)).toBe("Chưa cập nhật");
+      expect(formatLevelLabel(undefined)).toBe("Chưa cập nhật");
     });
 
-    it("maps INTERN to 'Thuc tap'", () => {
-      expect(formatLevelLabel("INTERN")).toBe("Thuc tap");
-      expect(formatLevelLabel("intern")).toBe("Thuc tap");
+    it("maps INTERN to 'Thực tập'", () => {
+      expect(formatLevelLabel("INTERN")).toBe("Thực tập");
+      expect(formatLevelLabel("intern")).toBe("Thực tập");
     });
 
-    it("maps FRESHER to 'Moi di lam'", () => {
-      expect(formatLevelLabel("FRESHER")).toBe("Moi di lam");
+    it("maps FRESHER to 'Mới đi làm'", () => {
+      expect(formatLevelLabel("FRESHER")).toBe("Mới đi làm");
     });
 
     it("maps JUNIOR to 'Junior'", () => {
@@ -89,8 +90,8 @@ describe("format utilities", () => {
       expect(formatLevelLabel("MIDDLE")).toBe("Middle");
     });
 
-    it("maps CHUA_CAP_NHAT to 'Chua cap nhat'", () => {
-      expect(formatLevelLabel("CHUA_CAP_NHAT")).toBe("Chua cap nhat");
+    it("maps CHUA_CAP_NHAT to 'Chưa cập nhật'", () => {
+      expect(formatLevelLabel("CHUA_CAP_NHAT")).toBe("Chưa cập nhật");
     });
 
     it("returns original value for unknown levels", () => {
@@ -99,27 +100,27 @@ describe("format utilities", () => {
   });
 
   describe("formatLocationLabel", () => {
-    it("returns 'Chua cap nhat' for null/undefined", () => {
-      expect(formatLocationLabel(null)).toBe("Chua cap nhat");
-      expect(formatLocationLabel(undefined)).toBe("Chua cap nhat");
+    it("returns 'Chưa cập nhật' for null/undefined", () => {
+      expect(formatLocationLabel(null)).toBe("Chưa cập nhật");
+      expect(formatLocationLabel(undefined)).toBe("Chưa cập nhật");
     });
 
-    it("maps REMOTE to 'Lam viec tu xa'", () => {
-      expect(formatLocationLabel("REMOTE")).toBe("Lam viec tu xa");
+    it("maps REMOTE to 'Làm việc từ xa'", () => {
+      expect(formatLocationLabel("REMOTE")).toBe("Làm việc từ xa");
     });
 
-    it("maps HANOI to 'Ha Noi'", () => {
-      expect(formatLocationLabel("HANOI")).toBe("Ha Noi");
+    it("maps HANOI to 'Hà Nội'", () => {
+      expect(formatLocationLabel("HANOI")).toBe("Hà Nội");
     });
 
-    it("maps HOCHIMINH and variants to 'TP. Ho Chi Minh'", () => {
-      expect(formatLocationLabel("HOCHIMINH")).toBe("TP. Ho Chi Minh");
-      expect(formatLocationLabel("HCM")).toBe("TP. Ho Chi Minh");
-      expect(formatLocationLabel("TPHCM")).toBe("TP. Ho Chi Minh");
+    it("maps HOCHIMINH and variants to 'TP. Hồ Chí Minh'", () => {
+      expect(formatLocationLabel("HOCHIMINH")).toBe("TP. Hồ Chí Minh");
+      expect(formatLocationLabel("HCM")).toBe("TP. Hồ Chí Minh");
+      expect(formatLocationLabel("TPHCM")).toBe("TP. Hồ Chí Minh");
     });
 
-    it("maps DANANG to 'Da Nang'", () => {
-      expect(formatLocationLabel("DANANG")).toBe("Da Nang");
+    it("maps DANANG to 'Đà Nẵng'", () => {
+      expect(formatLocationLabel("DANANG")).toBe("Đà Nẵng");
     });
 
     it("returns original value for unknown locations", () => {
@@ -221,6 +222,17 @@ describe("format utilities", () => {
 
     it("limits to two initials", () => {
       expect(getInitials("Nguyen Van A B C")).toBe("NV");
+    });
+  });
+
+  describe("resolveStorageUrl", () => {
+    it("resolves storage paths against the configured storage base", () => {
+      expect(resolveStorageUrl("/storage/resume/cv.pdf")).toBe("http://localhost:8080/storage/resume/cv.pdf");
+      expect(resolveStorageUrl("storage/resume/cv.pdf")).toBe("http://localhost:8080/storage/resume/cv.pdf");
+    });
+
+    it("keeps absolute URLs unchanged", () => {
+      expect(resolveStorageUrl("https://example.com/cv.pdf")).toBe("https://example.com/cv.pdf");
     });
   });
 

@@ -138,9 +138,9 @@ export default function FloatingChatWidget() {
         : CHAT_PLACEHOLDER_DEFAULT;
 
   return (
-    <div className="fixed bottom-16 right-3 z-40 pb-[env(safe-area-inset-bottom)] sm:bottom-4 sm:right-4">
+    <div className="fixed bottom-4 right-3 z-40 pb-[env(safe-area-inset-bottom)] sm:right-4">
       {open ? (
-        <section className="grid h-[min(500px,calc(100vh-6rem))] w-[min(330px,calc(100vw-1rem))] grid-rows-[auto,1fr,auto] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:w-[330px]">
+        <section className="grid h-[min(500px,calc(100vh-6rem))] w-[min(330px,calc(100vw-1rem))] grid-rows-[auto,1fr,auto] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl sm:w-[330px]">
           <header className="flex items-center justify-between border-b border-slate-200 bg-slate-900 px-3 py-2.5 text-white">
             <strong className="text-sm">Trợ lý Jobhunter</strong>
             <div className="flex items-center gap-1.5">
@@ -168,7 +168,7 @@ export default function FloatingChatWidget() {
             aria-label="Tin nhắn trợ lý AI"
           >
             {aiStatus !== "ready" ? (
-              <article className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <article className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
                 {aiStatus === "checking" ? "Đang kiểm tra trạng thái trợ lý AI..." : aiNotice || AI_UNAVAILABLE_FRIENDLY}
               </article>
             ) : null}
@@ -178,10 +178,10 @@ export default function FloatingChatWidget() {
                 key={message.id}
                 className={
                   message.role === "user"
-                    ? "ml-auto max-w-[85%] rounded-xl border border-emerald-200 bg-emerald-100 px-3 py-2 text-sm text-emerald-900"
+                    ? "ml-auto max-w-[85%] rounded-md border border-emerald-200 bg-emerald-100 px-3 py-2 text-sm text-emerald-900"
                     : message.isError
-                      ? "max-w-[85%] rounded-xl border border-rose-200 bg-rose-100 px-3 py-2 text-sm text-rose-900"
-                      : "max-w-[85%] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                      ? "max-w-[85%] rounded-md border border-rose-200 bg-rose-100 px-3 py-2 text-sm text-rose-900"
+                      : "max-w-[85%] rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
                 }
               >
                 {message.text}
@@ -208,7 +208,7 @@ export default function FloatingChatWidget() {
             </div>
             <div className="grid grid-cols-[1fr,auto] gap-2">
               <textarea
-                className="min-h-[56px] resize-none rounded-xl border border-slate-300 p-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="min-h-[56px] resize-none rounded-md border border-slate-300 p-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:cursor-not-allowed disabled:bg-slate-100"
                 disabled={inputDisabled}
                 onChange={(event) => handleInputChange(event.target.value)}
                 onKeyDown={onKeyDown}
@@ -218,7 +218,7 @@ export default function FloatingChatWidget() {
                 aria-label="Tin nhắn trợ lý AI"
               />
               <button
-                className="rounded-xl bg-rose-600 px-4 text-sm font-bold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-md bg-rose-600 px-4 text-sm font-bold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
                 disabled={inputDisabled || input.trim().length === 0}
                 type="submit"
               >
@@ -232,7 +232,7 @@ export default function FloatingChatWidget() {
         </section>
       ) : (
         <button
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-lg shadow-rose-500/30 transition hover:scale-105 sm:h-12 sm:w-12"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-[#b51d1a] text-white shadow-lg shadow-rose-500/30 transition hover:scale-105 sm:h-12 sm:w-12"
           onClick={() => setOpen(true)}
           type="button"
           aria-label="Mở trợ lý AI"

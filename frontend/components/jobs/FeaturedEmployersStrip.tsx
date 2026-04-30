@@ -54,7 +54,7 @@ export default function FeaturedEmployersStrip({
   // Loading skeleton — shown while companies are being fetched
   if (loading) {
     return (
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-card sm:p-4">
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white p-3.5 shadow-card sm:p-4">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <div>
             <div className="mb-1 h-3 w-20 animate-pulse rounded-full bg-slate-200" />
@@ -66,10 +66,10 @@ export default function FeaturedEmployersStrip({
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="w-60 shrink-0 animate-pulse rounded-2xl border border-slate-200 bg-slate-50 p-3.5"
+              className="w-60 shrink-0 animate-pulse rounded-lg border border-slate-200 bg-slate-50 p-3.5"
             >
               <div className="mb-2 flex items-start justify-between gap-2">
-                <div className="h-10 w-10 rounded-xl bg-slate-200" />
+                <div className="h-10 w-10 rounded-md bg-slate-200" />
                 <div className="h-5 w-14 rounded-full bg-slate-200" />
               </div>
               <div className="mb-2 h-4 w-3/4 animate-pulse rounded-full bg-slate-200" />
@@ -87,7 +87,7 @@ export default function FeaturedEmployersStrip({
   // No companies at all — show meaningful empty state instead of silent nothing
   if (!items.length) {
     return (
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-card sm:p-4">
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white p-3.5 shadow-card sm:p-4">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-widest text-rose-500">Doanh nghiệp tiêu biểu</p>
@@ -110,8 +110,7 @@ export default function FeaturedEmployersStrip({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-card sm:p-4">
-      {/* Section header */}
+    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white p-3.5 shadow-card sm:p-4">
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-widest text-rose-500">Doanh nghiệp tiêu biểu</p>
@@ -126,7 +125,7 @@ export default function FeaturedEmployersStrip({
             <button
               type="button"
               onClick={() => onViewAllCompanies()}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700 hover:shadow focus:outline-none focus:ring-2 focus:ring-rose-300"
+              className="inline-flex items-center gap-1.5 rounded-md bg-[#b51d1a] px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#8f1515] hover:shadow focus:outline-none focus:ring-2 focus:ring-rose-300"
               aria-label={`Xem chi tiết ${totalCompanies} công ty`}
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -141,7 +140,7 @@ export default function FeaturedEmployersStrip({
               type="button"
               aria-label="Cuộn sang trái"
               onClick={() => scrollBy(-1)}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
               disabled={!canScrollLeft}
               data-scroll-btn="left"
             >
@@ -154,7 +153,7 @@ export default function FeaturedEmployersStrip({
               aria-label="Cuộn sang phải"
               onClick={() => scrollBy(1)}
               disabled={!canScrollRight}
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
               data-scroll-btn="right"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
@@ -220,12 +219,12 @@ export default function FeaturedEmployersStrip({
               </div>
 
               {/* Gradient bottom accent */}
-              <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl bg-gradient-to-r from-rose-500 to-pink-500 opacity-0 transition group-hover:opacity-100" />
+              <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-lg bg-[#b51d1a] opacity-0 transition group-hover:opacity-100" />
             </>
           );
 
           const cardClass =
-            "group relative flex w-60 shrink-0 snap-start flex-col rounded-2xl border border-slate-200 bg-white p-3.5 text-left transition-all hover:border-rose-200 hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-rose-300 min-w-0";
+            "group relative flex w-60 shrink-0 snap-start flex-col rounded-lg border border-slate-200 bg-white p-3.5 text-left transition-all hover:border-rose-200 hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-rose-300 min-w-0";
 
           if (onSelectCompany) {
             return (

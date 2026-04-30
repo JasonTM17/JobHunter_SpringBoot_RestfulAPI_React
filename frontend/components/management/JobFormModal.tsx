@@ -133,14 +133,14 @@ export default function JobFormModal({
     >
       <form className="grid gap-3" onSubmit={(event) => void handleSubmit(event)}>
         {error ? (
-          <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p>
+          <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p>
         ) : null}
 
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span className="font-semibold text-slate-700">Tên công việc *</span>
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.name}
               onChange={(event) => setState((prev) => ({ ...prev, name: event.target.value }))}
               placeholder="Ví dụ: Frontend Developer"
@@ -150,7 +150,7 @@ export default function JobFormModal({
           <label className="grid gap-1 text-sm">
             <span className="font-semibold text-slate-700">Khu vực *</span>
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 uppercase focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 uppercase focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.location}
               onChange={(event) => setState((prev) => ({ ...prev, location: event.target.value }))}
               placeholder="HANOI / HOCHIMINH / DANANG / REMOTE"
@@ -160,7 +160,7 @@ export default function JobFormModal({
           <label className="grid gap-1 text-sm">
             <span className="font-semibold text-slate-700">Mức lương (VND)</span>
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               inputMode="numeric"
               value={state.salary}
               onChange={(event) =>
@@ -173,7 +173,7 @@ export default function JobFormModal({
           <label className="grid gap-1 text-sm">
             <span className="font-semibold text-slate-700">Số lượng *</span>
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               inputMode="numeric"
               value={state.quantity}
               onChange={(event) =>
@@ -186,7 +186,7 @@ export default function JobFormModal({
           <label className="grid gap-1 text-sm">
             <span className="font-semibold text-slate-700">Cấp độ</span>
             <select
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.level}
               onChange={(event) => setState((prev) => ({ ...prev, level: event.target.value as Level }))}
             >
@@ -201,7 +201,7 @@ export default function JobFormModal({
           <label className="grid gap-1 text-sm">
             <span className="font-semibold text-slate-700">Công ty *</span>
             <select
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.companyId}
               onChange={(event) => setState((prev) => ({ ...prev, companyId: event.target.value }))}
             >
@@ -218,7 +218,7 @@ export default function JobFormModal({
             <span className="font-semibold text-slate-700">Ngày bắt đầu</span>
             <input
               type="date"
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.startDate}
               onChange={(event) => setState((prev) => ({ ...prev, startDate: event.target.value }))}
             />
@@ -228,7 +228,7 @@ export default function JobFormModal({
             <span className="font-semibold text-slate-700">Hạn nộp</span>
             <input
               type="date"
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.endDate}
               onChange={(event) => setState((prev) => ({ ...prev, endDate: event.target.value }))}
             />
@@ -246,7 +246,7 @@ export default function JobFormModal({
 
         <section>
           <h4 className="text-sm font-semibold text-slate-700">Kỹ năng liên quan</h4>
-          <div className="mt-2 grid max-h-36 grid-cols-2 gap-2 overflow-y-auto rounded-xl border border-slate-200 p-3 sm:grid-cols-3">
+          <div className="mt-2 grid max-h-36 grid-cols-2 gap-2 overflow-y-auto rounded-md border border-slate-200 p-3 sm:grid-cols-3">
             {skills.map((skill) => (
               <label key={skill.id} className="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input
@@ -264,7 +264,7 @@ export default function JobFormModal({
           <span className="font-semibold text-slate-700">Mô tả công việc</span>
           <textarea
             rows={8}
-            className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+            className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
             value={state.description}
             onChange={(event) => setState((prev) => ({ ...prev, description: event.target.value }))}
             placeholder="Nhập mô tả công việc, yêu cầu và quyền lợi..."
@@ -275,14 +275,14 @@ export default function JobFormModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
           >
             Hủy
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? "Đang lưu..." : mode === "create" ? "Tạo việc làm" : "Cập nhật"}
           </button>

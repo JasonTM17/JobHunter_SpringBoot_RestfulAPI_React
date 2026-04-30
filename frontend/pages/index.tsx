@@ -2,15 +2,15 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import FloatingChatWidget from "../components/chat/FloatingChatWidget";
-import CompanyLogo from "../components/common/CompanyLogo";
 import EmptyState from "../components/common/EmptyState";
 import ErrorState from "../components/common/ErrorState";
 import LoadingState from "../components/common/LoadingState";
 import ToastViewport, { ToastItem, ToastType } from "../components/common/ToastViewport";
+import AboutSection from "../components/home/AboutSection";
+import HomeContentHub from "../components/home/HomeContentHub";
+import HomeHero from "../components/home/HomeHero";
+import JobsBoard from "../components/home/JobsBoard";
 import FeaturedEmployersStrip from "../components/jobs/FeaturedEmployersStrip";
-import JobCard from "../components/jobs/JobCard";
-import JobFilters from "../components/jobs/JobFilters";
-import JobQuickDetail from "../components/jobs/JobQuickDetail";
 import ManagementPanel from "../components/management/ManagementPanel";
 import { useAuth } from "../contexts/auth-context";
 import {
@@ -35,6 +35,10 @@ import {
   fetchAllCompanies,
   fetchAllJobs,
   fetchAllSkills,
+  fetchPublicJobs,
+  fetchSavedJobsWithAuth,
+  saveJobWithAuth,
+  unsaveJobWithAuth,
   updateCompany,
   updateJob,
   updateSkill,
@@ -55,8 +59,9 @@ import {
   UserListItem,
   UserUpdatePayload
 } from "../types/models";
+import { addBookmark, bookmarkScopeFromAccount, getBookmarks, removeBookmark, saveBookmarks } from "../utils/bookmarks";
 import { toUserErrorMessage } from "../utils/error-message";
-import { createId, stripHtml } from "../utils/format";
+import { createId, formatLocationLabel } from "../utils/format";
 import { resolveWorkspaceKind, workspacePath } from "../utils/workspace";
 
 type MainTab = "browse" | "manage";
@@ -65,12 +70,70 @@ const UNKNOWN_LEVEL = "CHUA_CAP_NHAT";
 const JOBS_PER_PAGE = 12;
 const FEATURED_EMPLOYERS_LIMIT = 6;
 const SECONDARY_EMPLOYERS_LIMIT = 12;
+const FILTER_QUERY_KEYS = new Set(["q", "location", "level", "skill", "salaryMin", "salaryMax", "sort", "page"]);
+const DEFAULT_JOB_SORT = "latest";
+const SUPPORTED_JOB_SORTS = new Set([DEFAULT_JOB_SORT, "salary_desc", "deadline_asc"]);
+const CITY_HUBS = [
+  { label: "TP. Hồ Chí Minh", value: "HOCHIMINH" },
+  { label: "Hà Nội", value: "HANOI" },
+  { label: "Đà Nẵng", value: "DANANG" },
+  { label: "Remote", value: "REMOTE" }
+];
+const CAMPAIGN_TILES = [
+  {
+    title: "Upload CV và ứng tuyển nhanh",
+    description: "Ứng viên dùng file CV hiện có, theo dõi trạng thái hồ sơ và tránh nộp trùng.",
+    action: "Mở tài khoản",
+    href: "/account"
+  },
+  {
+    title: "Review JD trước khi apply",
+    description: "Trợ lý AI giúp bóc tách kỹ năng, seniority, lương và điểm cần chuẩn bị.",
+    action: "Hỏi trợ lý AI",
+    href: "/chatbot"
+  },
+  {
+    title: "Recruiter pipeline",
+    description: "Nhà tuyển dụng lọc resume theo job, trạng thái, ngày nộp trong cùng workspace.",
+    action: "Vào recruiter",
+    href: "/recruiter"
+  }
+];
+const FEATURED_ARTICLES = [
+  {
+    label: "Career guide",
+    title: "Checklist CV developer trước khi nộp job IT",
+    description: "Cách trình bày kỹ năng, dự án, thành tựu và link portfolio để recruiter quét nhanh.",
+    keyword: "CV developer"
+  },
+  {
+    label: "Salary report",
+    title: "Đọc khoảng lương IT theo level và city",
+    description: "Gợi ý cách so sánh offer theo gross, net, benefits, remote policy và runway học hỏi.",
+    keyword: "salary"
+  },
+  {
+    label: "Interview prep",
+    title: "Từ JD đến kế hoạch ôn phỏng vấn trong 30 phút",
+    description: "Phân loại requirement bắt buộc, nice-to-have và câu hỏi nên chuẩn bị trước vòng technical.",
+    keyword: "interview"
+  }
+];
+const EXPERTISE_GROUPS = [
+  { title: "Backend", skills: ["Java", "Spring", "NodeJS", "Microservices"], focus: "API, scale, data consistency" },
+  { title: "Frontend", skills: ["ReactJS", "TypeScript", "Next.js", "UI"], focus: "Product UI, performance, accessibility" },
+  { title: "Data & AI", skills: ["Python", "Data", "AI", "Machine Learning"], focus: "Analytics, recommendation, automation" },
+  { title: "Cloud & DevOps", skills: ["AWS", "DevOps", "Docker", "Kubernetes"], focus: "CI/CD, observability, platform reliability" },
+  { title: "Mobile", skills: ["React Native", "Flutter", "iOS", "Android"], focus: "Consumer apps, release quality, UX" },
+  { title: "QA & Automation", skills: ["QA", "Automation", "Testing", "Selenium"], focus: "Test strategy, regression, release confidence" }
+];
 
 export default function HomePage() {
   const router = useRouter();
   const {
     status: authStatus,
     can,
+    currentUser,
     assignableRoles,
     permissionKeys,
     canAccessManagement,
@@ -80,6 +143,9 @@ export default function HomePage() {
 
   const [tab, setTab] = useState<MainTab>("browse");
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [browseJobs, setBrowseJobs] = useState<Job[]>([]);
+  const [browseTotalItems, setBrowseTotalItems] = useState(0);
+  const [browseTotalPages, setBrowseTotalPages] = useState(1);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
@@ -89,6 +155,7 @@ export default function HomePage() {
   const [userCapabilities, setUserCapabilities] = useState<Record<number, UserActionCapability>>({});
 
   const [loading, setLoading] = useState(true);
+  const [browseLoading, setBrowseLoading] = useState(false);
   const [error, setError] = useState("");
   const [rbacLoading, setRbacLoading] = useState(false);
   const [rbacLoaded, setRbacLoaded] = useState(false);
@@ -100,11 +167,15 @@ export default function HomePage() {
   const [skill, setSkill] = useState("ALL");
   const [salaryMin, setSalaryMin] = useState("");
   const [salaryMax, setSalaryMax] = useState("");
+  const [sortMode, setSortMode] = useState(DEFAULT_JOB_SORT);
+  const [filtersHydrated, setFiltersHydrated] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
+  const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
+  const [savingJobIds, setSavingJobIds] = useState<number[]>([]);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
-  const companiesSectionRef = useRef<HTMLDivElement>(null);
+  const companiesSectionRef = useRef<HTMLElement>(null);
   const jobsSectionRef = useRef<HTMLElement>(null);
   const secondaryCompaniesScrollRef = useRef<HTMLDivElement>(null);
   const [secondaryScrollLeft, setSecondaryScrollLeft] = useState(false);
@@ -116,6 +187,7 @@ export default function HomePage() {
     [roleName, canAccessManagement]
   );
   const workspaceHref = useMemo(() => workspacePath(workspace), [workspace]);
+  const bookmarkScope = useMemo(() => bookmarkScopeFromAccount(currentUser), [currentUser]);
   const workspaceLabel = useMemo(() => {
     if (workspace === "admin") return "Bảng điều hành quản trị";
     if (workspace === "recruiter") return "Bảng tuyển dụng";
@@ -137,6 +209,19 @@ export default function HomePage() {
       } else if (value) {
         nextQuery[key] = value;
       }
+    });
+    return nextQuery;
+  }
+
+  function queryValue(key: string): string {
+    const raw = router.query[key];
+    return Array.isArray(raw) ? raw[0] ?? "" : raw ?? "";
+  }
+
+  function queryWithoutFilters(currentQuery: typeof router.query): Record<string, string> {
+    const nextQuery = queryWithoutTab(currentQuery);
+    FILTER_QUERY_KEYS.forEach((key) => {
+      delete nextQuery[key];
     });
     return nextQuery;
   }
@@ -188,6 +273,57 @@ export default function HomePage() {
       setError(toUserErrorMessage(loadError, "Không thể tải dữ liệu tuyển dụng lúc này."));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadBrowseJobs() {
+    if (salaryRangeInvalid) {
+      setBrowseJobs([]);
+      setBrowseTotalItems(0);
+      setBrowseTotalPages(1);
+      return;
+    }
+
+    setBrowseLoading(true);
+    try {
+      const result = await fetchPublicJobs({
+        page: currentPage - 1,
+        size: JOBS_PER_PAGE,
+        q: keyword.trim() || undefined,
+        location: location !== "ALL" ? location : undefined,
+        level: level !== "ALL" ? level : undefined,
+        skill: skill !== "ALL" ? skill : undefined,
+        salaryMin: salaryMin || undefined,
+        salaryMax: salaryMax || undefined,
+        sort: sortMode
+      });
+      setBrowseJobs(result.items);
+      setBrowseTotalItems(result.totalItems);
+      setBrowseTotalPages(Math.max(1, result.totalPages));
+    } catch (loadError) {
+      setBrowseJobs([]);
+      setBrowseTotalItems(0);
+      setBrowseTotalPages(1);
+      addToast("error", toUserErrorMessage(loadError, "Không thể tải danh sách việc làm lúc này."));
+    } finally {
+      setBrowseLoading(false);
+    }
+  }
+
+  async function loadSavedJobIds() {
+    if (authStatus !== "authenticated") {
+      setSavedJobIds(getBookmarks(bookmarkScope));
+      return;
+    }
+
+    try {
+      const savedJobs = await fetchSavedJobsWithAuth();
+      const nextIds = savedJobs.map((job) => job.id);
+      setSavedJobIds(nextIds);
+      saveBookmarks(nextIds, bookmarkScope);
+    } catch (loadError) {
+      setSavedJobIds(getBookmarks(bookmarkScope));
+      addToast("error", toUserErrorMessage(loadError, "Không thể đồng bộ việc làm đã lưu lúc này."));
     }
   }
 
@@ -360,6 +496,10 @@ export default function HomePage() {
     void reloadRbacData();
   }, [authStatus]);
 
+  useEffect(() => {
+    void loadSavedJobIds();
+  }, [authStatus, bookmarkScope]);
+
   const locationOptions = useMemo(
     () => Array.from(new Set(jobs.map((job) => job.location).filter(Boolean))),
     [jobs]
@@ -375,6 +515,39 @@ export default function HomePage() {
     [skills]
   );
 
+  const trendingSkillOptions = useMemo(
+    () => skillOptions.slice(0, 8),
+    [skillOptions]
+  );
+
+  const hubSkillOptions = useMemo(() => {
+    const preferred = [
+      "Java",
+      "ReactJS",
+      "NodeJS",
+      "Python",
+      "DevOps",
+      "AWS",
+      "TypeScript",
+      "Spring",
+      "Docker",
+      "Kubernetes"
+    ];
+    const available = preferred.filter((item) => skillOptions.includes(item));
+    return [...available, ...skillOptions.filter((item) => !available.includes(item))].slice(0, 12);
+  }, [skillOptions]);
+
+  const hubCityOptions = useMemo(() => {
+    const dynamic = locationOptions.map((item) => ({
+      label: formatLocationLabel(item),
+      value: item
+    }));
+    const merged = [...CITY_HUBS, ...dynamic].filter(
+      (item, index, array) => array.findIndex((candidate) => candidate.value === item.value) === index
+    );
+    return merged.slice(0, 8);
+  }, [locationOptions]);
+
   const activeJobsCount = useMemo(() => jobs.filter((job) => job.active).length, [jobs]);
   const activeJobsByCompanyId = useMemo(() => {
     const countMap = new Map<number, number>();
@@ -385,6 +558,15 @@ export default function HomePage() {
     return countMap;
   }, [jobs]);
   const isFilteringKeyword = keyword.trim().toLowerCase() !== deferredKeyword;
+  const salaryRangeInvalid = useMemo(() => {
+    if (!salaryMin || !salaryMax) return false;
+    return Number(salaryMin) > Number(salaryMax);
+  }, [salaryMin, salaryMax]);
+  useEffect(() => {
+    if (!filtersHydrated || tab !== "browse") return;
+    void loadBrowseJobs();
+  }, [filtersHydrated, tab, currentPage, deferredKeyword, location, level, skill, salaryMin, salaryMax, sortMode, salaryRangeInvalid]);
+
   const rankedCompanies = useMemo(
     () =>
       companies
@@ -411,40 +593,49 @@ export default function HomePage() {
     [rankedCompanies]
   );
 
-  const filteredJobs = useMemo(() => {
-    const min = salaryMin ? Number(salaryMin) : null;
-    const max = salaryMax ? Number(salaryMax) : null;
+  useEffect(() => {
+    if (!router.isReady) return;
+    setKeyword(queryValue("q"));
+    setLocation(queryValue("location") || "ALL");
+    setLevel(queryValue("level") || "ALL");
+    setSkill(queryValue("skill") || "ALL");
+    setSalaryMin(queryValue("salaryMin").replace(/[^\d]/g, ""));
+    setSalaryMax(queryValue("salaryMax").replace(/[^\d]/g, ""));
+    const requestedSort = queryValue("sort");
+    setSortMode(SUPPORTED_JOB_SORTS.has(requestedSort) ? requestedSort : DEFAULT_JOB_SORT);
+    const nextPage = Number(queryValue("page") || "1");
+    setCurrentPage(Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1);
+    setFiltersHydrated(true);
+  }, [router.isReady]);
 
-    return jobs.filter((job) => {
-      if (!job.active) return false;
-      if (location !== "ALL" && job.location !== location) return false;
-      if (level !== "ALL" && String(job.level || UNKNOWN_LEVEL) !== level) return false;
-      if (skill !== "ALL" && !(job.skills ?? []).some((item) => item.name === skill)) return false;
-      if (min !== null && Number(job.salary || 0) < min) return false;
-      if (max !== null && Number(job.salary || 0) > max) return false;
+  useEffect(() => {
+    if (!router.isReady || !filtersHydrated || tab !== "browse") return;
 
-      if (!deferredKeyword) return true;
+    const nextQuery = queryWithoutFilters(router.query);
+    if (keyword.trim()) nextQuery.q = keyword.trim();
+    if (location !== "ALL") nextQuery.location = location;
+    if (level !== "ALL") nextQuery.level = level;
+    if (skill !== "ALL") nextQuery.skill = skill;
+    if (salaryMin) nextQuery.salaryMin = salaryMin;
+    if (salaryMax) nextQuery.salaryMax = salaryMax;
+    if (sortMode !== DEFAULT_JOB_SORT) nextQuery.sort = sortMode;
+    if (currentPage > 1) nextQuery.page = String(currentPage);
 
-      const haystack = [
-        job.name,
-        job.location,
-        job.level || "",
-        job.company?.name || "",
-        stripHtml(job.description),
-        ...(job.skills ?? []).map((item) => item.name)
-      ]
-        .join(" ")
-        .toLowerCase();
+    const currentComparable = JSON.stringify(queryWithoutTab(router.query));
+    const nextComparable = JSON.stringify(nextQuery);
+    if (currentComparable === nextComparable) return;
 
-      return haystack.includes(deferredKeyword);
-    });
-  }, [jobs, location, level, skill, salaryMin, salaryMax, deferredKeyword]);
+    void router.replace(
+      {
+        pathname: router.pathname,
+        query: nextQuery
+      },
+      undefined,
+      { shallow: true }
+    );
+  }, [router.isReady, filtersHydrated, tab, keyword, location, level, skill, salaryMin, salaryMax, sortMode, currentPage]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PER_PAGE));
-  const paginatedJobs = useMemo(() => {
-    const start = (currentPage - 1) * JOBS_PER_PAGE;
-    return filteredJobs.slice(start, start + JOBS_PER_PAGE);
-  }, [filteredJobs, currentPage]);
+  const totalPages = browseTotalPages;
 
   const paginationNumbers = useMemo(() => {
     if (totalPages <= 5) {
@@ -463,7 +654,7 @@ export default function HomePage() {
     if (salaryMin) count += 1;
     if (salaryMax) count += 1;
     return count;
-  }, [keyword, location, level, skill, salaryMin, salaryMax]);
+  }, [keyword, location, level, skill, salaryMin, salaryMax, sortMode]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -474,17 +665,17 @@ export default function HomePage() {
   }, [totalPages]);
 
   useEffect(() => {
-    if (!paginatedJobs.length) {
+    if (!browseJobs.length) {
       setSelectedJobId(null);
       return;
     }
-    const stillExists = paginatedJobs.some((item) => item.id === selectedJobId);
+    const stillExists = browseJobs.some((item) => item.id === selectedJobId);
     if (!stillExists) {
-      setSelectedJobId(paginatedJobs[0].id);
+      setSelectedJobId(browseJobs[0].id);
     }
-  }, [paginatedJobs, selectedJobId]);
+  }, [browseJobs, selectedJobId]);
 
-  const selectedJob = paginatedJobs.find((job) => job.id === selectedJobId) ?? null;
+  const selectedJob = browseJobs.find((job) => job.id === selectedJobId) ?? null;
 
   function resetFilters() {
     setKeyword("");
@@ -493,7 +684,30 @@ export default function HomePage() {
     setSkill("ALL");
     setSalaryMin("");
     setSalaryMax("");
+    setSortMode(DEFAULT_JOB_SORT);
     setCurrentPage(1);
+  }
+
+  function scrollToJobs(delay = 80) {
+    setTimeout(() => jobsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), delay);
+  }
+
+  function applyKeywordFilter(value: string) {
+    startTransition(() => setKeyword(value));
+    setCurrentPage(1);
+    scrollToJobs();
+  }
+
+  function applySkillFilter(value: string) {
+    setSkill(value);
+    setCurrentPage(1);
+    scrollToJobs();
+  }
+
+  function applyCityFilter(value: string) {
+    setLocation(value);
+    setCurrentPage(1);
+    scrollToJobs();
   }
 
   function handleViewAllCompanies() {
@@ -501,9 +715,38 @@ export default function HomePage() {
   }
 
   function handleSelectCompany(company: Company) {
-    startTransition(() => setKeyword(company.name));
-    setCurrentPage(1);
-    setTimeout(() => jobsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+    applyKeywordFilter(company.name);
+  }
+
+  async function handleToggleSavedJob(job: Job, nextBookmarked: boolean) {
+    const previousIds = savedJobIds;
+    const optimisticIds = nextBookmarked
+      ? Array.from(new Set([...savedJobIds, job.id]))
+      : savedJobIds.filter((id) => id !== job.id);
+
+    setSavedJobIds(optimisticIds);
+    setSavingJobIds((prev) => Array.from(new Set([...prev, job.id])));
+
+    try {
+      if (authStatus === "authenticated") {
+        const syncedJobs = nextBookmarked ? await saveJobWithAuth(job.id) : await unsaveJobWithAuth(job.id);
+        const syncedIds = syncedJobs.map((item) => item.id);
+        setSavedJobIds(syncedIds);
+        saveBookmarks(syncedIds, bookmarkScope);
+      } else {
+        if (nextBookmarked) {
+          addBookmark(job.id, bookmarkScope);
+        } else {
+          removeBookmark(job.id, bookmarkScope);
+        }
+        saveBookmarks(optimisticIds, bookmarkScope);
+      }
+    } catch (saveError) {
+      setSavedJobIds(previousIds);
+      addToast("error", toUserErrorMessage(saveError, "Không thể cập nhật việc làm đã lưu lúc này."));
+    } finally {
+      setSavingJobIds((prev) => prev.filter((id) => id !== job.id));
+    }
   }
 
   const updateSecondaryScrollState = useCallback(() => {
@@ -604,134 +847,22 @@ export default function HomePage() {
         <title>Việc làm IT — Jobhunter</title>
         <meta name="description" content="Tìm việc IT nhanh chóng, ứng tuyển dễ dàng. Khám phá hàng trăm vị trí tuyển dụng từ các công ty công nghệ hàng đầu Việt Nam." />
       </Head>
-      <main className="mx-auto w-full max-w-[1180px] px-4 pb-24 pt-4 sm:px-5 xl:px-6">
+      <main className="w-full pb-24" data-testid="home-page">
       <ToastViewport toasts={toasts} onDismiss={removeToast} />
 
-      <header className="mb-5 rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 text-white shadow-soft sm:p-6 lg:p-7">
-        {/* Eyebrow label */}
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3.5 py-1.5 text-xs font-semibold text-rose-300">
-          <span className="h-1.5 w-1.5 rounded-full bg-rose-400 animate-pulse" />
-          Việc làm IT dành cho bạn
-        </div>
+      <HomeHero
+        activeJobsCountLabel={renderPublicStat(activeJobsCount)}
+        keyword={keyword}
+        location={location}
+        locationOptions={locationOptions}
+        trendingSkillOptions={trendingSkillOptions}
+        onKeywordChange={(value) => startTransition(() => setKeyword(value))}
+        onLocationChange={setLocation}
+        onSearch={() => scrollToJobs(0)}
+        onSelectSkill={applySkillFilter}
+      />
 
-        {/* Headline */}
-        <h1 className="text-[26px] font-extrabold leading-tight tracking-tight sm:text-[30px] lg:text-[36px]">
-          Tìm việc IT phù hợp
-          <br />
-          <span className="brand-gradient">Nhanh hơn mọi nơi</span>
-        </h1>
-
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-[15px]">
-          Khám phá hàng trăm vị trí tuyển dụng từ các công ty công nghệ hàng đầu. Ứng tuyển dễ dàng, nhận phản hồi nhanh chóng.
-        </p>
-
-        {/* Stats bar — ITviec style */}
-        <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-3 sm:gap-4">
-          {[
-            {
-              icon: (
-                <svg className="h-5 w-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              ),
-              value: activeJobsCount,
-              label: "Việc đang tuyển",
-              fallback: "—"
-            },
-            {
-              icon: (
-                <svg className="h-5 w-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              ),
-              value: companies.length,
-              label: "Doanh nghiệp",
-              fallback: "—"
-            },
-            {
-              icon: (
-                <svg className="h-5 w-5 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              ),
-              value: skills.length,
-              label: "Kỹ năng",
-              fallback: "—"
-            }
-          ].map((stat, i) => (
-            <div key={i} className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/5 p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
-                {stat.icon}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[17px] font-extrabold leading-none sm:text-xl">
-                  {loading ? stat.fallback : error ? stat.fallback : stat.value}
-                </p>
-                <p className="mt-0.5 truncate text-[11px] font-medium text-slate-300">{stat.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* CTAs */}
-        <div className="mt-5 flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => changeMainTab("browse")}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-rose-500/30 transition hover:from-rose-700 hover:to-pink-600 hover:shadow-xl"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            Tìm việc ngay
-          </button>
-
-          {authStatus === "authenticated" ? (
-            <>
-              <button
-                type="button"
-                onClick={() => void router.push(workspaceHref)}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                {workspaceLabel}
-              </button>
-              <button
-                type="button"
-                onClick={() => void router.push("/account")}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                Tài khoản
-              </button>
-              {canAccessManagement ? (
-                <button
-                  type="button"
-                  onClick={() => changeMainTab("manage", manageModuleQuery ?? defaultManageModule)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
-                >
-                  {manageCtaLabel}
-                </button>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => void router.push(`/login?next=${encodeURIComponent(router.asPath || "/")}`)}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                Đăng nhập
-              </button>
-              <button
-                type="button"
-                onClick={() => void router.push(`/register?next=${encodeURIComponent(router.asPath || "/")}`)}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                Đăng ký
-              </button>
-            </>
-          )}
-        </div>
-      </header>
+      <div className="mx-auto w-full max-w-[1180px] px-4 pt-4 sm:px-5 xl:px-6">
 
       {canAccessManagement ? (
         <section className="mb-3 flex flex-wrap gap-2">
@@ -740,8 +871,8 @@ export default function HomePage() {
             onClick={() => changeMainTab("browse")}
             className={
               tab === "browse"
-                ? "rounded-xl bg-slate-900 px-3.5 py-2 text-[13px] font-semibold text-white sm:text-sm"
-                : "rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:text-sm"
+                ? "rounded-md bg-slate-900 px-3.5 py-2 text-[13px] font-semibold text-white sm:text-sm"
+                : "rounded-md border border-slate-300 bg-white px-3.5 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:text-sm"
             }
           >
             Việc làm
@@ -751,8 +882,8 @@ export default function HomePage() {
             onClick={() => changeMainTab("manage", manageModuleQuery ?? defaultManageModule)}
             className={
               tab === "manage"
-                ? "rounded-xl bg-slate-900 px-3.5 py-2 text-[13px] font-semibold text-white sm:text-sm"
-                : "rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:text-sm"
+                ? "rounded-md bg-slate-900 px-3.5 py-2 text-[13px] font-semibold text-white sm:text-sm"
+                : "rounded-md border border-slate-300 bg-white px-3.5 py-2 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:text-sm"
             }
           >
             Quản lý
@@ -766,310 +897,106 @@ export default function HomePage() {
         <ErrorState description={error} onRetry={() => void loadPublicData()} />
       ) : tab === "browse" ? (
         <section className="grid grid-cols-1 gap-4">
-          <FeaturedEmployersStrip
-            items={featuredCompanies}
-            totalCompanies={companies.length}
-            loading={loading}
-            onViewAllCompanies={handleViewAllCompanies}
-            onSelectCompany={handleSelectCompany}
-          />
+          <div id="top-employers" data-testid="top-employers-section">
+            <FeaturedEmployersStrip
+              items={featuredCompanies}
+              totalCompanies={companies.length}
+              loading={loading}
+              onViewAllCompanies={handleViewAllCompanies}
+              onSelectCompany={handleSelectCompany}
+            />
+          </div>
 
-          <JobFilters
+          <JobsBoard
             keyword={keyword}
             location={location}
             level={level}
             skill={skill}
             salaryMin={salaryMin}
             salaryMax={salaryMax}
+            salaryError={salaryRangeInvalid ? "Lương tối thiểu không được lớn hơn lương tối đa." : ""}
             activeFilterCount={activeFilterCount}
-            isFiltering={isFilteringKeyword}
+            isFilteringKeyword={isFilteringKeyword}
             locationOptions={locationOptions}
             levelOptions={levelOptions}
             skillOptions={skillOptions}
+            jobs={browseJobs}
+            totalItems={browseTotalItems}
+            sortMode={sortMode}
+            selectedJobId={selectedJobId}
+            selectedJob={selectedJob}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            paginationNumbers={paginationNumbers}
+            bookmarkScope={bookmarkScope}
+            bookmarkedJobIds={savedJobIds}
+            bookmarkBusyJobIds={savingJobIds}
+            isLoading={browseLoading}
+            jobsSectionRef={jobsSectionRef}
             onKeywordChange={(value) => startTransition(() => setKeyword(value))}
             onLocationChange={setLocation}
             onLevelChange={setLevel}
             onSkillChange={setSkill}
             onSalaryMinChange={setSalaryMin}
             onSalaryMaxChange={setSalaryMax}
+            onSortModeChange={setSortMode}
+            onToggleSavedJob={handleToggleSavedJob}
             onReset={resetFilters}
+            onSelectJob={setSelectedJobId}
+            onCurrentPageChange={setCurrentPage}
           />
 
-          <section className="grid min-w-0 grid-cols-1 items-start gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
-            <section
-              ref={jobsSectionRef}
-              className="min-w-0 w-full rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:p-4"
-            >
-              <div className="mb-3 flex flex-wrap items-end justify-between gap-2.5">
-                <div>
-                  <h2 className="text-[17px] font-bold text-slate-900">Việc làm phù hợp</h2>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    {activeFilterCount > 0 ? `Đang áp dụng ${activeFilterCount} bộ lọc` : "Danh sách việc làm mới nhất cho bạn"}
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
-                    {filteredJobs.length} kết quả
-                  </span>
-                  {isFilteringKeyword ? <p className="text-[11px] text-slate-500">Đang cập nhật theo từ khóa...</p> : null}
-                </div>
-              </div>
+          <HomeContentHub
+            campaignTiles={CAMPAIGN_TILES}
+            featuredArticles={FEATURED_ARTICLES}
+            expertiseGroups={EXPERTISE_GROUPS}
+            rankedCompanies={rankedCompanies}
+            secondaryCompanies={secondaryCompanies}
+            hubSkillOptions={hubSkillOptions}
+            hubCityOptions={CITY_HUBS}
+            companiesCount={companies.length}
+            secondaryScrollLeft={secondaryScrollLeft}
+            secondaryScrollRight={secondaryScrollRight}
+            companiesSectionRef={companiesSectionRef}
+            secondaryCompaniesScrollRef={secondaryCompaniesScrollRef}
+            onResetFilters={resetFilters}
+            onApplySkillFilter={applySkillFilter}
+            onApplyKeywordFilter={applyKeywordFilter}
+            onApplyCityFilter={applyCityFilter}
+            onSelectCompany={handleSelectCompany}
+            onViewAllCompanies={handleViewAllCompanies}
+            onScrollSecondaryBy={scrollSecondaryBy}
+            onUpdateSecondaryScrollState={updateSecondaryScrollState}
+          />
 
-              <div className="grid gap-2.5">
-                {filteredJobs.length === 0 ? (
-                  <EmptyState
-                    title="Không tìm thấy công việc phù hợp"
-                    description="Hãy thử thay đổi bộ lọc hoặc từ khóa tìm kiếm."
-                    actionLabel="Xóa bộ lọc"
-                    onAction={resetFilters}
-                  />
-                ) : (
-                  paginatedJobs.map((job) => (
-                    <JobCard key={job.id} job={job} selected={selectedJobId === job.id} onSelect={setSelectedJobId} />
-                  ))
-                )}
-              </div>
-
-              {filteredJobs.length > JOBS_PER_PAGE ? (
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
-                  <p className="text-xs text-slate-500">
-                    Hiển thị trang {currentPage} / {totalPages} ({filteredJobs.length} việc làm)
-                  </p>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage(1)}
-                      disabled={currentPage <= 1}
-                      className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                      aria-label="Trang đầu tiên"
-                    >
-                      «
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                      disabled={currentPage <= 1}
-                      className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Trước
-                    </button>
-                    {paginationNumbers.map((pageNumber) => (
-                      <button
-                        key={pageNumber}
-                        type="button"
-                        onClick={() => setCurrentPage(pageNumber)}
-                        className={
-                          pageNumber === currentPage
-                            ? "rounded-lg bg-slate-900 px-2.5 py-1 text-xs font-bold text-white"
-                            : "rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                        }
-                      >
-                        {pageNumber}
-                      </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage >= totalPages}
-                      className="rounded-lg border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Sau
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCurrentPage(totalPages)}
-                      disabled={currentPage >= totalPages}
-                      className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-                      aria-label="Trang cuối cùng"
-                    >
-                      »
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-            </section>
-
-            <aside className="h-fit min-w-0 w-full 2xl:sticky 2xl:top-24 2xl:justify-self-end">
-              <JobQuickDetail job={selectedJob} />
-            </aside>
-          </section>
-
-          {companies.length > 0 ? (
-            <section
-              ref={companiesSectionRef}
-              id="companies"
-              className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4"
-              aria-labelledby="companies-heading"
-            >
-              <h2 id="companies-heading" className="sr-only">
-                Tất cả doanh nghiệp
-              </h2>
-              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-500">
-                    Xem chi tiết từng doanh nghiệp
-                  </p>
-                  <h3 className="mt-1 text-base font-bold text-slate-900">Tất cả {companies.length} công ty</h3>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Bấm vào công ty để xem việc làm đang tuyển của công ty đó.
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {rankedCompanies.map(({ company, activeJobs }) => (
-                  <button
-                    key={company.id}
-                    type="button"
-                    onClick={() => handleSelectCompany(company)}
-                    className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-rose-200 hover:bg-rose-50/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200"
-                  >
-                    <CompanyLogo name={company.name} logo={company.logo} size="sm" className="shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="line-clamp-2 text-sm font-semibold text-slate-800">{company.name}</h4>
-                        <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                          {activeJobs} vị trí
-                        </span>
-                      </div>
-                      <p className="mt-2 line-clamp-2 text-xs text-slate-500">
-                        {company.address || "Đang cập nhật địa chỉ"}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : !loading ? (
-            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
-              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-rose-500">
-                    Xem chi tiết từng doanh nghiệp
-                  </p>
-                  <h3 className="mt-1 text-base font-bold text-slate-900">Tất cả công ty</h3>
-                </div>
-              </div>
-              <EmptyState
-                title="Chưa có doanh nghiệp nào"
-                description="Hệ thống hiện chưa có doanh nghiệp nào. Hãy quay lại sau!"
-              />
-            </section>
-          ) : null}
-
-          {secondaryCompanies.length ? (
-            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
-              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    Mở rộng hệ sinh thái tuyển dụng
-                  </p>
-                  <h2 className="mt-1 text-base font-bold text-slate-900">Khám phá thêm doanh nghiệp</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Ngoài nhóm nổi bật phía trên, đây là những doanh nghiệp cũng đang tuyển dụng tích cực.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
-                    {secondaryCompanies.length} công ty
-                  </span>
-                  <div className="flex gap-1.5">
-                    <button
-                      type="button"
-                      aria-label="Cuộn sang trái"
-                      onClick={() => scrollSecondaryBy(-1)}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                      disabled={!secondaryScrollLeft}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path d="M9 11L5 7l4-4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Cuộn sang phải"
-                      onClick={() => scrollSecondaryBy(1)}
-                      disabled={!secondaryScrollRight}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                        <path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div
-                ref={secondaryCompaniesScrollRef}
-                onScroll={updateSecondaryScrollState}
-                className="flex gap-2.5 overflow-x-auto pb-1 scroll-snap-x scroll-snap-mandatory [scroll-behavior:smooth] [scrollbar-width:thin] [scrollbar-color:theme(colors.slate.300)_transparent] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-300"
-              >
-                {secondaryCompanies.map(({ company, activeJobs }) => (
-                  <button
-                    key={company.id}
-                    type="button"
-                    onClick={() => handleSelectCompany(company)}
-                    className="min-w-[220px] shrink-0 snap-start rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-rose-200 hover:bg-rose-50/50 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200"
-                  >
-                    <div className="flex items-start gap-2.5">
-                      <CompanyLogo name={company.name} logo={company.logo} size="sm" className="shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="line-clamp-2 text-sm font-semibold text-slate-800">{company.name}</h3>
-                          <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                            {activeJobs} vị trí
-                          </span>
-                        </div>
-                        <p className="mt-2 line-clamp-2 text-xs text-slate-500">
-                          {company.address || "Đang cập nhật địa chỉ"}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : !loading && companies.length > FEATURED_EMPLOYERS_LIMIT ? (
-            <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
-              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    Mở rộng hệ sinh thái tuyển dụng
-                  </p>
-                  <h2 className="mt-1 text-base font-bold text-slate-900">Khám phá thêm doanh nghiệp</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Ngoài nhóm nổi bật phía trên, đây là những doanh nghiệp cũng đang tuyển dụng tích cực.
-                  </p>
-                </div>
-              </div>
-              <EmptyState
-                title="Không còn doanh nghiệp nào khác"
-                description="Đã hiển thị toàn bộ doanh nghiệp trên hệ thống."
-              />
-            </section>
-          ) : null}
+          <AboutSection
+            activeJobsLabel={renderPublicStat(activeJobsCount)}
+            companiesLabel={renderPublicStat(companies.length)}
+            skillsLabel={renderPublicStat(skills.length)}
+          />
         </section>
       ) : canAccessManagement ? (
         <section className="grid gap-3">
-          <section className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-soft sm:grid-cols-2 lg:grid-cols-4">
-            <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+          <section className="grid gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-soft sm:grid-cols-2 lg:grid-cols-4">
+            <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
               <p className="text-xs uppercase tracking-wide text-slate-500">Tài khoản quản lý được</p>
               <p className="mt-1 text-xl font-extrabold text-slate-900">
                 {rbacLoading ? "..." : can("/api/v1/users", "GET") ? users.length : "Không có quyền"}
               </p>
             </article>
-            <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
               <p className="text-xs uppercase tracking-wide text-slate-500">Hồ sơ ứng tuyển</p>
               <p className="mt-1 text-xl font-extrabold text-slate-900">
                 {rbacLoading ? "..." : can("/api/v1/resumes", "GET") ? resumes.length : "Không có quyền"}
               </p>
             </article>
-            <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
               <p className="text-xs uppercase tracking-wide text-slate-500">Vai trò trong hệ thống</p>
               <p className="mt-1 text-xl font-extrabold text-slate-900">
                 {rbacLoading ? "..." : can("/api/v1/roles", "GET") ? roles.length : "Không có quyền"}
               </p>
             </article>
-            <article className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <article className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
               <p className="text-xs uppercase tracking-wide text-slate-500">Quyền khả dụng</p>
               <p className="mt-1 text-xl font-extrabold text-slate-900">{permissionKeys.length}</p>
             </article>
@@ -1103,14 +1030,7 @@ export default function HomePage() {
             onUpdateResumeStatus={(resume, nextStatus) =>
               runRbacMutation(
                 () =>
-                  updateResumeWithAuth({
-                    id: resume.id,
-                    email: resume.email,
-                    url: resume.url,
-                    status: nextStatus,
-                    user: resume.user?.id ? { id: resume.user.id } : null,
-                    job: resume.job?.id ? { id: resume.job.id } : null
-                  }),
+                  updateResumeWithAuth(resume.id, { status: nextStatus }),
                 "Cập nhật trạng thái hồ sơ thành công."
               )
             }
@@ -1131,6 +1051,8 @@ export default function HomePage() {
           onAction={() => changeMainTab("browse")}
         />
       )}
+
+      </div>
 
       {tab === "browse" ? <FloatingChatWidget /> : null}
     </main>

@@ -44,6 +44,7 @@ public class UserService {
             "GET /api/v1/permissions",
             "GET /api/v1/resumes",
             "PUT /api/v1/resumes",
+            "PATCH /api/v1/resumes/{id}/status",
             "DELETE /api/v1/resumes/{id}",
             "POST /api/v1/jobs",
             "PUT /api/v1/jobs",

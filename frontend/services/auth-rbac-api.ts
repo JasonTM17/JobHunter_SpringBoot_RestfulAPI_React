@@ -9,7 +9,7 @@ import {
   RegisterPayload,
   ResumeCreatePayload,
   ResumeItem,
-  ResumeUpdatePayload,
+  ResumeStatusUpdatePayload,
   Role,
   UserActionCapability,
   UserCreatePayload,
@@ -158,9 +158,9 @@ export async function createResumeWithAuth(payload: ResumeCreatePayload): Promis
   });
 }
 
-export async function updateResumeWithAuth(payload: ResumeUpdatePayload): Promise<void> {
-  await apiRequest(`${API_PREFIX}/resumes`, {
-    method: "PUT",
+export async function updateResumeWithAuth(resumeId: number, payload: ResumeStatusUpdatePayload): Promise<void> {
+  await apiRequest(`${API_PREFIX}/resumes/${resumeId}/status`, {
+    method: "PATCH",
     body: payload
   });
 }

@@ -85,7 +85,7 @@ export default function AccountPage() {
       <>
         <Head><title>Cài đặt tài khoản — Jobhunter</title><meta name="description" content="Quản lý thông tin tài khoản, cài đặt email gợi ý việc làm và xem nhanh workspace phù hợp với vai trò của bạn." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
-          <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
             <p className="text-sm text-slate-600">Đang tải thông tin tài khoản...</p>
           </section>
         </main>
@@ -98,34 +98,34 @@ export default function AccountPage() {
       <>
         <Head><title>Cài đặt tài khoản — Jobhunter</title><meta name="description" content="Quản lý thông tin tài khoản, cài đặt email gợi ý việc làm và xem nhanh workspace phù hợp với vai trò của bạn." /></Head>
         <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
-          <section className="grid gap-4 rounded-[30px] border border-slate-200 bg-white p-5 shadow-soft sm:p-6 lg:grid-cols-[1.08fr,0.92fr] lg:p-8">
-          <article className="rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-6 text-white sm:p-7">
-            <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
+          <section className="grid gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-soft sm:p-6 lg:grid-cols-[1.08fr,0.92fr] lg:p-8">
+          <article className="rounded-lg border border-rose-200 bg-rose-50 p-6 text-slate-950 sm:p-7">
+            <p className="inline-flex rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#b51d1a]">
               Tài khoản Jobhunter
             </p>
             <h1 className="mt-4 text-3xl font-extrabold leading-tight sm:text-4xl">Đăng nhập để mở toàn bộ không gian cá nhân của bạn</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-200">
+            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600">
               Theo dõi hồ sơ ứng tuyển, cập nhật cài đặt email gợi ý việc làm và đi nhanh tới workspace phù hợp với quyền hiện tại.
             </p>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-300">Ứng tuyển</p>
-                <p className="mt-1 text-sm font-semibold text-white">Theo dõi trạng thái minh bạch</p>
+              <div className="rounded-lg border border-rose-200 bg-white px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-500">Ứng tuyển</p>
+                <p className="mt-1 text-sm font-semibold text-slate-950">Theo dõi trạng thái minh bạch</p>
               </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-300">Thông báo</p>
-                <p className="mt-1 text-sm font-semibold text-white">Bật hoặc tắt email gợi ý</p>
+              <div className="rounded-lg border border-rose-200 bg-white px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-500">Thông báo</p>
+                <p className="mt-1 text-sm font-semibold text-slate-950">Bật hoặc tắt email gợi ý</p>
               </div>
-              <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
-                <p className="text-[11px] uppercase tracking-wide text-slate-300">Workspace</p>
-                <p className="mt-1 text-sm font-semibold text-white">Đi tới đúng không gian làm việc</p>
+              <div className="rounded-lg border border-rose-200 bg-white px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-500">Workspace</p>
+                <p className="mt-1 text-sm font-semibold text-slate-950">Đi tới đúng không gian làm việc</p>
               </div>
             </div>
           </article>
 
-          <article className="rounded-[28px] border border-slate-200 bg-slate-50/70 p-5 sm:p-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Trạng thái hiện tại</p>
+          <article className="rounded-lg border border-slate-200 bg-slate-50/70 p-5 sm:p-6">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Trạng thái hiện tại</p>
             <h2 className="mt-3 text-2xl font-extrabold text-slate-900">Bạn chưa đăng nhập</h2>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">
               Đăng nhập để xem thông tin tài khoản, quản lý email gợi ý việc làm và mở nhanh khu vực phù hợp với vai trò của bạn.
@@ -134,19 +134,19 @@ export default function AccountPage() {
             <div className="mt-5 grid gap-3">
               <Link
                 href={loginHref}
-                className="rounded-xl bg-slate-900 px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-slate-800"
+                className="rounded-md bg-[#b51d1a] px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-[#951513]"
               >
                 Đăng nhập
               </Link>
               <Link
                 href={registerHref}
-                className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-center text-sm font-semibold text-rose-700 hover:bg-rose-100"
+                className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2.5 text-center text-sm font-semibold text-rose-700 hover:bg-rose-100"
               >
                 Tạo tài khoản mới
               </Link>
               <Link
                 href="/"
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                className="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-100"
               >
                 Về cổng việc làm
               </Link>
@@ -173,58 +173,58 @@ export default function AccountPage() {
     <>
       <Head><title>Cài đặt tài khoản — Jobhunter</title></Head>
       <main className="mx-auto max-w-[1180px] px-3 py-6 sm:px-4 sm:py-8">
-      <section className="rounded-[30px] border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-700 p-5 text-white shadow-soft sm:p-6 lg:p-7">
-        <p className="inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-100">
+      <section className="rounded-lg border border-rose-200 bg-white p-5 text-slate-950 shadow-soft sm:p-6 lg:p-7">
+        <p className="inline-flex rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#b51d1a]">
           Hồ sơ tài khoản
         </p>
         <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
           <div>
             <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">{currentUser.name}</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-200">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
               Theo dõi nhanh thông tin hồ sơ, phạm vi quyền hiện tại và các cài đặt ảnh hưởng trực tiếp tới trải nghiệm nhận việc làm phù hợp.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <span className="max-w-full break-all rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100">
+              <span className="max-w-full break-all rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-medium text-[#b51d1a]">
                 {currentUser.email}
               </span>
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100">
+              <span className="rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-medium text-[#b51d1a]">
                 {roleName ?? "Chưa gán vai trò"}
               </span>
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-slate-100">
+              <span className="rounded-full border border-rose-200 bg-white px-3 py-1 text-xs font-medium text-[#b51d1a]">
                 {permissionCount} khóa quyền
               </span>
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <article className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Vai trò</p>
-                <p className="mt-1 text-base font-bold text-white">{roleName ?? "Chưa gán"}</p>
+              <article className="rounded-lg border border-rose-200 bg-white px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Vai trò</p>
+                <p className="mt-1 text-base font-bold text-slate-950">{roleName ?? "Chưa gán"}</p>
               </article>
-              <article className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Mức truy cập</p>
-                <p className="mt-1 text-base font-bold text-white">{levelText(permissionCount)}</p>
+              <article className="rounded-lg border border-rose-200 bg-white px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Mức truy cập</p>
+                <p className="mt-1 text-base font-bold text-slate-950">{levelText(permissionCount)}</p>
               </article>
-              <article className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Email gợi ý</p>
-                <p className="mt-1 text-base font-bold text-white">{weeklyEmailEnabled ? "Đã bật" : "Đang tắt"}</p>
+              <article className="rounded-lg border border-rose-200 bg-white px-4 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Email gợi ý</p>
+                <p className="mt-1 text-base font-bold text-slate-950">{weeklyEmailEnabled ? "Đã bật" : "Đang tắt"}</p>
               </article>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/15 bg-white/10 p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300">Workspace</p>
-            <p className="mt-2 text-lg font-bold text-white">{workspaceLabel}</p>
-            <p className="mt-2 text-sm text-slate-200">Đi nhanh tới đúng khu vực làm việc theo quyền hiện tại của tài khoản.</p>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Workspace</p>
+            <p className="mt-2 text-lg font-bold text-slate-950">{workspaceLabel}</p>
+            <p className="mt-2 text-sm text-slate-600">Đi nhanh tới đúng khu vực làm việc theo quyền hiện tại của tài khoản.</p>
             <div className="mt-4 grid gap-2">
               <Link
                 href={workspaceHref}
-                className="rounded-xl bg-white px-4 py-2.5 text-center text-sm font-semibold text-slate-900 hover:bg-slate-100"
+                className="rounded-md bg-[#b51d1a] px-4 py-2.5 text-center text-sm font-semibold text-white hover:bg-[#951513]"
               >
                 Mở workspace
               </Link>
               <Link
                 href="/"
-                className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-center text-sm font-semibold text-slate-100 hover:bg-white/20"
+                className="rounded-md border border-rose-200 bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#b51d1a] hover:bg-rose-50"
               >
                 Về cổng việc làm
               </Link>
@@ -234,7 +234,7 @@ export default function AccountPage() {
       </section>
 
       <section className="mt-4 grid gap-4 lg:grid-cols-[1.15fr,0.85fr]">
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               Hồ sơ cơ bản
@@ -243,19 +243,19 @@ export default function AccountPage() {
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <article className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Họ tên</p>
               <p className="mt-1 text-base font-bold text-slate-900 break-words">{currentUser.name}</p>
             </article>
-            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <article className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Email</p>
               <p className="mt-1 break-all text-base font-bold text-slate-900">{currentUser.email}</p>
             </article>
-            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <article className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Vai trò</p>
               <p className="mt-1 text-base font-bold text-slate-900">{roleName ?? "Chưa gán vai trò"}</p>
             </article>
-            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <article className="rounded-lg border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Mức quyền hiện tại</p>
               <p className="mt-1 text-base font-bold text-slate-900">
                 {levelText(permissionCount)} ({permissionCount} khóa quyền)
@@ -264,15 +264,15 @@ export default function AccountPage() {
           </div>
         </article>
 
-        <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Cài đặt nhận tin</p>
+        <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Cài đặt nhận tin</p>
           <h2 className="mt-2 text-lg font-bold text-slate-900">Thông báo email</h2>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             Gửi cho tôi các công việc phù hợp dựa trên lịch sử ứng tuyển và kỹ năng quan tâm.
           </p>
 
           <label
-            className={`mt-5 flex items-start justify-between gap-4 rounded-2xl border p-4 ${
+            className={`mt-5 flex items-start justify-between gap-4 rounded-lg border p-4 ${
               weeklyEmailEnabled ? "border-emerald-200 bg-emerald-50/60" : "border-slate-200 bg-slate-50"
             }`}
           >
@@ -301,12 +301,12 @@ export default function AccountPage() {
             <p className="mt-3 text-sm text-slate-500">Đang lưu cài đặt...</p>
           ) : null}
           {emailSettingMessage ? (
-            <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+            <p className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
               {emailSettingMessage}
             </p>
           ) : null}
           {emailSettingError ? (
-            <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+            <p className="mt-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
               {emailSettingError}
             </p>
           ) : null}

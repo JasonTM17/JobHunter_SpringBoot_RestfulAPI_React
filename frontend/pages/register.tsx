@@ -133,23 +133,23 @@ export default function RegisterPage() {
       ]}
     >
       <div className="max-w-lg">
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Tạo tài khoản Jobhunter</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">Tạo tài khoản Jobhunter</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             Nhập thông tin tài khoản để bắt đầu. Các mục hồ sơ nâng cao là tùy chọn.
           </p>
 
           {error ? (
-            <p className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p>
+            <p className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p>
           ) : null}
 
           {success ? (
-            <p className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
               {success}
             </p>
           ) : null}
 
           <form className="mt-5 grid gap-3.5" onSubmit={(event) => void handleSubmit(event)}>
-            <section className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+            <section className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-4">
               <header>
                 <h2 className="text-sm font-bold text-slate-800">Thông tin tài khoản</h2>
                 <p className="mt-0.5 text-xs text-slate-500">Bắt buộc</p>
@@ -164,7 +164,7 @@ export default function RegisterPage() {
                     onBlur={(e) => handleBlur("name", e.target.value)}
                     placeholder="Ví dụ: Nguyễn Minh Anh"
                     autoComplete="name"
-                    className={`rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.name ? "border-rose-400" : "border-slate-300"}`}
+                    className={`rounded-md border bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.name ? "border-rose-400" : "border-slate-300"}`}
                   />
                   {fieldErrors.name ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.name}</p> : null}
                 </label>
@@ -178,7 +178,7 @@ export default function RegisterPage() {
                     onBlur={(e) => handleBlur("email", e.target.value)}
                     placeholder="you@example.com"
                     autoComplete="email"
-                    className={`rounded-xl border bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.email ? "border-rose-400" : "border-slate-300"}`}
+                    className={`rounded-md border bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.email ? "border-rose-400" : "border-slate-300"}`}
                   />
                   {fieldErrors.email ? <p className="mt-1 text-xs text-rose-600">{fieldErrors.email}</p> : null}
                 </label>
@@ -193,7 +193,7 @@ export default function RegisterPage() {
                       onBlur={(e) => handleBlur("password", e.target.value)}
                       placeholder="Tối thiểu 6 ký tự"
                       autoComplete="new-password"
-                      className={`w-full rounded-xl border bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.password ? "border-rose-400" : "border-slate-300"}`}
+                      className={`w-full rounded-md border bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.password ? "border-rose-400" : "border-slate-300"}`}
                     />
                     <button
                       type="button"
@@ -227,7 +227,7 @@ export default function RegisterPage() {
                       onBlur={(e) => handleBlur("confirmPassword", e.target.value)}
                       placeholder="Nhập lại mật khẩu"
                       autoComplete="new-password"
-                      className={`w-full rounded-xl border bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.confirmPassword ? "border-rose-400" : "border-slate-300"}`}
+                      className={`w-full rounded-md border bg-white py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:ring-2 focus:ring-rose-100 ${fieldErrors.confirmPassword ? "border-rose-400" : "border-slate-300"}`}
                     />
                     <button
                       type="button"
@@ -253,7 +253,7 @@ export default function RegisterPage() {
               </div>
             </section>
 
-            <details className="rounded-2xl border border-slate-200 bg-white p-4">
+            <details className="rounded-lg border border-slate-200 bg-white p-4">
               <summary className="cursor-pointer list-none text-sm font-semibold text-slate-700">
                 <span className="inline-flex items-center gap-2">
                   Thông tin cá nhân thêm
@@ -274,7 +274,7 @@ export default function RegisterPage() {
                     value={age}
                     onChange={(event) => setAge(event.target.value.replace(/[^\d]/g, ""))}
                     placeholder="Ví dụ: 22"
-                    className="rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
+                    className="rounded-md border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
                   />
                 </label>
 
@@ -283,7 +283,7 @@ export default function RegisterPage() {
                   <select
                     value={gender}
                     onChange={(event) => setGender(event.target.value as GenderValue | "")}
-                    className="rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
+                    className="rounded-md border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
                   >
                     <option value="">Chưa chọn</option>
                     <option value="MALE">Nam</option>
@@ -299,7 +299,7 @@ export default function RegisterPage() {
                   value={address}
                   onChange={(event) => setAddress(event.target.value)}
                   placeholder="Ví dụ: Hà Nội / TP.HCM / ..."
-                  className="rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
+                  className="rounded-md border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
                 />
               </label>
             </details>
@@ -307,7 +307,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-1 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-1 rounded-md bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
             </button>

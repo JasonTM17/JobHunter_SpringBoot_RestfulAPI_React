@@ -145,10 +145,10 @@ export default function CompanyFormModal({
     >
       <form className="grid gap-3" onSubmit={(event) => void submit(event)}>
         {error ? (
-          <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p>
+          <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p>
         ) : null}
         {uploadInfo ? (
-          <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{uploadInfo}</p>
+          <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{uploadInfo}</p>
         ) : null}
 
         <div className="grid gap-3 md:grid-cols-[auto,1fr]">
@@ -157,7 +157,7 @@ export default function CompanyFormModal({
             <label className="grid gap-1 text-sm">
               <span className="font-semibold text-slate-700">Tên công ty *</span>
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
                 value={state.name}
                 onChange={(event) => setState((prev) => ({ ...prev, name: event.target.value }))}
                 placeholder="Ví dụ: FPT Software"
@@ -167,7 +167,7 @@ export default function CompanyFormModal({
             <label className="grid gap-1 text-sm">
               <span className="font-semibold text-slate-700">Địa chỉ</span>
               <input
-                className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
                 value={state.address}
                 onChange={(event) => setState((prev) => ({ ...prev, address: event.target.value }))}
                 placeholder="Hà Nội / TP.HCM / Đà Nẵng / Remote"
@@ -179,7 +179,7 @@ export default function CompanyFormModal({
         <label className="grid gap-1 text-sm">
           <span className="font-semibold text-slate-700">Logo (URL hoặc đường dẫn)</span>
           <input
-            className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+            className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
             value={state.logo}
             onChange={(event) => setState((prev) => ({ ...prev, logo: event.target.value }))}
             placeholder="/storage/company/logo.png hoặc https://..."
@@ -191,7 +191,7 @@ export default function CompanyFormModal({
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp,image/gif"
-            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            className="rounded-md border border-slate-300 px-3 py-2 text-sm"
             onChange={(event) => void handleLogoFile(event)}
           />
           <span className="text-xs text-slate-500">
@@ -204,7 +204,7 @@ export default function CompanyFormModal({
           <span className="font-semibold text-slate-700">Mô tả</span>
           <textarea
             rows={5}
-            className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+            className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
             value={state.description}
             onChange={(event) => setState((prev) => ({ ...prev, description: event.target.value }))}
             placeholder="<p>Mô tả công ty...</p>"
@@ -215,14 +215,14 @@ export default function CompanyFormModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
           >
             Hủy
           </button>
           <button
             type="submit"
             disabled={submitting || uploading}
-            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? "Đang lưu..." : mode === "create" ? "Tạo công ty" : "Cập nhật"}
           </button>

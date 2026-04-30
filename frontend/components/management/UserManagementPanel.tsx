@@ -132,7 +132,7 @@ export default function UserManagementPanel({
   }
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+    <section className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
         <h2 className="text-xl font-bold text-slate-900">Quản lý tài khoản và phân quyền</h2>
         <div className="flex flex-wrap gap-2">
@@ -141,8 +141,8 @@ export default function UserManagementPanel({
             onClick={() => changeMode("users")}
             className={
               mode === "users"
-                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
-                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
+                ? "rounded-md bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
             }
           >
             Tài khoản
@@ -152,8 +152,8 @@ export default function UserManagementPanel({
             onClick={() => changeMode("roles")}
             className={
               mode === "roles"
-                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
-                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
+                ? "rounded-md bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
             }
           >
             Vai trò
@@ -163,8 +163,8 @@ export default function UserManagementPanel({
             onClick={() => changeMode("permissions")}
             className={
               mode === "permissions"
-                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
-                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
+                ? "rounded-md bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
             }
           >
             Quyền
@@ -198,7 +198,7 @@ export default function UserManagementPanel({
                   disabled={!canCreateUser}
                   title={canCreateUser ? "Tạo tài khoản mới" : noPermissionTitle}
                   onClick={() => setFormState({ open: true, action: "create", target: null })}
-                  className="rounded-xl bg-rose-600 px-3 py-2 text-[13px] font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
+                  className="rounded-md bg-rose-600 px-3 py-2 text-[13px] font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50 sm:text-sm"
                 >
                   Tạo tài khoản
                 </button>
@@ -209,7 +209,7 @@ export default function UserManagementPanel({
               ) : filteredUsers.length === 0 ? (
                 <EmptyState title="Không có tài khoản phù hợp" description="Thử đổi từ khóa tìm kiếm." />
               ) : (
-                <div className="w-full overflow-x-auto rounded-2xl border border-slate-200">
+                <div className="w-full overflow-x-auto rounded-lg border border-slate-200">
                   <table className="min-w-full divide-y divide-slate-200 text-xs sm:text-sm">
                     <thead className="bg-slate-50">
                       <tr>
@@ -283,7 +283,7 @@ export default function UserManagementPanel({
           ) : (
             <div className="grid gap-2 md:grid-cols-2">
               {roleOptions.map((role) => (
-                <article key={role.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                <article key={role.id} className="rounded-md border border-slate-200 bg-white p-3">
                   <h3 className="text-sm font-bold text-slate-900">{roleLabel(role.name)}</h3>
                   <p className="mt-1 text-xs text-slate-500">{role.description || "Chưa có mô tả."}</p>
                   <p className="mt-1 text-xs text-slate-500">
@@ -309,7 +309,7 @@ export default function UserManagementPanel({
           ) : (
             <div className="grid gap-3">
               {permissionGroups.map(([module, modulePermissions]) => (
-                <article key={module} className="rounded-xl border border-slate-200 bg-white p-3">
+                <article key={module} className="rounded-md border border-slate-200 bg-white p-3">
                   <h3 className="text-sm font-bold text-slate-900">{formatModuleName(module)}</h3>
                   <div className="mt-2 grid gap-1">
                     {modulePermissions.map((permission) => (

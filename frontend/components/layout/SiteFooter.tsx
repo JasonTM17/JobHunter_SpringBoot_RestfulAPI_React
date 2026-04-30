@@ -1,28 +1,26 @@
 import Link from "next/link";
 
 const FOOTER_LINKS = {
-  việcLàm: [
-    { label: "Tìm việc làm IT", href: "/" },
-    { label: "Việc làm theo khu vực", href: "/" },
-    { label: "Việc làm theo kỹ năng", href: "/" },
-    { label: "Việc làm theo mức lương", href: "/" }
+  "Việc làm": [
+    { label: "Tìm việc IT", href: "/#jobs" },
+    { label: "Việc làm theo kỹ năng", href: "/#jobs-by-skill" },
+    { label: "Việc làm theo thành phố", href: "/#jobs-by-city" },
+    { label: "Việc làm theo công ty", href: "/#jobs-by-company" }
   ],
-  côngTy: [
+  "Công ty": [
+    { label: "Top Employers", href: "/#top-employers" },
     { label: "Danh sách công ty", href: "/#companies" },
-    { label: "Nhà tuyển dụng nổi bật", href: "/" },
-    { label: "Công ty IT hàng đầu", href: "/" }
+    { label: "Không gian tuyển dụng", href: "/recruiter" }
   ],
-  ứngViên: [
-    { label: "Tạo tài khoản", href: "/register" },
-    { label: "Đăng nhập", href: "/login" },
-    { label: "Hồ sơ ứng viên", href: "/account" },
+  "Career hub": [
+    { label: "Bài viết nổi bật", href: "/#career-resources" },
+    { label: "IT Expertise Summary", href: "/#it-expertise" },
     { label: "Trợ lý AI", href: "/chatbot" }
   ],
-  hỗTrợ: [
+  "Hỗ trợ": [
+    { label: "Trung tâm hỗ trợ", href: "/support" },
     { label: "Câu hỏi thường gặp", href: "/support#faq" },
-    { label: "Chính sách bảo mật", href: "/support#privacy" },
-    { label: "Điều khoản sử dụng", href: "/support#terms" },
-    { label: "Liên hệ hỗ trợ", href: "/support#contact" }
+    { label: "Chính sách bảo mật", href: "/support#privacy" }
   ]
 };
 
@@ -56,18 +54,10 @@ const SOCIAL_LINKS = [
   }
 ];
 
-function sectionTitleLabel(key: string): string {
-  if (key === "việcLàm") return "Việc làm";
-  if (key === "côngTy") return "Công ty";
-  if (key === "ứngViên") return "Ứng viên";
-  return "Hỗ trợ";
-}
-
-function FooterLinkColumn({ sectionKey, links }: { sectionKey: string; links: { label: string; href: string }[] }) {
-  const title = sectionTitleLabel(sectionKey);
+function FooterLinkColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
     <details className="group/section sm:contents">
-      <summary className="flex cursor-pointer items-center justify-between py-2 text-[12px] font-semibold uppercase tracking-widest text-slate-900 sm:hidden">
+      <summary className="flex cursor-pointer items-center justify-between py-2 text-[12px] font-semibold uppercase tracking-wide text-slate-900 sm:hidden">
         {title}
         <svg
           className="h-4 w-4 shrink-0 transition-transform group-open/section:rotate-180"
@@ -83,19 +73,17 @@ function FooterLinkColumn({ sectionKey, links }: { sectionKey: string; links: { 
       <ul className="grid gap-2 pb-2 sm:hidden">
         {links.map((link) => (
           <li key={link.label}>
-            <Link href={link.href} className="text-[13px] text-slate-500 transition hover:text-rose-500">
+            <Link href={link.href} className="text-[13px] text-slate-500 transition hover:text-[#b51d1a]">
               {link.label}
             </Link>
           </li>
         ))}
       </ul>
-      <h3 className="mb-3 hidden text-[12px] font-semibold uppercase tracking-widest text-slate-900 sm:block">
-        {title}
-      </h3>
+      <h3 className="mb-3 hidden text-[12px] font-semibold uppercase tracking-wide text-slate-900 sm:block">{title}</h3>
       <ul className="hidden flex-col gap-2 sm:flex">
         {links.map((link) => (
           <li key={link.label}>
-            <Link href={link.href} className="text-[13px] text-slate-500 transition hover:text-rose-500">
+            <Link href={link.href} className="text-[13px] text-slate-500 transition hover:text-[#b51d1a]">
               {link.label}
             </Link>
           </li>
@@ -110,16 +98,15 @@ export default function SiteFooter() {
     <footer className="border-t border-slate-200 bg-slate-50">
       <div className="mx-auto max-w-[1200px] px-4 py-12 sm:px-5 lg:px-6">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
-          {/* Brand column */}
           <div className="lg:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Jobhunter — Trang chủ">
-              <span className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm ring-1 ring-slate-100">
+            <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Jobhunter trang chủ">
+              <span className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
                 <img src="/favicon.svg" alt="" className="h-full w-full object-cover" width={40} height={40} />
               </span>
-              <span className="text-base font-extrabold tracking-tight text-slate-900">Jobhunter</span>
+              <span className="text-base font-extrabold text-slate-900">Jobhunter</span>
             </Link>
             <p className="mt-3 text-[13px] leading-relaxed text-slate-500">
-              Nền tảng tuyển dụng công nghệ hàng đầu dành cho ứng viên và nhà tuyển dụng tại Việt Nam.
+              Nền tảng tuyển dụng IT tập trung vào dữ liệu rõ ràng, ứng tuyển nhanh và workspace vận hành cho candidate, recruiter, admin.
             </p>
             <div className="mt-4 flex items-center gap-2.5">
               {SOCIAL_LINKS.map((social) => (
@@ -129,7 +116,7 @@ export default function SiteFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-500"
+                  className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-400 shadow-sm transition hover:border-rose-300 hover:bg-rose-50 hover:text-[#b51d1a]"
                 >
                   {social.icon}
                 </a>
@@ -137,20 +124,19 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          {Object.entries(FOOTER_LINKS).map(([sectionKey, links]) => (
-            <FooterLinkColumn key={sectionKey} sectionKey={sectionKey} links={links} />
+          {Object.entries(FOOTER_LINKS).map(([title, links]) => (
+            <FooterLinkColumn key={title} title={title} links={links} />
           ))}
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-2 px-4 py-4 text-center sm:flex-row sm:px-5 sm:text-left lg:px-6">
           <p className="text-[12px] text-slate-400">
             © {new Date().getFullYear()} Jobhunter. Tất cả quyền được bảo lưu.
           </p>
           <p className="text-[12px] text-slate-400">
-            Nền tảng tuyển dụng công nghệ hàng đầu Việt Nam
+            Search-first IT job board for Vietnam technology teams.
           </p>
         </div>
       </div>

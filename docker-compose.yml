@@ -55,7 +55,7 @@ services:
       JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED: ${JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED:-true}
 
       # JWT — replace in .env for production. Default is for local dev only.
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3010,http://127.0.0.1:3000,http://127.0.0.1:3001,http://127.0.0.1:3010}
       JWT_BASE64_SECRET: ${JWT_BASE64_SECRET:-g/AYKfaK6dDKXZFgopotLApRTC79KZo9uIWfWCXH/bKPDt3TgG4jEX5Dm+hboY2TJmEuyVPXbSrNpvgD/SGu4A==}
       JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-900}
       JWT_REFRESH_TOKEN_TTL: ${JWT_REFRESH_TOKEN_TTL:-604800}

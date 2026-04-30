@@ -52,7 +52,7 @@ export default function SupportPage() {
           <Link href="/" className="text-sm font-semibold text-rose-600 hover:text-rose-700 hover:underline">
             ← Về trang chủ
           </Link>
-          <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">Hỗ trợ</h1>
+          <h1 className="mt-4 text-3xl font-black text-slate-900">Hỗ trợ</h1>
           <p className="mt-2 text-slate-600">
             Câu hỏi thường gặp, chính sách bảo mật, điều khoản sử dụng và thông tin liên hệ.
           </p>
@@ -69,7 +69,7 @@ export default function SupportPage() {
                       {item}
                     </p>
                   ) : (
-                    <div key={i} className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                    <div key={i} className="rounded-md border border-slate-200 bg-slate-50/50 p-4">
                       <p className="font-semibold text-slate-800">{item.q}</p>
                       <p className="mt-1 text-sm text-slate-600">{item.a}</p>
                     </div>

@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.vn.son.jobhunter.domain.Company;
-import com.vn.son.jobhunter.domain.Job;
 import com.vn.son.jobhunter.domain.res.ResultPaginationResponse;
 import com.vn.son.jobhunter.service.CompanyService;
 import com.vn.son.jobhunter.util.annotation.ApiMessage;
@@ -25,7 +24,7 @@ public class CompanyController {
 
     @PostMapping("")
     @ApiMessage("Tạo công ty")
-    public ResponseEntity<Company> createCompany(@Valid @RequestBody Company company){
+    public ResponseEntity<Company> createCompany(@Valid @RequestBody Company company) throws Exception {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(this.companyService.createCompany(company));
     }
@@ -35,7 +34,7 @@ public class CompanyController {
     public ResponseEntity<ResultPaginationResponse> getAllCompany(
             @Filter Specification<Company> spec,
             Pageable pageable
-    ){
+    ) throws Exception {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(this.companyService.getAllCompany(pageable, spec));
     }
@@ -44,7 +43,7 @@ public class CompanyController {
     @ApiMessage("Cập nhật công ty")
     public ResponseEntity<Company> updateCompany(
             @Valid @RequestBody Company company
-    ){
+    ) throws Exception {
         return ResponseEntity.ok(this.companyService.updateCompany(company));
     }
 
@@ -52,14 +51,14 @@ public class CompanyController {
     @ApiMessage("Xóa công ty")
     public ResponseEntity<Void> deleteCompany(
             @PathVariable("id") Long id
-    ){
+    ) throws Exception {
         this.companyService.deleteCompany(id);
         return ResponseEntity.ok(null);
     }
 
     @GetMapping("/{id}")
     @ApiMessage("Lấy chi tiết công ty theo mã")
-    public ResponseEntity<Company> getCompany(@PathVariable("id") Long id) throws Exception{
-        return ResponseEntity.ok().body(this.companyService.findCompanyById(id));
+    public ResponseEntity<Company> getCompany(@PathVariable("id") Long id) throws Exception {
+        return ResponseEntity.ok().body(this.companyService.findCompanyByIdOrThrow(id));
     }
 }
