@@ -22,6 +22,24 @@ const sampleResume: ResumeItem = {
   }
 };
 
+function buildResume(id: number, status: ResumeItem["status"] = "PENDING"): ResumeItem {
+  return {
+    ...sampleResume,
+    id,
+    email: `candidate${id}@example.com`,
+    status,
+    createdDate: `2026-04-${String(30 - id).padStart(2, "0")}T08:00:00.000Z`,
+    user: {
+      id,
+      name: `Candidate ${id}`
+    },
+    job: {
+      id: 100 + id,
+      name: `Pipeline Job ${id}`
+    }
+  };
+}
+
 describe("ResumeManagementPanel", () => {
   it("renders recruiter resume data and submits status changes", async () => {
     const user = userEvent.setup();
@@ -34,6 +52,19 @@ describe("ResumeManagementPanel", () => {
         canReadResumes
         canUpdateResume
         canDeleteResume={false}
+        auditsByResumeId={{
+          17: [
+            {
+              id: 1,
+              resumeId: 17,
+              previousStatus: "PENDING",
+              nextStatus: "REVIEWING",
+              note: "Đã mở CV",
+              actorEmail: "recruiter@example.com",
+              createdAt: "2026-04-02T10:30:00.000Z"
+            }
+          ]
+        }}
         onUpdateResumeStatus={onUpdateResumeStatus}
         onDeleteResume={jest.fn()}
       />
@@ -41,11 +72,49 @@ describe("ResumeManagementPanel", () => {
 
     expect(screen.getByText("Candidate One")).toBeInTheDocument();
     expect(screen.getByText("Senior Frontend Engineer")).toBeInTheDocument();
-    expect(screen.getByText("recruiter@example.com", { exact: false })).toBeInTheDocument();
+    expect(screen.getAllByText("recruiter@example.com", { exact: false }).length).toBeGreaterThanOrEqual(1);
 
     await user.selectOptions(screen.getByTestId("resume-status-select-17"), "REVIEWING");
+    await user.type(screen.getByPlaceholderText("Ghi chú audit"), "CV phù hợp");
     await user.click(screen.getByTestId("resume-status-save-17"));
 
-    expect(onUpdateResumeStatus).toHaveBeenCalledWith(sampleResume, "REVIEWING");
+    expect(onUpdateResumeStatus).toHaveBeenCalledWith(sampleResume, "REVIEWING", "CV phù hợp");
+    expect(screen.getByText("Đã mở CV")).toBeInTheDocument();
+  });
+
+  it("filters and paginates recruiter resume pipeline rows", async () => {
+    const user = userEvent.setup();
+    const resumes = Array.from({ length: 9 }, (_, index) =>
+      buildResume(index + 1, index === 8 ? "APPROVED" : "PENDING")
+    );
+
+    render(
+      <ResumeManagementPanel
+        resumes={resumes}
+        loadingAction={false}
+        canReadResumes
+        canUpdateResume
+        canDeleteResume={false}
+        onUpdateResumeStatus={jest.fn().mockResolvedValue(undefined)}
+        onDeleteResume={jest.fn()}
+      />
+    );
+
+    expect(screen.getByText("Candidate 1")).toBeInTheDocument();
+    expect(screen.queryByText("Candidate 9")).not.toBeInTheDocument();
+    expect(screen.getByText(/1-8 \/ 9/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Sau" }));
+
+    expect(screen.getByText("Candidate 9")).toBeInTheDocument();
+    expect(screen.queryByText("Candidate 1")).not.toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText("Lọc trạng thái hồ sơ"), "APPROVED");
+
+    expect(screen.getByText("Candidate 9")).toBeInTheDocument();
+    expect(screen.queryByText("Candidate 1")).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("Tìm hồ sơ"), "missing candidate");
+    expect(screen.getByText("Không tìm thấy hồ sơ phù hợp với bộ lọc hiện tại.")).toBeInTheDocument();
   });
 });

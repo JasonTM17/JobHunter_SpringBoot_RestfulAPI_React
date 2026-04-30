@@ -190,6 +190,17 @@ export interface ResumeItem extends BaseAudit {
   job?: ResumeJobRef | null;
 }
 
+export interface ResumeStatusAudit {
+  id: number;
+  resumeId: number;
+  previousStatus?: ResumeStatus | string | null;
+  nextStatus: ResumeStatus | string;
+  note?: string | null;
+  actorUserId?: number | null;
+  actorEmail?: string | null;
+  createdAt: string;
+}
+
 export interface ResumeCreatePayload {
   jobId: number;
   url: string;
@@ -197,6 +208,37 @@ export interface ResumeCreatePayload {
 
 export interface ResumeStatusUpdatePayload {
   status: ResumeStatus | string;
+  note?: string;
+}
+
+export interface CandidateCv {
+  id: number;
+  fileUrl: string;
+  fileName: string;
+  defaultCv: boolean;
+  createdAt?: string | null;
+}
+
+export interface CandidateCvPayload {
+  fileUrl: string;
+  fileName?: string;
+  defaultCv?: boolean;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  devResetToken?: string | null;
+  expiresAt?: string | null;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
+export interface SubscriberPayload {
+  email: string;
+  name: string;
+  skills?: Array<{ id: number }>;
 }
 
 export interface JobUpsertPayload {

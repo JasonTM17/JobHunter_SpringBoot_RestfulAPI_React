@@ -180,6 +180,17 @@ public class GlobalException {
         );
     }
 
+    @ExceptionHandler(value = {
+            RateLimitExceededException.class
+    })
+    public ResponseEntity<Object> handleRateLimitException(Exception ex) {
+        return buildErrorResponse(
+                HttpStatus.TOO_MANY_REQUESTS,
+                "RATE_LIMITED",
+                sanitizeClientMessage(ex.getMessage(), "QuÃ¡ nhiá»u yÃªu cáº§u. Vui lÃ²ng thá»­ láº¡i sau Ã­t phÃºt.")
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RestResponse<Object>> handleAllException(Exception ex) {
         logger.error("Unhandled exception", ex);

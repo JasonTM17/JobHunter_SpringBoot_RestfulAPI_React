@@ -56,6 +56,9 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    maxParallelForks = 1
+    maxHeapSize = '768m'
+    jvmArgs '-XX:MaxMetaspaceSize=256m'
     systemProperty 'spring.profiles.active', 'test'
     systemProperty 'jobhunter.seed.enabled', 'false'
     systemProperty 'jobhunter.scheduler.enabled', 'false'

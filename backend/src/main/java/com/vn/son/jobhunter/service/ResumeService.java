@@ -3,13 +3,16 @@ package com.vn.son.jobhunter.service;
 import com.vn.son.jobhunter.domain.Company;
 import com.vn.son.jobhunter.domain.Job;
 import com.vn.son.jobhunter.domain.Resume;
+import com.vn.son.jobhunter.domain.ResumeStatusAudit;
 import com.vn.son.jobhunter.domain.User;
 import com.vn.son.jobhunter.domain.dto.resume.ResumeCreateDTO;
 import com.vn.son.jobhunter.domain.res.ResultPaginationResponse;
 import com.vn.son.jobhunter.domain.res.resume.CreatedResumeResponse;
+import com.vn.son.jobhunter.domain.res.resume.ResumeStatusAuditResponse;
 import com.vn.son.jobhunter.domain.res.resume.UpdatedResumeResponse;
 import com.vn.son.jobhunter.repository.JobRepository;
 import com.vn.son.jobhunter.repository.ResumeRepository;
+import com.vn.son.jobhunter.repository.ResumeStatusAuditRepository;
 import com.vn.son.jobhunter.repository.UserRepository;
 import com.vn.son.jobhunter.util.constant.ResumeStateEnum;
 import com.vn.son.jobhunter.util.convert.ResumeConvert;
@@ -29,7 +32,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Locale;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -37,6 +42,7 @@ public class ResumeService {
     private final ResumeRepository resumeRepository;
     private final UserRepository userRepository;
     private final JobRepository jobRepository;
+    private final ResumeStatusAuditRepository resumeStatusAuditRepository;
 
     @Transactional
     public CreatedResumeResponse create(ResumeCreateDTO request) throws Exception {
@@ -72,11 +78,16 @@ public class ResumeService {
         if (resume == null || resume.getId() <= 0) {
             throw new BadRequestException("Resume ID is required");
         }
-        return updateStatus(resume.getId(), resume.getStatus());
+        return updateStatus(resume.getId(), resume.getStatus(), null);
     }
 
     @Transactional
     public UpdatedResumeResponse updateStatus(Long id, ResumeStateEnum status) throws Exception {
+        return updateStatus(id, status, null);
+    }
+
+    @Transactional
+    public UpdatedResumeResponse updateStatus(Long id, ResumeStateEnum status, String note) throws Exception {
         if (status == null) {
             throw new BadRequestException("Status is required");
         }
@@ -84,8 +95,23 @@ public class ResumeService {
         User currentUser = getCurrentAuthenticatedUserOrThrow();
         Resume currentResume = findResumeByIdOrThrow(id);
         ensureCanManageResume(currentUser, currentResume);
+        ResumeStateEnum previousStatus = currentResume.getStatus();
+        String normalizedNote = normalizeAuditNote(note);
         currentResume.setStatus(status);
-        return ResumeConvert.convertToResUpdatedResumeRes(this.resumeRepository.save(currentResume));
+        Resume savedResume = this.resumeRepository.save(currentResume);
+
+        if (!Objects.equals(previousStatus, status)) {
+            ResumeStatusAudit audit = new ResumeStatusAudit();
+            audit.setResume(savedResume);
+            audit.setPreviousStatus(previousStatus);
+            audit.setNextStatus(status);
+            audit.setNote(normalizedNote);
+            audit.setActor(currentUser);
+            audit.setActorEmail(currentUser.getEmail());
+            this.resumeStatusAuditRepository.save(audit);
+        }
+
+        return ResumeConvert.convertToResUpdatedResumeRes(savedResume);
     }
 
     @Transactional
@@ -111,6 +137,17 @@ public class ResumeService {
                 criteriaBuilder.equal(root.join("user", JoinType.LEFT).get("id"), currentUser.getId());
         Page<Resume> resumePage = this.resumeRepository.findAll(spec, pageable);
         return FormatResultPagaination.createPaginateResumeRes(resumePage);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ResumeStatusAuditResponse> fetchResumeAudits(Long resumeId) throws Exception {
+        User currentUser = getCurrentAuthenticatedUserOrThrow();
+        Resume resume = findResumeByIdOrThrow(resumeId);
+        ensureCanAccessResume(currentUser, resume);
+        return this.resumeStatusAuditRepository.findByResume_IdOrderByCreatedAtDesc(resumeId)
+                .stream()
+                .map(this::toAuditResponse)
+                .collect(Collectors.toList());
     }
 
     private Resume findResumeByIdOrThrow(Long id) throws ResourceNotFoundException {
@@ -139,6 +176,31 @@ public class ResumeService {
             throw new BadRequestException("Url must be at most 500 characters");
         }
         return url;
+    }
+
+    private String normalizeAuditNote(String rawNote) throws BadRequestException {
+        String note = rawNote == null ? "" : rawNote.trim();
+        if (note.isBlank()) {
+            return null;
+        }
+        if (note.length() > 500) {
+            throw new BadRequestException("Audit note must be at most 500 characters");
+        }
+        return note;
+    }
+
+    private ResumeStatusAuditResponse toAuditResponse(ResumeStatusAudit audit) {
+        Long actorUserId = audit.getActor() == null ? null : audit.getActor().getId();
+        return new ResumeStatusAuditResponse(
+                audit.getId(),
+                audit.getResume() == null ? null : audit.getResume().getId(),
+                audit.getPreviousStatus(),
+                audit.getNextStatus(),
+                audit.getNote(),
+                actorUserId,
+                audit.getActorEmail(),
+                audit.getCreatedAt()
+        );
     }
 
     private Specification<Resume> scopedSpecificationFor(User user) {

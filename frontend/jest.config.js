@@ -13,7 +13,7 @@ const config = {
     "^@/(.*)$": "<rootDir>/$1"
   },
   testMatch: ["**/__tests__/**/*.[jt]s?(x)", "**/?(*.)+(spec|test).[jt]s?(x)"],
-  testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/", "<rootDir>/visual-tests/"],
+  testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/.next/", "<rootDir>/visual-tests/", "<rootDir>/e2e-tests/"],
   collectCoverageFrom: [
     "components/**/*.tsx",
     "pages/**/*.tsx",

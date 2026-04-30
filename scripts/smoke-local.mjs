@@ -1,9 +1,15 @@
 #!/usr/bin/env node
 
+import { createRequire } from "node:module";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
 const DEFAULT_FRONTEND_URL = "http://localhost:3010";
 const DEFAULT_API_BASE_URL = "http://localhost:8080/api/v1";
 const FRONTEND_FALLBACK_URLS = [DEFAULT_FRONTEND_URL, "http://localhost:3001", "http://localhost:3000"];
 const TIMEOUT_MS = Number(process.env.SMOKE_TIMEOUT_MS || 10000);
+const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
+const WORKSPACE_ROOT = path.resolve(SCRIPT_DIR, "..");
 
 function readOption(name) {
   const prefix = `--${name}=`;
@@ -11,8 +17,17 @@ function readOption(name) {
   return arg ? arg.slice(prefix.length) : process.env[name.toUpperCase().replaceAll("-", "_")];
 }
 
+function readFlag(name) {
+  const envValue = process.env[name.toUpperCase().replaceAll("-", "_")];
+  const cliValue = readOption(name);
+  const rawValue = cliValue ?? envValue;
+  return process.argv.includes(`--${name}`)
+    || ["1", "true", "yes", "on"].includes(String(rawValue || "").toLowerCase());
+}
+
 let frontendUrl = (readOption("frontend-url") || process.env.FRONTEND_URL || "").replace(/\/$/, "");
 const apiBaseUrl = (readOption("api-base-url") || process.env.API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/$/, "");
+const browserSmokeEnabled = readFlag("browser");
 
 async function fetchWithTimeout(url, options = {}) {
   const controller = new AbortController();
@@ -88,6 +103,14 @@ async function resolveFrontendHome() {
   throw new Error(`Could not find a running Jobhunter frontend. Tried: ${failures.join("; ")}`);
 }
 
+async function loadPlaywrightChromium() {
+  const require = createRequire(import.meta.url);
+  const resolved = require.resolve("@playwright/test", {
+    paths: [path.join(WORKSPACE_ROOT, "frontend"), WORKSPACE_ROOT]
+  });
+  return require(resolved).chromium;
+}
+
 await check("frontend home", async () => {
   const response = await resolveFrontendHome();
   assert(response.ok, `Expected frontend home 2xx, got ${response.status}`);
@@ -106,6 +129,19 @@ await check("jobs api", async () => {
   firstJobId = jobs[0]?.id;
   assert(firstJobId, "First job has no id");
   return { status: response.status, returned: jobs.length, total: unwrapMetaTotal(response.json), firstJobId };
+});
+
+await check("jobs api salary sort", async () => {
+  const response = await fetchWithTimeout(`${apiBaseUrl}/jobs?page=0&size=5&sort=salary_desc`);
+  assert(response.ok, `Expected salary sorted jobs API 2xx, got ${response.status}`);
+  assert(response.json, "Salary sorted jobs API did not return JSON");
+  const jobs = unwrapList(response.json);
+  assert(jobs.length > 0, "Salary sorted jobs API returned no jobs");
+  const salaries = jobs.map((job) => Number(job?.salary ?? 0));
+  for (let index = 1; index < salaries.length; index += 1) {
+    assert(salaries[index - 1] >= salaries[index], `Salary sort is not descending at index ${index}`);
+  }
+  return { status: response.status, returned: jobs.length, salaries };
 });
 
 await check("companies api", async () => {
@@ -139,6 +175,105 @@ await check("frontend job detail route", async () => {
   assert(response.text.includes("Jobhunter"), "Job detail HTML does not contain Jobhunter");
   return { status: response.status, jobId: firstJobId, bytes: response.text.length };
 });
+
+if (browserSmokeEnabled) {
+  await check("frontend rendered job board DOM", async () => {
+    const chromium = await loadPlaywrightChromium();
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
+
+    try {
+      await page.goto(`${frontendUrl}/`, { waitUntil: "domcontentloaded", timeout: TIMEOUT_MS });
+      await page.waitForSelector('[data-testid="home-page"]', { timeout: TIMEOUT_MS });
+      await page.waitForFunction(
+        () => !document.body.innerText.includes("Đang tải dữ liệu tuyển dụng..."),
+        null,
+        { timeout: TIMEOUT_MS }
+      );
+      await page.waitForSelector('[data-testid="job-card"]', { timeout: TIMEOUT_MS });
+
+      const jobCardCount = await page.locator('[data-testid="job-card"]').count();
+      assert(jobCardCount > 0, "Home rendered no job cards");
+      assert(await page.locator('[data-testid="jobs-sort-select"]').count() === 1, "Sort select is missing");
+      assert(await page.locator('[data-testid="about-section"]').count() === 1, "About section is missing");
+
+      await page.locator('[data-testid="jobs-sort-select"]').selectOption("salary_desc");
+      await page.waitForURL((url) => url.searchParams.get("sort") === "salary_desc", { timeout: TIMEOUT_MS });
+
+      const horizontalOverflow = await page.locator("body").evaluate(() =>
+        Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      );
+      assert(horizontalOverflow <= 2, `Desktop has horizontal overflow: ${horizontalOverflow}px`);
+
+      return {
+        status: "rendered",
+        jobCardCount,
+        sort: "salary_desc",
+        url: page.url()
+      };
+    } finally {
+      await browser.close();
+    }
+  });
+
+  await check("frontend rendered job detail DOM", async () => {
+    assert(firstJobId, "Skipped because jobs API did not provide a job id");
+    const chromium = await loadPlaywrightChromium();
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 1366, height: 900 } });
+
+    try {
+      await page.goto(`${frontendUrl}/jobs/${firstJobId}`, { waitUntil: "domcontentloaded", timeout: TIMEOUT_MS });
+      await page.waitForSelector("h1", { timeout: TIMEOUT_MS });
+      await page.waitForSelector('a[href^="/chatbot?jobId="]', { timeout: TIMEOUT_MS });
+
+      const heading = await page.locator("h1").first().innerText();
+      assert(heading.trim().length > 0, "Job detail heading is empty");
+
+      const horizontalOverflow = await page.locator("body").evaluate(() =>
+        Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      );
+      assert(horizontalOverflow <= 2, `Job detail desktop has horizontal overflow: ${horizontalOverflow}px`);
+
+      return {
+        status: "rendered",
+        jobId: firstJobId,
+        heading
+      };
+    } finally {
+      await browser.close();
+    }
+  });
+
+  await check("frontend mobile layout DOM", async () => {
+    const chromium = await loadPlaywrightChromium();
+    const browser = await chromium.launch({ headless: true });
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true });
+
+    try {
+      await page.goto(`${frontendUrl}/`, { waitUntil: "domcontentloaded", timeout: TIMEOUT_MS });
+      await page.waitForSelector('[data-testid="home-page"]', { timeout: TIMEOUT_MS });
+      await page.waitForSelector('[data-testid="job-card"]', { timeout: TIMEOUT_MS });
+
+      const jobCardCount = await page.locator('[data-testid="job-card"]').count();
+      assert(jobCardCount > 0, "Mobile home rendered no job cards");
+
+      const horizontalOverflow = await page.locator("body").evaluate(() =>
+        Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      );
+      assert(horizontalOverflow <= 2, `Mobile has horizontal overflow: ${horizontalOverflow}px`);
+
+      return {
+        status: "rendered",
+        jobCardCount,
+        width: 390,
+        horizontalOverflow
+      };
+    } finally {
+      await browser.close();
+    }
+  });
+}
 
 await check("frontend auth/support routes", async () => {
   const routes = ["/login", "/register", "/forgot-password", "/support"];

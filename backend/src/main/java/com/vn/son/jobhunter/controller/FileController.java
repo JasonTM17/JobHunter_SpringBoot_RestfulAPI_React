@@ -35,6 +35,12 @@ public class FileController {
     private static final Pattern SAFE_FOLDER = Pattern.compile("^[a-zA-Z0-9/_-]+$");
     private static final List<String> IMAGE_EXTENSIONS = List.of(".jpg", ".jpeg", ".png", ".webp", ".gif");
     private static final List<String> DOCUMENT_EXTENSIONS = List.of(".pdf", ".doc", ".docx");
+    private static final List<String> DOCUMENT_CONTENT_TYPES = List.of(
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/octet-stream"
+    );
     private static final Set<String> IMAGE_ONLY_FOLDERS = Set.of("company", "avatar", "image", "images");
     private static final Set<String> DOCUMENT_FOLDERS = Set.of("resume", "resumes", "cv", "document", "documents");
 
@@ -160,6 +166,17 @@ public class FileController {
             if (!isValidImage(file)) {
                 throw new StorageException("Uploaded file is not a valid image");
             }
+            return;
+        }
+
+        boolean expectsDocument = policy == UploadPolicy.DOCUMENT_ONLY || (policy == UploadPolicy.MIXED && DOCUMENT_EXTENSIONS.contains(extension));
+        if (expectsDocument) {
+            if (!contentType.isBlank() && !DOCUMENT_CONTENT_TYPES.contains(contentType)) {
+                throw new StorageException("Only PDF, DOC, or DOCX files are allowed for this folder");
+            }
+            if (!isValidDocument(file, extension)) {
+                throw new StorageException("Uploaded file is not a valid document");
+            }
         }
     }
 
@@ -183,6 +200,32 @@ public class FileController {
         try (InputStream inputStream = file.getInputStream()) {
             return ImageIO.read(inputStream) != null;
         }
+    }
+
+    private boolean isValidDocument(MultipartFile file, String extension) throws IOException {
+        byte[] header = new byte[8];
+        int read;
+        try (InputStream inputStream = file.getInputStream()) {
+            read = inputStream.read(header);
+        }
+        if (read < 4) return false;
+
+        return switch (extension) {
+            case ".pdf" -> startsWith(header, read, 0x25, 0x50, 0x44, 0x46);
+            case ".doc" -> read >= 8 && startsWith(header, read, 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1);
+            case ".docx" -> startsWith(header, read, 0x50, 0x4B, 0x03, 0x04)
+                    || startsWith(header, read, 0x50, 0x4B, 0x05, 0x06)
+                    || startsWith(header, read, 0x50, 0x4B, 0x07, 0x08);
+            default -> false;
+        };
+    }
+
+    private boolean startsWith(byte[] header, int read, int... expected) {
+        if (read < expected.length) return false;
+        for (int index = 0; index < expected.length; index++) {
+            if ((header[index] & 0xFF) != expected[index]) return false;
+        }
+        return true;
     }
 
     private enum UploadPolicy {

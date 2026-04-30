@@ -5,6 +5,8 @@ import com.vn.son.jobhunter.domain.Permission;
 import com.vn.son.jobhunter.domain.Role;
 import com.vn.son.jobhunter.domain.User;
 import com.vn.son.jobhunter.domain.res.auth.AuthCapabilityResponse;
+import com.vn.son.jobhunter.domain.res.auth.ForgotPasswordResponse;
+import com.vn.son.jobhunter.domain.res.auth.ResetPasswordResponse;
 import com.vn.son.jobhunter.util.constant.GenderEnum;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,9 +29,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import com.vn.son.jobhunter.service.SecurityService;
 import com.vn.son.jobhunter.service.UserService;
+import com.vn.son.jobhunter.service.PasswordResetService;
+import com.vn.son.jobhunter.service.RateLimitService;
 import com.vn.son.jobhunter.util.error.GlobalException;
 import com.vn.son.jobhunter.util.security.SecurityUtils;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
@@ -63,6 +68,12 @@ class AuthControllerTest {
     @Mock
     private SecurityUtils securityUtils;
 
+    @Mock
+    private PasswordResetService passwordResetService;
+
+    @Mock
+    private RateLimitService rateLimitService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -71,7 +82,9 @@ class AuthControllerTest {
                 authenticationManagerBuilder,
                 securityService,
                 userService,
-                securityUtils
+                securityUtils,
+                passwordResetService,
+                rateLimitService
         );
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
@@ -166,6 +179,55 @@ class AuthControllerTest {
         assertNull(request.getCompany());
         assertNull(request.getRefreshToken());
         assertEquals("candidate@mail.com", request.getEmail());
+    }
+
+    @Test
+    void forgotPasswordShouldReturnGenericResponseAndOptionalDevToken() throws Exception {
+        when(passwordResetService.requestReset("candidate@mail.com")).thenReturn(
+                new ForgotPasswordResponse(
+                        "Nếu email tồn tại trong hệ thống, Jobhunter sẽ gửi hướng dẫn đặt lại mật khẩu.",
+                        "dev-token",
+                        Instant.parse("2026-04-30T10:00:00Z")
+                )
+        );
+
+        String payload = """
+                {
+                  "email": "candidate@mail.com"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Nếu email tồn tại trong hệ thống, Jobhunter sẽ gửi hướng dẫn đặt lại mật khẩu."))
+                .andExpect(jsonPath("$.devResetToken").value("dev-token"))
+                .andExpect(jsonPath("$.expiresAt").value("2026-04-30T10:00:00Z"));
+
+        verify(passwordResetService).requestReset("candidate@mail.com");
+    }
+
+    @Test
+    void resetPasswordShouldDelegateToResetService() throws Exception {
+        when(passwordResetService.resetPassword("reset-token", "new-password")).thenReturn(
+                new ResetPasswordResponse("Mật khẩu đã được cập nhật. Bạn có thể đăng nhập bằng mật khẩu mới.")
+        );
+
+        String payload = """
+                {
+                  "token": "reset-token",
+                  "password": "new-password"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/auth/reset-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Mật khẩu đã được cập nhật. Bạn có thể đăng nhập bằng mật khẩu mới."));
+
+        verify(passwordResetService).resetPassword("reset-token", "new-password");
     }
 
     @Test

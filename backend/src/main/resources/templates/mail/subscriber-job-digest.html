@@ -66,6 +66,16 @@
                     </td>
                 </tr>
 
+                <tr>
+                    <td style="padding: 0 32px 24px;">
+                        <p style="margin: 0; font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #64748b;">
+                            Ban co the
+                            <a th:href="${unsubscribeUrl}" style="color: #b91c1c; text-decoration: underline;">huy dang ky nhan email goi y</a>
+                            bat cu luc nao.
+                        </p>
+                    </td>
+                </tr>
+
                 <tr th:replace="~{mail/fragments/brand :: footer(${currentYear}, ${supportEmail}, ${appName})}">
                     <td></td>
                 </tr>

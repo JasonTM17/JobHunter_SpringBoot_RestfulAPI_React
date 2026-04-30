@@ -1,4 +1,5 @@
 import Head from "next/head";
+import type { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
 import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import FloatingChatWidget from "../components/chat/FloatingChatWidget";
@@ -10,6 +11,7 @@ import AboutSection from "../components/home/AboutSection";
 import HomeContentHub from "../components/home/HomeContentHub";
 import HomeHero from "../components/home/HomeHero";
 import JobsBoard from "../components/home/JobsBoard";
+import SubscriberSection from "../components/home/SubscriberSection";
 import FeaturedEmployersStrip from "../components/jobs/FeaturedEmployersStrip";
 import ManagementPanel from "../components/management/ManagementPanel";
 import { useAuth } from "../contexts/auth-context";
@@ -18,6 +20,7 @@ import {
   deleteResumeWithAuth,
   deleteUserWithAuth,
   fetchPermissionsWithAuth,
+  fetchResumeAuditsWithAuth,
   fetchResumesWithAuth,
   fetchRolesWithAuth,
   fetchUserActionCapabilityWithAuth,
@@ -29,6 +32,7 @@ import {
   createCompany,
   createJob,
   createSkill,
+  createSubscriber,
   deleteCompany,
   deleteJob,
   deleteSkill,
@@ -51,6 +55,7 @@ import {
   JobUpsertPayload,
   Permission,
   ResumeItem,
+  ResumeStatusAudit,
   Role,
   Skill,
   SkillUpsertPayload,
@@ -128,7 +133,25 @@ const EXPERTISE_GROUPS = [
   { title: "QA & Automation", skills: ["QA", "Automation", "Testing", "Selenium"], focus: "Test strategy, regression, release confidence" }
 ];
 
-export default function HomePage() {
+interface HomePageProps {
+  initialJobs: Job[];
+  initialBrowseJobs: Job[];
+  initialBrowseTotalItems: number;
+  initialBrowseTotalPages: number;
+  initialCompanies: Company[];
+  initialSkills: Skill[];
+  initialError: string;
+}
+
+export default function HomePage({
+  initialJobs,
+  initialBrowseJobs,
+  initialBrowseTotalItems,
+  initialBrowseTotalPages,
+  initialCompanies,
+  initialSkills,
+  initialError
+}: HomePageProps) {
   const router = useRouter();
   const {
     status: authStatus,
@@ -142,21 +165,21 @@ export default function HomePage() {
   } = useAuth();
 
   const [tab, setTab] = useState<MainTab>("browse");
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [browseJobs, setBrowseJobs] = useState<Job[]>([]);
-  const [browseTotalItems, setBrowseTotalItems] = useState(0);
-  const [browseTotalPages, setBrowseTotalPages] = useState(1);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const [jobs, setJobs] = useState<Job[]>(initialJobs);
+  const [browseJobs, setBrowseJobs] = useState<Job[]>(initialBrowseJobs);
+  const [browseTotalItems, setBrowseTotalItems] = useState(initialBrowseTotalItems);
+  const [browseTotalPages, setBrowseTotalPages] = useState(initialBrowseTotalPages);
+  const [companies, setCompanies] = useState<Company[]>(initialCompanies);
+  const [skills, setSkills] = useState<Skill[]>(initialSkills);
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [userCapabilities, setUserCapabilities] = useState<Record<number, UserActionCapability>>({});
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [browseLoading, setBrowseLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(initialError);
   const [rbacLoading, setRbacLoading] = useState(false);
   const [rbacLoaded, setRbacLoaded] = useState(false);
   const [rbacError, setRbacError] = useState("");
@@ -173,7 +196,14 @@ export default function HomePage() {
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
   const [savingJobIds, setSavingJobIds] = useState<number[]>([]);
+  const [resumeAuditsById, setResumeAuditsById] = useState<Record<number, ResumeStatusAudit[]>>({});
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [subscriberName, setSubscriberName] = useState("");
+  const [subscriberEmail, setSubscriberEmail] = useState("");
+  const [subscriberSkillIds, setSubscriberSkillIds] = useState<number[]>([]);
+  const [subscriberSubmitting, setSubscriberSubmitting] = useState(false);
+  const [subscriberMessage, setSubscriberMessage] = useState("");
+  const [subscriberError, setSubscriberError] = useState("");
 
   const companiesSectionRef = useRef<HTMLElement>(null);
   const jobsSectionRef = useRef<HTMLElement>(null);
@@ -195,8 +225,8 @@ export default function HomePage() {
   }, [workspace]);
 
   function renderPublicStat(value: number): string {
-    if (loading) return "Đang tải...";
-    if (error) return "Không khả dụng";
+    if (loading && value === 0) return "Đang tải...";
+    if (error && value === 0) return "Đang cập nhật";
     return String(value);
   }
 
@@ -255,25 +285,47 @@ export default function HomePage() {
   async function loadPublicData() {
     setLoading(true);
     setError("");
-    try {
-      const [nextJobs, nextCompanies, nextSkills] = await Promise.all([fetchAllJobs(), fetchAllCompanies(), fetchAllSkills()]);
+    const messages: string[] = [];
+    const [jobsResult, companiesResult, skillsResult] = await Promise.allSettled([
+      fetchAllJobs(),
+      fetchAllCompanies(),
+      fetchAllSkills()
+    ]);
+
+    if (jobsResult.status === "fulfilled") {
+      const nextJobs = jobsResult.value;
       const sortedJobs = [...nextJobs].sort((a, b) => {
         if (a.active !== b.active) return a.active ? -1 : 1;
         const aDate = a.endDate ? new Date(a.endDate).getTime() : 0;
         const bDate = b.endDate ? new Date(b.endDate).getTime() : 0;
         return bDate - aDate;
       });
-      const sortedCompanies = [...nextCompanies].sort((a, b) => a.name.localeCompare(b.name));
-      const sortedSkills = [...nextSkills].sort((a, b) => a.name.localeCompare(b.name));
-
       setJobs(sortedJobs);
-      setCompanies(sortedCompanies);
-      setSkills(sortedSkills);
-    } catch (loadError) {
-      setError(toUserErrorMessage(loadError, "Không thể tải dữ liệu tuyển dụng lúc này."));
-    } finally {
-      setLoading(false);
+    } else {
+      setJobs([]);
+      messages.push(toUserErrorMessage(jobsResult.reason, "Không thể tải metadata việc làm."));
     }
+
+    if (companiesResult.status === "fulfilled") {
+      const nextCompanies = companiesResult.value;
+      const sortedCompanies = [...nextCompanies].sort((a, b) => a.name.localeCompare(b.name));
+      setCompanies(sortedCompanies);
+    } else {
+      setCompanies([]);
+      messages.push(toUserErrorMessage(companiesResult.reason, "Không thể tải danh sách công ty."));
+    }
+
+    if (skillsResult.status === "fulfilled") {
+      const nextSkills = skillsResult.value;
+      const sortedSkills = [...nextSkills].sort((a, b) => a.name.localeCompare(b.name));
+      setSkills(sortedSkills);
+    } else {
+      setSkills([]);
+      messages.push(toUserErrorMessage(skillsResult.reason, "Không thể tải danh sách kỹ năng."));
+    }
+
+    setError(messages.join(" "));
+    setLoading(false);
   }
 
   async function loadBrowseJobs() {
@@ -404,13 +456,17 @@ export default function HomePage() {
 
       if (canReadResumes) {
         try {
-          setResumes(await fetchResumesWithAuth());
+          const resumeItems = await fetchResumesWithAuth();
+          setResumes(resumeItems);
+          void loadResumeAudits(resumeItems);
         } catch (resumeError) {
           setResumes([]);
+          setResumeAuditsById({});
           messages.push(`Ứng tuyển: ${toUserErrorMessage(resumeError, "Không thể tải hồ sơ ứng tuyển.")}`);
         }
       } else {
         setResumes([]);
+        setResumeAuditsById({});
       }
 
       setRbacError(messages.join(" | "));
@@ -431,6 +487,28 @@ export default function HomePage() {
       }
     }
     await loadRbacData();
+  }
+
+  async function loadResumeAudits(resumeItems: ResumeItem[]) {
+    if (!resumeItems.length) {
+      setResumeAuditsById({});
+      return;
+    }
+
+    const settled = await Promise.allSettled(
+      resumeItems.map(async (resume) => {
+        const audits = await fetchResumeAuditsWithAuth(resume.id);
+        return [resume.id, audits] as const;
+      })
+    );
+    const nextAudits: Record<number, ResumeStatusAudit[]> = {};
+    settled.forEach((item) => {
+      if (item.status === "fulfilled") {
+        const [resumeId, audits] = item.value;
+        nextAudits[resumeId] = audits;
+      }
+    });
+    setResumeAuditsById(nextAudits);
   }
 
   const manageModuleQuery = useMemo(() => {
@@ -464,6 +542,8 @@ export default function HomePage() {
     const tabQueryValue = Array.isArray(raw) ? raw[0] : raw;
     const wantsManage = tabQueryValue === "manage" || Boolean(manageModuleQuery);
 
+    if (wantsManage && authStatus === "loading") return;
+
     if (wantsManage && !canAccessManagement) {
       const nextQuery = queryWithoutTab(router.query);
       setTab("browse");
@@ -480,7 +560,7 @@ export default function HomePage() {
 
     const nextTab: MainTab = wantsManage ? "manage" : "browse";
     setTab((prev) => (prev === nextTab ? prev : nextTab));
-  }, [router.isReady, router.query.tab, canAccessManagement, manageModuleQuery]);
+  }, [router.isReady, router.query.tab, authStatus, canAccessManagement, manageModuleQuery]);
 
   useEffect(() => {
     if (authStatus !== "authenticated") {
@@ -500,14 +580,16 @@ export default function HomePage() {
     void loadSavedJobIds();
   }, [authStatus, bookmarkScope]);
 
+  const jobsForMetadata = useMemo(() => (jobs.length ? jobs : browseJobs), [jobs, browseJobs]);
+
   const locationOptions = useMemo(
-    () => Array.from(new Set(jobs.map((job) => job.location).filter(Boolean))),
-    [jobs]
+    () => Array.from(new Set(jobsForMetadata.map((job) => job.location).filter(Boolean))),
+    [jobsForMetadata]
   );
 
   const levelOptions = useMemo(
-    () => Array.from(new Set(jobs.map((job) => String(job.level || UNKNOWN_LEVEL)).filter(Boolean))),
-    [jobs]
+    () => Array.from(new Set(jobsForMetadata.map((job) => String(job.level || UNKNOWN_LEVEL)).filter(Boolean))),
+    [jobsForMetadata]
   );
 
   const skillOptions = useMemo(
@@ -548,15 +630,18 @@ export default function HomePage() {
     return merged.slice(0, 8);
   }, [locationOptions]);
 
-  const activeJobsCount = useMemo(() => jobs.filter((job) => job.active).length, [jobs]);
+  const activeJobsCount = useMemo(
+    () => (jobs.length ? jobs.filter((job) => job.active).length : browseTotalItems),
+    [jobs, browseTotalItems]
+  );
   const activeJobsByCompanyId = useMemo(() => {
     const countMap = new Map<number, number>();
-    jobs.forEach((job) => {
+    jobsForMetadata.forEach((job) => {
       if (!job.active || !job.company?.id) return;
       countMap.set(job.company.id, (countMap.get(job.company.id) ?? 0) + 1);
     });
     return countMap;
-  }, [jobs]);
+  }, [jobsForMetadata]);
   const isFilteringKeyword = keyword.trim().toLowerCase() !== deferredKeyword;
   const salaryRangeInvalid = useMemo(() => {
     if (!salaryMin || !salaryMax) return false;
@@ -749,6 +834,45 @@ export default function HomePage() {
     }
   }
 
+  function toggleSubscriberSkill(skillId: number) {
+    setSubscriberSkillIds((prev) =>
+      prev.includes(skillId) ? prev.filter((id) => id !== skillId) : [...prev, skillId]
+    );
+  }
+
+  async function submitSubscriber() {
+    const cleanName = subscriberName.trim();
+    const cleanEmail = subscriberEmail.trim();
+    setSubscriberMessage("");
+    setSubscriberError("");
+
+    if (!cleanName) {
+      setSubscriberError("Vui lòng nhập họ tên để đăng ký nhận việc.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setSubscriberError("Email chưa đúng định dạng.");
+      return;
+    }
+
+    setSubscriberSubmitting(true);
+    try {
+      await createSubscriber({
+        email: cleanEmail,
+        name: cleanName,
+        skills: subscriberSkillIds.map((id) => ({ id }))
+      });
+      setSubscriberMessage("Đăng ký nhận gợi ý việc làm thành công.");
+      setSubscriberName("");
+      setSubscriberEmail("");
+      setSubscriberSkillIds([]);
+    } catch (subscriberErrorValue) {
+      setSubscriberError(toUserErrorMessage(subscriberErrorValue, "Không thể đăng ký nhận việc lúc này."));
+    } finally {
+      setSubscriberSubmitting(false);
+    }
+  }
+
   const updateSecondaryScrollState = useCallback(() => {
     const el = secondaryCompaniesScrollRef.current;
     if (!el) return;
@@ -891,12 +1015,12 @@ export default function HomePage() {
         </section>
       ) : null}
 
-      {loading ? (
-        <LoadingState title="Đang tải dữ liệu tuyển dụng..." rows={6} />
-      ) : error ? (
-        <ErrorState description={error} onRetry={() => void loadPublicData()} />
-      ) : tab === "browse" ? (
+      {tab === "browse" ? (
         <section className="grid grid-cols-1 gap-4">
+          {error ? (
+            <ErrorState description={error} onRetry={() => void loadPublicData()} />
+          ) : null}
+
           <div id="top-employers" data-testid="top-employers-section">
             <FeaturedEmployersStrip
               items={featuredCompanies}
@@ -946,27 +1070,45 @@ export default function HomePage() {
             onCurrentPageChange={setCurrentPage}
           />
 
-          <HomeContentHub
-            campaignTiles={CAMPAIGN_TILES}
-            featuredArticles={FEATURED_ARTICLES}
-            expertiseGroups={EXPERTISE_GROUPS}
-            rankedCompanies={rankedCompanies}
-            secondaryCompanies={secondaryCompanies}
-            hubSkillOptions={hubSkillOptions}
-            hubCityOptions={CITY_HUBS}
-            companiesCount={companies.length}
-            secondaryScrollLeft={secondaryScrollLeft}
-            secondaryScrollRight={secondaryScrollRight}
-            companiesSectionRef={companiesSectionRef}
-            secondaryCompaniesScrollRef={secondaryCompaniesScrollRef}
-            onResetFilters={resetFilters}
-            onApplySkillFilter={applySkillFilter}
-            onApplyKeywordFilter={applyKeywordFilter}
-            onApplyCityFilter={applyCityFilter}
-            onSelectCompany={handleSelectCompany}
-            onViewAllCompanies={handleViewAllCompanies}
-            onScrollSecondaryBy={scrollSecondaryBy}
-            onUpdateSecondaryScrollState={updateSecondaryScrollState}
+          {loading ? (
+            <LoadingState title="Đang tải dữ liệu công ty và kỹ năng..." rows={3} />
+          ) : (
+            <HomeContentHub
+              campaignTiles={CAMPAIGN_TILES}
+              featuredArticles={FEATURED_ARTICLES}
+              expertiseGroups={EXPERTISE_GROUPS}
+              rankedCompanies={rankedCompanies}
+              secondaryCompanies={secondaryCompanies}
+              hubSkillOptions={hubSkillOptions}
+              hubCityOptions={CITY_HUBS}
+              companiesCount={companies.length}
+              secondaryScrollLeft={secondaryScrollLeft}
+              secondaryScrollRight={secondaryScrollRight}
+              companiesSectionRef={companiesSectionRef}
+              secondaryCompaniesScrollRef={secondaryCompaniesScrollRef}
+              onResetFilters={resetFilters}
+              onApplySkillFilter={applySkillFilter}
+              onApplyKeywordFilter={applyKeywordFilter}
+              onApplyCityFilter={applyCityFilter}
+              onSelectCompany={handleSelectCompany}
+              onViewAllCompanies={handleViewAllCompanies}
+              onScrollSecondaryBy={scrollSecondaryBy}
+              onUpdateSecondaryScrollState={updateSecondaryScrollState}
+            />
+          )}
+
+          <SubscriberSection
+            email={subscriberEmail}
+            name={subscriberName}
+            selectedSkillIds={subscriberSkillIds}
+            skills={skills}
+            submitting={subscriberSubmitting}
+            message={subscriberMessage}
+            error={subscriberError}
+            onEmailChange={setSubscriberEmail}
+            onNameChange={setSubscriberName}
+            onToggleSkill={toggleSubscriberSkill}
+            onSubmit={submitSubscriber}
           />
 
           <AboutSection
@@ -975,6 +1117,8 @@ export default function HomePage() {
             skillsLabel={renderPublicStat(skills.length)}
           />
         </section>
+      ) : loading ? (
+        <LoadingState title="Đang tải dữ liệu tuyển dụng..." rows={6} />
       ) : canAccessManagement ? (
         <section className="grid gap-3">
           <section className="grid gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-soft sm:grid-cols-2 lg:grid-cols-4">
@@ -1010,6 +1154,7 @@ export default function HomePage() {
             users={users}
             roles={roles}
             permissions={permissions}
+            resumeAuditsById={resumeAuditsById}
             userCapabilities={userCapabilities}
             createAssignableRoles={assignableRoles}
             rbacLoading={rbacLoading}
@@ -1027,10 +1172,10 @@ export default function HomePage() {
             onCreateSkill={(payload) => runProtectedMutation(() => createSkill(payload), "Tạo kỹ năng thành công.")}
             onUpdateSkill={(payload) => runProtectedMutation(() => updateSkill(payload), "Cập nhật kỹ năng thành công.")}
             onDeleteSkill={(skillId) => runProtectedMutation(() => deleteSkill(skillId), "Xóa kỹ năng thành công.")}
-            onUpdateResumeStatus={(resume, nextStatus) =>
+            onUpdateResumeStatus={(resume, nextStatus, note) =>
               runRbacMutation(
                 () =>
-                  updateResumeWithAuth(resume.id, { status: nextStatus }),
+                  updateResumeWithAuth(resume.id, { status: nextStatus, note }),
                 "Cập nhật trạng thái hồ sơ thành công."
               )
             }
@@ -1059,3 +1204,81 @@ export default function HomePage() {
     </>
   );
 }
+
+function queryStringValue(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
+function queryPositivePage(value: string | string[] | undefined): number {
+  const parsed = Number.parseInt(queryStringValue(value), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function normalizeInitialSort(value: string | string[] | undefined): string {
+  const requestedSort = queryStringValue(value);
+  return SUPPORTED_JOB_SORTS.has(requestedSort) ? requestedSort : DEFAULT_JOB_SORT;
+}
+
+export const getServerSideProps: GetServerSideProps<HomePageProps> = async ({ query }) => {
+  const requestedPage = queryPositivePage(query.page);
+  const requestedSort = normalizeInitialSort(query.sort);
+  const messages: string[] = [];
+
+  const [browseResult, companiesResult, skillsResult] = await Promise.allSettled([
+    fetchPublicJobs({
+      page: requestedPage - 1,
+      size: JOBS_PER_PAGE,
+      q: queryStringValue(query.q) || undefined,
+      location: queryStringValue(query.location) || undefined,
+      level: queryStringValue(query.level) || undefined,
+      skill: queryStringValue(query.skill) || undefined,
+      salaryMin: queryStringValue(query.salaryMin) || undefined,
+      salaryMax: queryStringValue(query.salaryMax) || undefined,
+      sort: requestedSort
+    }),
+    fetchAllCompanies(),
+    fetchAllSkills()
+  ]);
+
+  const initialJobs: Job[] = [];
+
+  const initialCompanies =
+    companiesResult.status === "fulfilled"
+      ? [...companiesResult.value].sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+  if (companiesResult.status === "rejected") {
+    messages.push(toUserErrorMessage(companiesResult.reason, "Không thể tải danh sách công ty."));
+  }
+
+  const initialSkills =
+    skillsResult.status === "fulfilled"
+      ? [...skillsResult.value].sort((a, b) => a.name.localeCompare(b.name))
+      : [];
+  if (skillsResult.status === "rejected") {
+    messages.push(toUserErrorMessage(skillsResult.reason, "Không thể tải danh sách kỹ năng."));
+  }
+
+  let initialBrowseJobs: Job[] = [];
+  let initialBrowseTotalItems = 0;
+  let initialBrowseTotalPages = 1;
+  if (browseResult.status === "fulfilled") {
+    initialBrowseJobs = browseResult.value.items;
+    initialBrowseTotalItems = browseResult.value.totalItems;
+    initialBrowseTotalPages = Math.max(1, browseResult.value.totalPages);
+  } else {
+    messages.push(toUserErrorMessage(browseResult.reason, "Không thể tải danh sách việc làm lúc này."));
+  }
+
+  return {
+    props: {
+      initialJobs,
+      initialBrowseJobs,
+      initialBrowseTotalItems,
+      initialBrowseTotalPages,
+      initialCompanies,
+      initialSkills,
+      initialError: messages.join(" ")
+    }
+  };
+};
