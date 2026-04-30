@@ -1,5 +1,27 @@
 # Release Notes
 
+## v1.0.1-ci-hardening - 2026-04-30
+
+### Tổng quan
+
+Patch release này sửa các lỗi phát hiện sau khi publish `v1.0.0` trên GitHub Actions.
+
+### Fixes
+
+- Sửa Docker smoke trên fresh MySQL volume: database bootstrap chủ động đảm bảo Flyway migration đã chạy trước khi seed dữ liệu.
+- Làm visual regression ổn định hơn trên Linux runner bằng ngưỡng diff riêng cho CI, tránh fail vì khác biệt font/render giữa hệ điều hành.
+
+### Verification
+
+- Backend `.\gradlew.bat test`
+- Frontend `npm run lint`
+- Frontend `npm test -- --runInBand`
+- Frontend `npm run build`
+- Frontend `npm run test:e2e`: 16/16
+- Frontend `npm run test:visual`: 4/4
+- Frontend `npm audit --omit=dev --audit-level=high`: 0 vulnerabilities
+- Root `npm run smoke:local -- --browser=true`: 11/11
+
 ## v1.0.0-production-mvp - 2026-04-30
 
 ### Tổng quan

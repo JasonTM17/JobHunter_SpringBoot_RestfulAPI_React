@@ -2,6 +2,8 @@ package com.vn.son.jobhunter.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.flywaydb.core.Flyway;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
@@ -15,6 +17,7 @@ import com.vn.son.jobhunter.repository.RoleRepository;
 import com.vn.son.jobhunter.repository.UserRepository;
 import com.vn.son.jobhunter.util.constant.GenderEnum;
 
+import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +32,14 @@ public class DatabaseInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RecruitmentDemoDataSeeder recruitmentDemoDataSeeder;
+    private final ObjectProvider<Flyway> flywayProvider;
+    private final DataSource dataSource;
+
+    @Value("${spring.flyway.enabled:true}")
+    private boolean flywayEnabled;
+
+    @Value("${spring.flyway.locations:classpath:db/migration}")
+    private String flywayLocations;
 
     @Value("${jobhunter.bootstrap.admin.enabled:true}")
     private boolean bootstrapAdminEnabled;
@@ -51,6 +62,7 @@ public class DatabaseInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         log.info("Starting database bootstrap");
+        runFlywayBeforeSeedIfAvailable();
         if (this.permissionRepository.count() == 0) {
             ArrayList<Permission> arr = new ArrayList<>();
             arr.add(new Permission("Create a company", "/api/v1/companies", "POST", "COMPANIES"));
@@ -116,6 +128,30 @@ public class DatabaseInitializer implements CommandLineRunner {
         ensureSuperAdminBootstrap();
         this.recruitmentDemoDataSeeder.seedDemoData();
         log.info("Database bootstrap completed");
+    }
+
+    private void runFlywayBeforeSeedIfAvailable() {
+        if (!flywayEnabled) {
+            return;
+        }
+
+        Flyway flyway = this.flywayProvider.getIfAvailable();
+        if (flyway == null) {
+            log.info("Flyway bean is not available; running database bootstrap migrations directly");
+            Flyway.configure()
+                    .dataSource(this.dataSource)
+                    .locations(this.flywayLocations)
+                    .baselineOnMigrate(true)
+                    .baselineVersion("0")
+                    .validateOnMigrate(true)
+                    .cleanDisabled(true)
+                    .load()
+                    .migrate();
+            return;
+        }
+
+        log.info("Ensuring Flyway migrations have run before database bootstrap");
+        flyway.migrate();
     }
 
     private void ensureSuperAdminBootstrap() {
