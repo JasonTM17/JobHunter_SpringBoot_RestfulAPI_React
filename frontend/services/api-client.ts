@@ -14,6 +14,7 @@ export const STORAGE_BASE_URL = (isServerRuntime ? INTERNAL_STORAGE_BASE_URL : P
   ""
 );
 const REFRESH_ENDPOINT = "/api/v1/auth/refresh";
+const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
 
 type QueryValue = string | number | boolean | null | undefined;
 
@@ -183,6 +184,11 @@ export async function apiRequest<T>(
   query?: Record<string, QueryValue>
 ): Promise<T> {
   const headers = new Headers(options?.headers);
+  const timeoutController =
+    !options?.signal && typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timeoutId = timeoutController
+    ? globalThis.setTimeout(() => timeoutController.abort(), DEFAULT_REQUEST_TIMEOUT_MS)
+    : null;
 
   let finalBody: BodyInit | undefined = undefined;
   const rawBody = options?.body;
@@ -201,25 +207,36 @@ export async function apiRequest<T>(
 
   const requestInit: RequestInit = {
     method: options?.method,
-    signal: options?.signal,
+    signal: options?.signal ?? timeoutController?.signal,
     body: finalBody,
     credentials: "include",
     headers
   };
 
-  let response = await fetch(url, requestInit);
+  try {
+    let response = await fetch(url, requestInit);
 
-  if (!response.ok && shouldAttemptRefresh(path, response.status, headers)) {
-    const refreshed = await refreshSession();
-    if (refreshed) {
-      response = await fetch(url, requestInit);
+    if (!response.ok && shouldAttemptRefresh(path, response.status, headers)) {
+      const refreshed = await refreshSession();
+      if (refreshed) {
+        response = await fetch(url, requestInit);
+      }
+    }
+
+    const payload = await parsePayload(response);
+    if (!response.ok) {
+      throw new ApiClientError(extractMessage(payload, response.status), response.status, payload);
+    }
+
+    return unwrapEnvelope<T>(payload);
+  } catch (error) {
+    if (timeoutController?.signal.aborted) {
+      throw new ApiClientError("Kết nối API quá thời gian chờ. Vui lòng kiểm tra backend và thử lại.", 0);
+    }
+    throw error;
+  } finally {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
     }
   }
-
-  const payload = await parsePayload(response);
-  if (!response.ok) {
-    throw new ApiClientError(extractMessage(payload, response.status), response.status, payload);
-  }
-
-  return unwrapEnvelope<T>(payload);
 }

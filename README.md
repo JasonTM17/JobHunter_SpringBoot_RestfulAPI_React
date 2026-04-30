@@ -122,7 +122,7 @@ jobhunter/
 │   ├── utils/                # Formatting, permissions
 │   ├── types/                # TypeScript models
 │   ├── __tests__/             # Jest tests
-│   ├── jest.config.ts
+│   ├── jest.config.js
 │   ├── jest.setup.ts
 │   ├── Dockerfile
 │   └── package.json
@@ -164,6 +164,8 @@ java -jar build/libs/jobhunter-*.jar
 Backend chạy tại: `http://localhost:8080`
 Swagger UI: `http://localhost:8080/swagger-ui.html`
 
+> Nếu port `8080` đang bị service khác chiếm, chạy backend với `SERVER_PORT=<port-khác>` và đồng bộ lại `NEXT_PUBLIC_API_BASE_URL` phía frontend.
+
 ### Frontend — Node.js + Next.js
 
 ```bash
@@ -180,6 +182,8 @@ npm run dev:turbo
 ```
 
 Frontend chạy tại: `http://localhost:3000`
+
+> Có thể đổi port frontend bằng `npm run dev -- -p 3010`. Khi đổi port, nhớ thêm origin tương ứng vào `CORS_ALLOWED_ORIGINS` nếu gọi backend local.
 
 ---
 
@@ -207,6 +211,16 @@ docker compose logs -f frontend
 | Backend  | http://localhost:8080     |
 | MySQL    | localhost:3307 (host)    |
 | Swagger  | http://localhost:8080/swagger-ui.html |
+
+Nếu host đã có ứng dụng khác ở `3001` hoặc `8080`, sửa `.env` trước khi chạy:
+
+```bash
+FRONTEND_PORT=3010
+BACKEND_PORT=8081
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8081
+NEXT_PUBLIC_STORAGE_BASE_URL=http://localhost:8081
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,http://localhost:3010,http://127.0.0.1:3010
+```
 
 ### 2. Pull từ Docker Hub
 
@@ -298,11 +312,35 @@ npm test
 
 # Chạy tests với coverage
 npm run test:coverage
+
+# Chạy visual snapshot regression (Playwright)
+npx playwright install chromium
+npm run test:visual
+
+# Cập nhật ảnh baseline khi UI thay đổi có chủ đích
+npm run test:visual:update
 ```
+
+Visual snapshots dùng mock API cố định trong `frontend/visual-tests/fixtures`, nên regression không phụ thuộc dữ liệu seed/local DB. CI sẽ chạy visual regression trên Chromium desktop và mobile.
 
 Coverage threshold hiện tại: 30% (branches, functions, lines, statements)
 
 ---
+
+### Local smoke check
+
+Sau khi backend va frontend da chay local, dung smoke check de xac nhan nhanh cac route/API chinh:
+
+```bash
+npm run smoke:local
+```
+
+Mac dinh script tu thu frontend tai `3010`, `3001`, `3000` va kiem tra backend tai `http://localhost:8080/api/v1`.
+Neu dung port khac:
+
+```bash
+npm run smoke:local -- --frontend-url=http://localhost:3001 --api-base-url=http://localhost:8080/api/v1
+```
 
 ## Docker — Build và Push lên Docker Hub
 

@@ -177,7 +177,7 @@ export default function ManagementPanel({
   const canDeleteSkill = can("/api/v1/skills/{id}", "DELETE");
 
   const canReadResumes = can("/api/v1/resumes", "GET");
-  const canUpdateResumes = can("/api/v1/resumes", "PUT");
+  const canUpdateResumes = can("/api/v1/resumes/{id}/status", "PATCH") || can("/api/v1/resumes", "PUT");
   const canDeleteResumes = can("/api/v1/resumes/{id}", "DELETE");
 
   const canReadUsers = can("/api/v1/users", "GET");
@@ -322,7 +322,7 @@ export default function ManagementPanel({
 
   return (
     <section className="grid gap-3">
-      <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+      <section className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Cổng quản trị</h2>
@@ -335,7 +335,7 @@ export default function ManagementPanel({
               type="button"
               onClick={() => void reloadPublicData()}
               disabled={reloadingPublic || loadingAction}
-              className="rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3 sm:text-sm"
+              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3 sm:text-sm"
             >
               Tải lại dữ liệu công khai
             </button>
@@ -343,7 +343,7 @@ export default function ManagementPanel({
               type="button"
               onClick={() => void reloadRbacData()}
               disabled={reloadingRbac || loadingAction}
-              className="rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3 sm:text-sm"
+              className="rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3 sm:text-sm"
             >
               Tải lại quyền truy cập
             </button>
@@ -356,8 +356,8 @@ export default function ManagementPanel({
             onClick={() => selectPublicTab(publicTab)}
             className={
               tab === "public-crud"
-                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
-                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
+                ? "rounded-md bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
             }
           >
             Quản lý dữ liệu
@@ -369,8 +369,8 @@ export default function ManagementPanel({
             title={canAccessRbac ? "Mở quản lý tài khoản và phân quyền" : "Mục này chỉ hiện khi tài khoản có quyền liên quan"}
             className={
               tab === "rbac"
-                ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
-                : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
+                ? "rounded-md bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                : "rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
             }
           >
             Tài khoản & phân quyền
@@ -379,15 +379,15 @@ export default function ManagementPanel({
       </section>
 
       {tab === "public-crud" ? (
-        <section className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
+        <section className="rounded-lg border border-slate-200 bg-white p-3.5 shadow-soft sm:p-4">
           <div className="mb-3 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => selectPublicTab("jobs")}
               className={
                 publicTab === "jobs"
-                  ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
-                  : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
+                  ? "rounded-md bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                  : "rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
               }
             >
               Việc làm ({jobs.length})
@@ -397,8 +397,8 @@ export default function ManagementPanel({
               onClick={() => selectPublicTab("companies")}
               className={
                 publicTab === "companies"
-                  ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
-                  : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
+                  ? "rounded-md bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                  : "rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
               }
             >
               Công ty ({companies.length})
@@ -408,8 +408,8 @@ export default function ManagementPanel({
               onClick={() => selectPublicTab("skills")}
               className={
                 publicTab === "skills"
-                  ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
-                  : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
+                  ? "rounded-md bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                  : "rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 sm:px-3 sm:text-sm"
               }
             >
               Kỹ năng ({skills.length})
@@ -421,15 +421,15 @@ export default function ManagementPanel({
               title={canReadResumes ? "Mở danh sách hồ sơ ứng tuyển" : "Bạn chưa có quyền xem hồ sơ ứng tuyển"}
               className={
                 publicTab === "resumes"
-                  ? "rounded-xl bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
-                  : "rounded-xl border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
+                  ? "rounded-md bg-slate-900 px-2.5 py-1.5 text-[13px] font-semibold text-white sm:px-3 sm:text-sm"
+                  : "rounded-md border border-slate-300 px-2.5 py-1.5 text-[13px] font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50 sm:px-3 sm:text-sm"
               }
             >
               Hồ sơ ứng tuyển ({rbacLoading ? "Đang tải..." : canReadResumes ? resumes.length : "Không có quyền"})
             </button>
           </div>
 
-          <div className="mb-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
             {`Việc làm: ${canManageJobs ? "Có thể thao tác" : "Chỉ xem"} • `}
             {`Công ty: ${canManageCompanies ? "Có thể thao tác" : "Chỉ xem"} • `}
             {`Kỹ năng: ${canManageSkills ? "Có thể thao tác" : "Chỉ xem"} • `}
@@ -445,9 +445,9 @@ export default function ManagementPanel({
                     value={jobSearch}
                     onChange={(e) => setJobSearch(e.target.value)}
                     placeholder="Tìm kiếm việc làm..."
-                    className="rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                    className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
                   />
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
                     <input
                       type="checkbox"
                       checked={showInactiveJobs}
@@ -462,7 +462,7 @@ export default function ManagementPanel({
                   disabled={!canCreateJob}
                   title={canCreateJob ? "Tạo việc làm mới" : noPermissionTitle}
                   onClick={() => setJobModal({ open: true, mode: "create", target: null })}
-                  className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Tạo việc làm
                 </button>
@@ -471,7 +471,7 @@ export default function ManagementPanel({
               {filteredJobs.length === 0 ? (
                 <EmptyState title="Không tìm thấy việc làm phù hợp" description="Thử thay đổi từ khóa tìm kiếm." />
               ) : (
-                <div className="w-full overflow-x-auto rounded-2xl border border-slate-200">
+                <div className="w-full overflow-x-auto rounded-lg border border-slate-200">
                   <table className="min-w-full divide-y divide-slate-200 text-xs sm:text-sm">
                     <thead className="bg-slate-50">
                       <tr>
@@ -545,14 +545,14 @@ export default function ManagementPanel({
                   value={companySearch}
                   onChange={(e) => setCompanySearch(e.target.value)}
                   placeholder="Tìm kiếm công ty..."
-                  className="rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                  className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
                 />
                 <button
                   type="button"
                   disabled={!canCreateCompany}
                   title={canCreateCompany ? "Tạo công ty mới" : noPermissionTitle}
                   onClick={() => setCompanyModal({ open: true, mode: "create", target: null })}
-                  className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Tạo công ty
                 </button>
@@ -561,13 +561,13 @@ export default function ManagementPanel({
               {companies.length === 0 && !companySearch ? (
                 <EmptyState title="Chưa có công ty" description="Bạn có thể tạo công ty mới." />
               ) : filteredCompanies.length === 0 ? (
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-600">
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-600">
                   Không tìm thấy công ty phù hợp.
                 </div>
               ) : (
                 <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                   {filteredCompanies.map((company) => (
-                    <article key={company.id} className="rounded-2xl border border-slate-200 bg-white p-3">
+                    <article key={company.id} className="rounded-lg border border-slate-200 bg-white p-3">
                       <div className="flex items-start gap-3">
                         <CompanyLogo name={company.name} logo={company.logo} size="md" />
                         <div className="min-w-0">
@@ -611,7 +611,7 @@ export default function ManagementPanel({
                   disabled={!canCreateSkill}
                   title={canCreateSkill ? "Tạo kỹ năng mới" : noPermissionTitle}
                   onClick={() => setSkillModal({ open: true, mode: "create", target: null })}
-                  className="rounded-xl bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md bg-rose-600 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Tạo kỹ năng
                 </button>
@@ -624,7 +624,7 @@ export default function ManagementPanel({
                   {skills.map((skill) => (
                     <article
                       key={skill.id}
-                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2"
+                      className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2"
                     >
                       <p className="text-sm font-semibold text-slate-800">{skill.name}</p>
                       <div className="flex gap-1.5">
@@ -676,17 +676,17 @@ export default function ManagementPanel({
         <section className="grid gap-3">
           <AuthAccessPanel onAfterLogin={reloadRbacData} />
           {status === "authenticated" && permissionKeys.length === 0 ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
               Tài khoản hiện tại chưa được cấp quyền thao tác. Cổng quản trị đang hiển thị ở chế độ chỉ xem.
             </div>
           ) : null}
           {rbacLoading ? (
-            <div className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+            <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
               Đang tải quyền truy cập...
             </div>
           ) : null}
           {rbacError ? (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+            <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
               Không thể tải một phần dữ liệu quản trị: {rbacError}
             </div>
           ) : null}
@@ -715,7 +715,7 @@ export default function ManagementPanel({
               onDeleteUser={(userId) => runAction(() => onDeleteUser(userId))}
             />
           )}
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
             Vai trò hiện tại: {roleName ?? "Chưa có"} • Xem tài khoản: {canReadUsers ? "Được phép" : "Không"} • Xem
             vai trò: {canReadRoles ? "Được phép" : "Không"} • Xem danh sách quyền:{" "}
             {canReadPermissions ? "Được phép" : "Không"}

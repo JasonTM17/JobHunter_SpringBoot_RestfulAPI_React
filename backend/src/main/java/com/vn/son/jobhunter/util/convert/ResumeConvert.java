@@ -1,14 +1,9 @@
 package com.vn.son.jobhunter.util.convert;
 
-import com.vn.son.jobhunter.domain.Job;
 import com.vn.son.jobhunter.domain.Resume;
-import com.vn.son.jobhunter.domain.Skill;
 import com.vn.son.jobhunter.domain.res.resume.CreatedResumeResponse;
 import com.vn.son.jobhunter.domain.res.resume.FetchResumeResponse;
 import com.vn.son.jobhunter.domain.res.resume.UpdatedResumeResponse;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class ResumeConvert {
     public static CreatedResumeResponse convertToResCreatedResumeRes(Resume resume){
@@ -42,12 +37,16 @@ public class ResumeConvert {
         res.setCreatedDate(resume.getCreatedDate());
         res.setCreatedBy(resume.getCreatedBy());
 
-        if(resume.getJob() != null){
+        if(resume.getJob() != null && resume.getJob().getCompany() != null){
             res.setCompanyName(resume.getJob().getCompany().getName());
         }
 
-        res.setUser(new FetchResumeResponse.UserResume(resume.getUser().getId(), resume.getUser().getName()));
-        res.setJob(new FetchResumeResponse.JobResume(resume.getJob().getId(), resume.getJob().getName()));
+        if (resume.getUser() != null) {
+            res.setUser(new FetchResumeResponse.UserResume(resume.getUser().getId(), resume.getUser().getName()));
+        }
+        if (resume.getJob() != null) {
+            res.setJob(new FetchResumeResponse.JobResume(resume.getJob().getId(), resume.getJob().getName()));
+        }
         return res;
     }
 }

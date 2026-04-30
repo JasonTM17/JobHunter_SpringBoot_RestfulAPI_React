@@ -8,6 +8,7 @@ interface JobFiltersProps {
   skill: string;
   salaryMin: string;
   salaryMax: string;
+  salaryError?: string;
   activeFilterCount: number;
   isFiltering: boolean;
   locationOptions: string[];
@@ -33,6 +34,7 @@ export default function JobFilters({
   skill,
   salaryMin,
   salaryMax,
+  salaryError,
   activeFilterCount,
   isFiltering,
   locationOptions,
@@ -47,14 +49,13 @@ export default function JobFilters({
   onReset
 }: JobFiltersProps) {
   const controlClassName =
-    "min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-[13px] text-slate-700 transition focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100";
+    "min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-3 py-2.5 text-[13px] text-slate-700 transition focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100";
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-card sm:p-4">
-      {/* Header */}
+    <section data-testid="job-filters" className="rounded-lg border border-slate-200 bg-white shadow-card sm:p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-3 pt-3 sm:mb-3 sm:px-0">
         <div>
-          <h2 className="text-sm font-bold text-slate-900">Bộ lọc việc làm</h2>
+          <h2 className="text-sm font-bold text-slate-900">Lọc nâng cao</h2>
           <p className="mt-0.5 text-[11px] text-slate-500">
             {activeFilterCount > 0 ? `${activeFilterCount} bộ lọc đang áp dụng` : "Tìm kiếm chính xác hơn"}
           </p>
@@ -73,7 +74,7 @@ export default function JobFilters({
             <button
               type="button"
               onClick={onReset}
-              className="flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-600 transition hover:border-rose-400 hover:bg-rose-100"
+              className="flex items-center gap-1 rounded-md border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-600 transition hover:border-rose-400 hover:bg-rose-100"
             >
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -84,7 +85,6 @@ export default function JobFilters({
         </div>
       </div>
 
-      {/* Keyword search — ITviec-style search bar */}
       <div className="mb-3 px-3 sm:mb-3 sm:px-0">
         <div className="relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -93,7 +93,8 @@ export default function JobFilters({
             </svg>
           </div>
           <input
-            className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-3 text-[13px] text-slate-700 placeholder-slate-400 transition focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 sm:text-[14px]"
+            data-testid="job-filter-keyword"
+            className="w-full rounded-md border border-slate-300 bg-slate-50 py-2.5 pl-10 pr-3 text-[13px] text-slate-700 placeholder-slate-400 transition focus:border-rose-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-100 sm:text-[14px]"
             placeholder="Tìm theo vị trí, công ty, kỹ năng..."
             value={keyword}
             onChange={(event) => onKeywordChange(event.target.value)}
@@ -112,9 +113,9 @@ export default function JobFilters({
         </div>
       </div>
 
-      {/* Dropdown row */}
       <div className="flex flex-wrap gap-2 px-3 sm:px-0">
         <select
+          data-testid="job-filter-location"
           className={controlClassName}
           style={{ minWidth: "140px", flex: "1 1 140px" }}
           value={location}
@@ -129,6 +130,7 @@ export default function JobFilters({
         </select>
 
         <select
+          data-testid="job-filter-level"
           className={controlClassName}
           style={{ minWidth: "140px", flex: "1 1 140px" }}
           value={level}
@@ -143,6 +145,7 @@ export default function JobFilters({
         </select>
 
         <select
+          data-testid="job-filter-skill"
           className={controlClassName}
           style={{ minWidth: "140px", flex: "2 2 200px" }}
           value={skill}
@@ -157,11 +160,11 @@ export default function JobFilters({
         </select>
       </div>
 
-      {/* Salary range */}
       <div className="mt-2 flex flex-wrap gap-2 px-3 pb-3 sm:px-0 sm:pb-0">
         <div className="relative" style={{ minWidth: "120px", flex: "1 1 120px" }}>
           <input
-            className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-3 pr-12 text-[13px] text-slate-700 placeholder-slate-400 transition focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+            data-testid="job-filter-salary-min"
+            className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-3 pr-12 text-[13px] text-slate-700 placeholder-slate-400 transition focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
             placeholder="Lương từ"
             value={salaryMin}
             inputMode="numeric"
@@ -171,7 +174,8 @@ export default function JobFilters({
         </div>
         <div className="relative" style={{ minWidth: "120px", flex: "1 1 120px" }}>
           <input
-            className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-3 pr-12 text-[13px] text-slate-700 placeholder-slate-400 transition focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
+            data-testid="job-filter-salary-max"
+            className="w-full rounded-md border border-slate-300 bg-white py-2.5 pl-3 pr-12 text-[13px] text-slate-700 placeholder-slate-400 transition focus:border-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-100"
             placeholder="Lương đến"
             value={salaryMax}
             inputMode="numeric"
@@ -180,6 +184,9 @@ export default function JobFilters({
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-slate-400">VNĐ</span>
         </div>
       </div>
+      {salaryError ? (
+        <p className="px-3 pb-3 text-xs font-semibold text-rose-600 sm:px-0 sm:pb-0">{salaryError}</p>
+      ) : null}
     </section>
   );
 }

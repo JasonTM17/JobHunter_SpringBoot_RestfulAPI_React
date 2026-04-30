@@ -20,6 +20,18 @@ export interface PaginatedResult<T> {
   totalItems: number;
 }
 
+export interface PublicJobSearchParams {
+  page?: number;
+  size?: number;
+  q?: string;
+  location?: string;
+  level?: string;
+  skill?: string;
+  salaryMin?: string | number;
+  salaryMax?: string | number;
+  sort?: string;
+}
+
 const CHAT_NOT_CONFIGURED_MESSAGE = "Tính năng AI hiện chưa được cấu hình trên máy chủ. Vui lòng thử lại sau.";
 const CHAT_PROVIDER_ERROR_MESSAGE = "Dịch vụ AI đang tạm gián đoạn. Vui lòng thử lại sau.";
 const CHAT_GENERIC_ERROR_MESSAGE = "Không thể gửi câu hỏi tới trợ lý AI. Vui lòng thử lại sau.";
@@ -108,6 +120,40 @@ export async function fetchAllJobs(): Promise<Job[]> {
   return fetchAllPages<Job>(`${API_PREFIX}/jobs`, 60);
 }
 
+export async function fetchPublicJobs(params: PublicJobSearchParams): Promise<PaginatedResult<Job>> {
+  const query = {
+    page: params.page ?? 0,
+    size: params.size ?? 12,
+    q: params.q,
+    location: params.location,
+    level: params.level,
+    skill: params.skill,
+    salaryMin: params.salaryMin,
+    salaryMax: params.salaryMax,
+    sort: params.sort
+  };
+  const data = await apiRequest<PaginatedData<Job>>(`${API_PREFIX}/jobs`, undefined, query);
+  return normalizePaginated(data);
+}
+
+export async function fetchSavedJobsWithAuth(): Promise<Job[]> {
+  return apiRequest<Job[]>(`${API_PREFIX}/saved-jobs`, {
+    method: "GET"
+  });
+}
+
+export async function saveJobWithAuth(jobId: number): Promise<Job[]> {
+  return apiRequest<Job[]>(`${API_PREFIX}/saved-jobs/${jobId}`, {
+    method: "POST"
+  });
+}
+
+export async function unsaveJobWithAuth(jobId: number): Promise<Job[]> {
+  return apiRequest<Job[]>(`${API_PREFIX}/saved-jobs/${jobId}`, {
+    method: "DELETE"
+  });
+}
+
 export async function fetchAllCompanies(): Promise<Company[]> {
   return fetchAllPages<Company>(`${API_PREFIX}/companies`, 60);
 }
@@ -187,6 +233,17 @@ export async function uploadCompanyLogo(file: File): Promise<UploadFileResponse>
   const form = new FormData();
   form.append("file", file);
   form.append("folder", "company");
+
+  return apiRequest<UploadFileResponse>(`${API_PREFIX}/files`, {
+    method: "POST",
+    body: form
+  });
+}
+
+export async function uploadResumeFile(file: File): Promise<UploadFileResponse> {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("folder", "resume");
 
   return apiRequest<UploadFileResponse>(`${API_PREFIX}/files`, {
     method: "POST",

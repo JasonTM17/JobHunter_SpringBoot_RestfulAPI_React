@@ -20,6 +20,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findOneByEmail(String email);
     User findByRefreshTokenAndEmail(String token,String email);
     List<User> findByCompany(Company company);
+    long countByCompany(Company company);
 
     @EntityGraph(attributePaths = {"role"})
     List<User> findByRole_NameIgnoreCase(String roleName);

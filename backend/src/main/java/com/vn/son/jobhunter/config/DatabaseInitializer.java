@@ -73,6 +73,7 @@ public class DatabaseInitializer implements CommandLineRunner {
 
             arr.add(new Permission("Create a resume", "/api/v1/resumes", "POST", "RESUMES"));
             arr.add(new Permission("Update a resume", "/api/v1/resumes", "PUT", "RESUMES"));
+            arr.add(new Permission("Update resume status", "/api/v1/resumes/{id}/status", "PATCH", "RESUMES"));
             arr.add(new Permission("Delete a resume", "/api/v1/resumes/{id}", "DELETE", "RESUMES"));
             arr.add(new Permission("Get a resume by id", "/api/v1/resumes/{id}", "GET", "RESUMES"));
             arr.add(new Permission("Get resumes with pagination", "/api/v1/resumes", "GET", "RESUMES"));
@@ -275,6 +276,13 @@ public class DatabaseInitializer implements CommandLineRunner {
                 "Get resumes by current user",
                 "/api/v1/resumes/by-user",
                 "POST",
+                "RESUMES"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Update resume status",
+                "/api/v1/resumes/{id}/status",
+                "PATCH",
                 "RESUMES"
         );
     }

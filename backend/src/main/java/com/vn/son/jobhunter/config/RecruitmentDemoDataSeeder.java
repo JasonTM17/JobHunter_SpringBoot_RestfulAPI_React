@@ -118,6 +118,7 @@ public class RecruitmentDemoDataSeeder {
                         "Get jobs with pagination",
                         "Create a resume",
                         "Update a resume",
+                        "Update resume status",
                         "Delete a resume",
                         "Get a resume by id",
                         "Get resumes with pagination",
@@ -166,6 +167,7 @@ public class RecruitmentDemoDataSeeder {
                         "Get skills with pagination",
                         "Get resumes with pagination",
                         "Update a resume",
+                        "Update resume status",
                         "Get a resume by id",
                         "Upload a file",
                         "Download a file"
@@ -183,6 +185,7 @@ public class RecruitmentDemoDataSeeder {
                         "Get jobs with pagination",
                         "Get skills with pagination",
                         "Create a resume",
+                        "Upload a file",
                         "Get resumes by current user"
                 ))
         );

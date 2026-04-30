@@ -14,6 +14,8 @@ import java.util.List;
 public interface ResumeRepository extends
         JpaRepository<Resume, Long>,
         JpaSpecificationExecutor<Resume> {
+    boolean existsByUser_IdAndJob_Id(Long userId, Long jobId);
+
     @EntityGraph(attributePaths = {"user", "job", "job.company", "job.skills"})
     @Query("select r from Resume r where r.user.id in :userIds")
     List<Resume> findByUserIdsWithJobDetails(@Param("userIds") List<Long> userIds);

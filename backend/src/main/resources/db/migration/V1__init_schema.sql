@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS permission_role (
     role_id       BIGINT NOT NULL,
     permission_id BIGINT NOT NULL,
     PRIMARY KEY (role_id, permission_id),
-    CONSTRAINT fk_permission_role_role FOREIGN KEY (role_id)       REFERENCES roles(role_id)       ON DELETE CASCADE,
+    CONSTRAINT fk_permission_role_role FOREIGN KEY (role_id)       REFERENCES roles(id)       ON DELETE CASCADE,
     CONSTRAINT fk_permission_role_perm  FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

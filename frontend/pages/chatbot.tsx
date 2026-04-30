@@ -226,15 +226,15 @@ export default function ChatbotPage() {
       </Head>
       <main className="mx-auto w-full max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8">
       <section className="grid gap-6 xl:grid-cols-[1.3fr,0.7fr]">
-        <article className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-soft">
-          <header className="border-b border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 px-5 py-5 text-white sm:px-6 sm:py-6">
+        <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-soft">
+          <header className="border-b border-slate-200 bg-white px-5 py-5 text-slate-950 sm:px-6 sm:py-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-2xl">
-                <p className="inline-flex rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">
+                <p className="inline-flex rounded-md border border-rose-200 bg-rose-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-[#b51d1a]">
                   Trợ lý nghề nghiệp AI
                 </p>
-                <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">Trợ lý AI Jobhunter</h1>
-                <p className="mt-3 text-sm leading-7 text-slate-200 sm:text-base">
+                <h1 className="mt-4 text-3xl font-black sm:text-4xl">Trợ lý AI Jobhunter</h1>
+                <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base">
                   Dùng trợ lý để tối ưu CV, chuẩn bị phỏng vấn, viết email ứng tuyển và phân tích nhanh JD trước khi nộp hồ sơ.
                 </p>
               </div>
@@ -242,13 +242,13 @@ export default function ChatbotPage() {
                 <button
                   type="button"
                   onClick={resetConversation}
-                  className="rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+                  className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-[#b51d1a] transition hover:bg-rose-100"
                 >
                   Làm mới hội thoại
                 </button>
                 <Link
                   href={prefillJobId ? `/jobs/${prefillJobId}` : "/"}
-                  className="rounded-2xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20"
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                 >
                   {prefillJobId ? "Về chi tiết công việc" : "Về trang chủ"}
                 </Link>
@@ -261,7 +261,7 @@ export default function ChatbotPage() {
                 {statusCopy.label}
               </div>
               {prefillJobId ? (
-                <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/85">
+                <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600">
                   Ngữ cảnh công việc: #{prefillJobId}
                 </div>
               ) : null}
@@ -291,19 +291,19 @@ export default function ChatbotPage() {
             className="grid min-h-[420px] max-h-[62vh] gap-4 overflow-y-auto bg-[radial-gradient(circle_at_top,_rgba(255,255,255,1),_rgba(248,250,252,1)_55%,_rgba(241,245,249,1)_100%)] px-5 py-5 sm:px-6"
           >
             {aiStatus !== "ready" ? (
-              <article className={`rounded-2xl border px-4 py-3 text-sm leading-6 ${statusTone.panel}`}>
+              <article className={`rounded-lg border px-4 py-3 text-sm leading-6 ${statusTone.panel}`}>
                 {aiStatus === "checking" ? "Đang kiểm tra trạng thái trợ lý AI..." : aiNotice || AI_UNAVAILABLE_FRIENDLY}
               </article>
             ) : null}
 
             {messages.length === 1 && aiStatus === "ready" ? (
-              <div className="grid gap-3 rounded-[28px] border border-slate-200 bg-white/90 p-5 shadow-sm sm:grid-cols-3">
+              <div className="grid gap-3 rounded-lg border border-slate-200 bg-white/90 p-5 shadow-sm sm:grid-cols-3">
                 {promptSuggestions.map((prompt, index) => (
                   <button
                     key={`${prompt}-${index}`}
                     type="button"
                     onClick={() => usePrompt(prompt)}
-                    className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm font-medium leading-6 text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+                    className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm font-medium leading-6 text-slate-700 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
                   >
                     {prompt}
                   </button>
@@ -320,8 +320,8 @@ export default function ChatbotPage() {
                   : "border-slate-200 bg-white text-slate-700";
 
               return (
-                <article key={message.id} className={`max-w-[88%] rounded-[28px] border px-4 py-4 shadow-sm sm:px-5 ${bubbleClass} ${isUser ? "justify-self-end" : "justify-self-start"}`}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{isUser ? "Bạn" : message.isError ? "Hệ thống" : "Jobhunter AI"}</p>
+                <article key={message.id} className={`max-w-[88%] rounded-lg border px-4 py-4 shadow-sm sm:px-5 ${bubbleClass} ${isUser ? "justify-self-end" : "justify-self-start"}`}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{isUser ? "Bạn" : message.isError ? "Hệ thống" : "Jobhunter AI"}</p>
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-7 sm:text-[15px]">{message.text}</p>
                 </article>
               );
@@ -354,12 +354,12 @@ export default function ChatbotPage() {
                 placeholder={placeholder}
                 rows={4}
                 disabled={inputDisabled}
-                className="min-h-[110px] resize-y rounded-[26px] border border-slate-300 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700 transition focus:border-rose-500 focus:outline-none focus:ring-4 focus:ring-rose-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="min-h-[110px] resize-y rounded-lg border border-slate-300 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700 transition focus:border-rose-500 focus:outline-none focus:ring-4 focus:ring-rose-100 disabled:cursor-not-allowed disabled:bg-slate-100"
               />
               <button
                 type="submit"
                 disabled={inputDisabled || input.trim().length === 0}
-                className="rounded-[26px] bg-rose-600 px-7 py-3 text-sm font-bold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60 lg:self-end"
+                className="rounded-lg bg-rose-600 px-7 py-3 text-sm font-bold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60 lg:self-end"
               >
                 {sending ? "Đang gửi..." : "Gửi câu hỏi"}
               </button>
@@ -368,11 +368,11 @@ export default function ChatbotPage() {
         </article>
 
         <aside className="grid gap-4 self-start">
-          <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Trạng thái phiên</p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900">{statusCopy.label}</h2>
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Trạng thái phiên</p>
+            <h2 className="mt-3 text-2xl font-black text-slate-900">{statusCopy.label}</h2>
             <p className="mt-3 text-sm leading-7 text-slate-600">{statusCopy.description}</p>
-            <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm leading-6 ${statusTone.panel}`}>
+            <div className={`mt-5 rounded-lg border px-4 py-3 text-sm leading-6 ${statusTone.panel}`}>
               {aiStatus === "ready"
                 ? "Phiên tư vấn đang hoạt động bình thường. Bạn có thể gửi câu hỏi nối tiếp để đào sâu cùng một chủ đề."
                 : aiStatus === "checking"
@@ -381,25 +381,25 @@ export default function ChatbotPage() {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Cách dùng hiệu quả</p>
+          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Cách dùng hiệu quả</p>
             <ul className="mt-4 grid gap-3 text-sm leading-7 text-slate-600">
-              <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">Nêu rõ vai trò mục tiêu, số năm kinh nghiệm và tech stack để câu trả lời bám thực tế hơn.</li>
-              <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">Nếu cần viết CV hoặc email, hãy nói rõ giọng điệu mong muốn: ngắn gọn, formal hoặc thuyết phục.</li>
-              <li className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">Khi đang xem một job cụ thể, mở chatbot từ job đó để trợ lý phân tích đúng JD và yêu cầu tuyển dụng.</li>
+              <li className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">Nêu rõ vai trò mục tiêu, số năm kinh nghiệm và tech stack để câu trả lời bám thực tế hơn.</li>
+              <li className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">Nếu cần viết CV hoặc email, hãy nói rõ giọng điệu mong muốn: ngắn gọn, formal hoặc thuyết phục.</li>
+              <li className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">Khi đang xem một job cụ thể, mở chatbot từ job đó để trợ lý phân tích đúng JD và yêu cầu tuyển dụng.</li>
             </ul>
           </section>
 
           {prefillJobId ? (
-            <section className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-rose-50 via-white to-white p-5 shadow-soft sm:p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-500">Ngữ cảnh hiện tại</p>
-              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900">Công việc #{prefillJobId}</h2>
+            <section className="rounded-lg border border-rose-200 bg-white p-5 shadow-soft sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-rose-500">Ngữ cảnh hiện tại</p>
+              <h2 className="mt-3 text-2xl font-black text-slate-900">Công việc #{prefillJobId}</h2>
               <p className="mt-3 text-sm leading-7 text-slate-600">
                 Bạn đang tư vấn trong ngữ cảnh một tin tuyển dụng cụ thể. Hãy hỏi trợ lý về điểm nổi bật trong JD, keyword nên thêm vào CV hoặc câu trả lời phỏng vấn phù hợp với vị trí này.
               </p>
               <Link
                 href={`/jobs/${prefillJobId}`}
-                className="mt-5 inline-flex rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                className="mt-5 inline-flex rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
               >
                 Mở lại chi tiết công việc
               </Link>

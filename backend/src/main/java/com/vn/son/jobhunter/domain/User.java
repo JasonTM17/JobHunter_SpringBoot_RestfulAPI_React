@@ -12,6 +12,7 @@ import lombok.*;
 import com.vn.son.jobhunter.util.constant.GenderEnum;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -66,6 +67,15 @@ public class User extends AbstractAuditingEntity<Long> {
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     @JsonIgnore
     List<Resume> resumes;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "saved_jobs",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "job_id")
+    )
+    @JsonIgnore
+    private List<Job> savedJobs = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "role_id")

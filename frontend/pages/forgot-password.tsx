@@ -20,12 +20,12 @@ export default function ForgotPasswordPage() {
         ]}
       >
         <div className="max-w-md">
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">Khôi phục mật khẩu</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">Khôi phục mật khẩu</h1>
           <p className="mt-3 text-sm leading-relaxed text-slate-600">
             Vì lý do bảo mật, việc đặt lại mật khẩu cần được xác minh thủ công bởi quản trị viên Jobhunter.
           </p>
 
-          <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+          <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
             <p className="text-sm font-semibold text-amber-800">Liên hệ hỗ trợ:</p>
             <p className="mt-1 text-sm text-amber-700">Email: support@jobhunter.vn</p>
             <p className="text-sm text-amber-700">Giờ hành chính: Thứ 2 – Thứ 6, 8:00 – 17:00</p>

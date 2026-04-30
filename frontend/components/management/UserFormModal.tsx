@@ -116,14 +116,14 @@ export default function UserFormModal({
     >
       <form className="grid gap-3" onSubmit={(event) => void submit(event)}>
         {error ? (
-          <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p>
+          <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">{error}</p>
         ) : null}
 
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm">
             <span className="font-semibold text-slate-700">Họ tên *</span>
             <input
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.name}
               onChange={(event) => setState((prev) => ({ ...prev, name: event.target.value }))}
             />
@@ -133,7 +133,7 @@ export default function UserFormModal({
             <span className="font-semibold text-slate-700">Tuổi *</span>
             <input
               inputMode="numeric"
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.age}
               onChange={(event) =>
                 setState((prev) => ({ ...prev, age: event.target.value.replace(/[^\d]/g, "") }))
@@ -146,7 +146,7 @@ export default function UserFormModal({
             <input
               type="email"
               disabled={mode === "edit"}
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:bg-slate-100"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:bg-slate-100"
               value={state.email}
               onChange={(event) => setState((prev) => ({ ...prev, email: event.target.value }))}
             />
@@ -157,7 +157,7 @@ export default function UserFormModal({
               <span className="font-semibold text-slate-700">Mật khẩu *</span>
               <input
                 type="password"
-                className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
                 value={state.password}
                 onChange={(event) => setState((prev) => ({ ...prev, password: event.target.value }))}
               />
@@ -167,7 +167,7 @@ export default function UserFormModal({
           <label className="grid gap-1 text-sm">
             <span className="font-semibold text-slate-700">Giới tính</span>
             <select
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.gender}
               onChange={(event) => setState((prev) => ({ ...prev, gender: event.target.value as Gender }))}
             >
@@ -180,7 +180,7 @@ export default function UserFormModal({
           <label className="grid gap-1 text-sm">
             <span className="font-semibold text-slate-700">Công ty</span>
             <select
-              className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+              className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
               value={state.companyId}
               onChange={(event) => setState((prev) => ({ ...prev, companyId: event.target.value }))}
             >
@@ -197,7 +197,7 @@ export default function UserFormModal({
         <label className="grid gap-1 text-sm">
           <span className="font-semibold text-slate-700">Địa chỉ</span>
           <input
-            className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+            className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
             value={state.address}
             onChange={(event) => setState((prev) => ({ ...prev, address: event.target.value }))}
           />
@@ -209,7 +209,7 @@ export default function UserFormModal({
           </span>
           <select
             disabled={!allowRoleSelect}
-            className="rounded-xl border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:bg-slate-100"
+            className="rounded-md border border-slate-300 px-3 py-2 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:bg-slate-100"
             value={state.roleId}
             onChange={(event) => setState((prev) => ({ ...prev, roleId: event.target.value }))}
           >
@@ -226,14 +226,14 @@ export default function UserFormModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
           >
             Hủy
           </button>
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-md bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? "Đang lưu..." : mode === "create" ? "Tạo tài khoản" : "Cập nhật"}
           </button>

@@ -33,7 +33,7 @@ export default function Modal({
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-900/60 p-3">
       <section
-        className={`w-full ${widthClassName} overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl`}
+        className={`w-full ${widthClassName} overflow-hidden rounded-lg border border-slate-200 bg-white shadow-2xl`}
       >
         <header className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
           <h3 className="text-base font-bold text-slate-900">{title}</h3>

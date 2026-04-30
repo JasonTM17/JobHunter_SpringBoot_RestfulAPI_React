@@ -116,23 +116,23 @@ export default function LoginPage() {
       ]}
     >
       <div className="max-w-md">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Đăng nhập vào Jobhunter</h1>
+          <h1 className="text-3xl font-extrabold text-slate-900">Đăng nhập vào Jobhunter</h1>
           <p className="mt-2 text-sm leading-relaxed text-slate-600">
             Tiếp tục với tài khoản của bạn để theo dõi việc làm phù hợp và quản lý hồ sơ ứng tuyển thuận tiện hơn.
           </p>
 
           {registered ? (
-            <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <p className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
               Tài khoản đã được tạo thành công. Bạn hãy đăng nhập để bắt đầu sử dụng Jobhunter.
             </p>
           ) : null}
 
           {error ? (
-            <p className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p>
+            <p className="mt-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">{error}</p>
           ) : null}
 
           {success ? (
-            <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+            <p className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
               {success}
             </p>
           ) : null}
@@ -146,7 +146,7 @@ export default function LoginPage() {
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="Nhập email của bạn"
                 autoComplete="email"
-                className="rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
+                className="rounded-md border border-slate-300 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
               />
             </label>
 
@@ -159,7 +159,7 @@ export default function LoginPage() {
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="Nhập mật khẩu"
                   autoComplete="current-password"
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
+                  className="w-full rounded-md border border-slate-300 bg-slate-50 py-2.5 pl-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-rose-400 focus:bg-white focus:ring-2 focus:ring-rose-100"
                 />
                 <button
                   type="button"
@@ -191,7 +191,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-1 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
+              className="mt-1 rounded-md bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-300 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
