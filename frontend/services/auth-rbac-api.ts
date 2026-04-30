@@ -3,12 +3,17 @@ import {
   AuthAccountResponse,
   AuthCapabilityResponse,
   AuthLoginResponse,
+  CandidateCv,
+  CandidateCvPayload,
   EmailPreferenceSetting,
+  ForgotPasswordResponse,
   PaginatedData,
   Permission,
   RegisterPayload,
+  ResetPasswordResponse,
   ResumeCreatePayload,
   ResumeItem,
+  ResumeStatusAudit,
   ResumeStatusUpdatePayload,
   Role,
   UserActionCapability,
@@ -71,6 +76,20 @@ export async function registerAccount(payload: RegisterPayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/auth/register`, {
     method: "POST",
     body: payload
+  });
+}
+
+export async function requestPasswordReset(email: string): Promise<ForgotPasswordResponse> {
+  return apiRequest<ForgotPasswordResponse>(`${API_PREFIX}/auth/forgot-password`, {
+    method: "POST",
+    body: { email }
+  });
+}
+
+export async function resetPassword(token: string, password: string): Promise<ResetPasswordResponse> {
+  return apiRequest<ResetPasswordResponse>(`${API_PREFIX}/auth/reset-password`, {
+    method: "POST",
+    body: { token, password }
   });
 }
 
@@ -151,6 +170,12 @@ export async function fetchCurrentUserResumesWithAuth(): Promise<ResumeItem[]> {
   return fetchAllPagesWithAuth<ResumeItem>(`${API_PREFIX}/resumes/by-user`, 50, undefined, "POST");
 }
 
+export async function fetchResumeAuditsWithAuth(resumeId: number): Promise<ResumeStatusAudit[]> {
+  return apiRequest<ResumeStatusAudit[]>(`${API_PREFIX}/resumes/${resumeId}/audits`, {
+    method: "GET"
+  });
+}
+
 export async function createResumeWithAuth(payload: ResumeCreatePayload): Promise<void> {
   await apiRequest(`${API_PREFIX}/resumes`, {
     method: "POST",
@@ -167,6 +192,31 @@ export async function updateResumeWithAuth(resumeId: number, payload: ResumeStat
 
 export async function deleteResumeWithAuth(resumeId: number): Promise<void> {
   await apiRequest(`${API_PREFIX}/resumes/${resumeId}`, {
+    method: "DELETE"
+  });
+}
+
+export async function fetchCandidateCvsWithAuth(): Promise<CandidateCv[]> {
+  return apiRequest<CandidateCv[]>(`${API_PREFIX}/candidate/cvs`, {
+    method: "GET"
+  });
+}
+
+export async function createCandidateCvWithAuth(payload: CandidateCvPayload): Promise<CandidateCv> {
+  return apiRequest<CandidateCv>(`${API_PREFIX}/candidate/cvs`, {
+    method: "POST",
+    body: payload
+  });
+}
+
+export async function setDefaultCandidateCvWithAuth(cvId: number): Promise<CandidateCv> {
+  return apiRequest<CandidateCv>(`${API_PREFIX}/candidate/cvs/${cvId}/default`, {
+    method: "PATCH"
+  });
+}
+
+export async function deleteCandidateCvWithAuth(cvId: number): Promise<void> {
+  await apiRequest(`${API_PREFIX}/candidate/cvs/${cvId}`, {
     method: "DELETE"
   });
 }

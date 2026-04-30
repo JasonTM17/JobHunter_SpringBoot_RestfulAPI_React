@@ -176,6 +176,26 @@ describe("format utilities", () => {
       const result = sanitizeRichText('<a href="javascript:alert(1)">click</a>');
       expect(result).not.toContain("javascript:");
     });
+
+    it("keeps a small safe HTML allowlist", () => {
+      const result = sanitizeRichText('<h3>Title</h3><p>Hello <strong>World</strong></p><ul><li>One</li></ul>');
+      expect(result).toContain("<h3>Title</h3>");
+      expect(result).toContain("<strong>World</strong>");
+      expect(result).toContain("<li>One</li>");
+    });
+
+    it("drops unsafe attributes and unsupported tags", () => {
+      const result = sanitizeRichText('<p onclick="alert(1)">Hello</p><img src="x" onerror="alert(1)">');
+      expect(result).toContain("<p>Hello</p>");
+      expect(result).not.toContain("onclick");
+      expect(result).not.toContain("onerror");
+      expect(result).not.toContain("<img");
+    });
+
+    it("keeps safe links with explicit no-referrer behavior", () => {
+      const result = sanitizeRichText('<a href="https://example.com/jobs">Job</a>');
+      expect(result).toBe('<a href="https://example.com/jobs" target="_blank" rel="noreferrer">Job</a>');
+    });
   });
 
   describe("splitDescriptionSections", () => {

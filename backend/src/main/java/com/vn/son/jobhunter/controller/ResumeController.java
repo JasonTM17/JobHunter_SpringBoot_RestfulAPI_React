@@ -7,6 +7,7 @@ import com.vn.son.jobhunter.domain.dto.resume.ResumeStatusUpdateDTO;
 import com.vn.son.jobhunter.domain.res.ResultPaginationResponse;
 import com.vn.son.jobhunter.domain.res.resume.CreatedResumeResponse;
 import com.vn.son.jobhunter.domain.res.resume.FetchResumeResponse;
+import com.vn.son.jobhunter.domain.res.resume.ResumeStatusAuditResponse;
 import com.vn.son.jobhunter.domain.res.resume.UpdatedResumeResponse;
 import com.vn.son.jobhunter.service.ResumeService;
 import com.vn.son.jobhunter.util.annotation.ApiMessage;
@@ -28,6 +29,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RequestMapping(path = "${apiPrefix}/resumes")
 @RequiredArgsConstructor
@@ -54,7 +57,7 @@ public class ResumeController {
             @PathVariable("id") Long id,
             @Valid @RequestBody ResumeStatusUpdateDTO request
     ) throws Exception {
-        return ResponseEntity.ok(this.resumeService.updateStatus(id, request.getStatus()));
+        return ResponseEntity.ok(this.resumeService.updateStatus(id, request.getStatus(), request.getNote()));
     }
 
     @DeleteMapping("/{id}")
@@ -70,6 +73,12 @@ public class ResumeController {
         return ResponseEntity.status(HttpStatus.OK).body(
                 ResumeConvert.convertToResFetchResumeRes(this.resumeService.fetchResumelById(id))
         );
+    }
+
+    @GetMapping("/{id}/audits")
+    @ApiMessage("Lấy lịch sử cập nhật trạng thái hồ sơ ứng tuyển")
+    public ResponseEntity<List<ResumeStatusAuditResponse>> fetchAudits(@PathVariable("id") Long id) throws Exception {
+        return ResponseEntity.ok(this.resumeService.fetchResumeAudits(id));
     }
 
     @GetMapping("")

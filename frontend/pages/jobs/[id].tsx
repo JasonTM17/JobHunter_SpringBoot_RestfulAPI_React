@@ -1,4 +1,5 @@
 import Head from "next/head";
+import type { GetServerSideProps } from "next";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useMemo, useState } from "react";
@@ -6,9 +7,14 @@ import CompanyLogo from "../../components/common/CompanyLogo";
 import ErrorState from "../../components/common/ErrorState";
 import LoadingState from "../../components/common/LoadingState";
 import { useAuth } from "../../contexts/auth-context";
-import { createResumeWithAuth } from "../../services/auth-rbac-api";
+import {
+  createCandidateCvWithAuth,
+  createResumeWithAuth,
+  fetchCandidateCvsWithAuth,
+  fetchCurrentUserResumesWithAuth
+} from "../../services/auth-rbac-api";
 import { fetchJobDetail, uploadResumeFile } from "../../services/jobhunter-api";
-import { Job } from "../../types/models";
+import { CandidateCv, Job, ResumeItem } from "../../types/models";
 import { toUserErrorMessage } from "../../utils/error-message";
 import {
   formatCurrencyVnd,
@@ -20,17 +26,33 @@ import {
   splitDescriptionSections
 } from "../../utils/format";
 
-export default function JobDetailPage() {
+function resumeStatusLabel(status?: string): string {
+  const normalized = (status || "").toUpperCase();
+  if (normalized === "REVIEWING") return "Đang xem xét";
+  if (normalized === "APPROVED") return "Đạt";
+  if (normalized === "REJECTED") return "Từ chối";
+  return "Đang chờ";
+}
+
+interface JobDetailPageProps {
+  initialJob: Job | null;
+  initialError: string;
+}
+
+export default function JobDetailPage({ initialJob, initialError }: JobDetailPageProps) {
   const router = useRouter();
   const { status: authStatus, currentUser, can } = useAuth();
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [job, setJob] = useState<Job | null>(initialJob);
+  const [loading, setLoading] = useState(!initialJob && !initialError);
+  const [error, setError] = useState(initialError);
   const [cvUrl, setCvUrl] = useState("");
   const [applying, setApplying] = useState(false);
   const [uploadingCv, setUploadingCv] = useState(false);
   const [applyError, setApplyError] = useState("");
   const [applySuccess, setApplySuccess] = useState("");
+  const [currentApplications, setCurrentApplications] = useState<ResumeItem[]>([]);
+  const [candidateCvs, setCandidateCvs] = useState<CandidateCv[]>([]);
+  const [checkingApplication, setCheckingApplication] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
   async function copyJobLink() {
@@ -52,6 +74,14 @@ export default function JobDetailPage() {
   const loginHref = useMemo(
     () => `/login?next=${encodeURIComponent(router.asPath || "/")}`,
     [router.asPath]
+  );
+  const appliedResume = useMemo(
+    () => currentApplications.find((item) => item.job?.id === job?.id) ?? null,
+    [currentApplications, job?.id]
+  );
+  const defaultCv = useMemo(
+    () => candidateCvs.find((item) => item.defaultCv) ?? candidateCvs[0] ?? null,
+    [candidateCvs]
   );
 
   async function loadJob() {
@@ -79,11 +109,51 @@ export default function JobDetailPage() {
     void loadJob();
   }, [router.isReady, jobId]);
 
+  async function loadCurrentApplications() {
+    if (authStatus !== "authenticated" || !job?.id) {
+      setCurrentApplications([]);
+      return;
+    }
+
+    setCheckingApplication(true);
+    try {
+      setCurrentApplications(await fetchCurrentUserResumesWithAuth());
+    } catch {
+      setCurrentApplications([]);
+    } finally {
+      setCheckingApplication(false);
+    }
+  }
+
+  async function loadCandidateCvs() {
+    if (authStatus !== "authenticated") {
+      setCandidateCvs([]);
+      return;
+    }
+
+    try {
+      setCandidateCvs(await fetchCandidateCvsWithAuth());
+    } catch {
+      setCandidateCvs([]);
+    }
+  }
+
+  useEffect(() => {
+    void loadCurrentApplications();
+    void loadCandidateCvs();
+  }, [authStatus, job?.id]);
+
   useEffect(() => {
     setCvUrl("");
     setApplyError("");
     setApplySuccess("");
   }, [job?.id]);
+
+  useEffect(() => {
+    if (!cvUrl.trim() && defaultCv?.fileUrl) {
+      setCvUrl(defaultCv.fileUrl);
+    }
+  }, [cvUrl, defaultCv?.fileUrl]);
 
   async function applyForJob() {
     if (!job) return;
@@ -97,6 +167,12 @@ export default function JobDetailPage() {
     if (!can("/api/v1/resumes", "POST")) {
       setApplySuccess("");
       setApplyError("Tài khoản hiện tại chưa có quyền gửi hồ sơ ứng tuyển.");
+      return;
+    }
+
+    if (appliedResume) {
+      setApplySuccess("");
+      setApplyError(`Bạn đã ứng tuyển công việc này. Trạng thái hiện tại: ${resumeStatusLabel(appliedResume.status)}.`);
       return;
     }
 
@@ -129,6 +205,7 @@ export default function JobDetailPage() {
       });
       setApplySuccess("Đã gửi hồ sơ ứng tuyển thành công.");
       setCvUrl("");
+      await loadCurrentApplications();
     } catch (submitError) {
       setApplyError(toUserErrorMessage(submitError, "Không thể gửi hồ sơ ứng tuyển lúc này."));
     } finally {
@@ -151,6 +228,16 @@ export default function JobDetailPage() {
       const uploaded = await uploadResumeFile(file);
       const resolvedUrl = resolveStorageUrl(uploaded.fileUrl) ?? uploaded.fileUrl;
       setCvUrl(resolvedUrl);
+      try {
+        await createCandidateCvWithAuth({
+          fileUrl: resolvedUrl,
+          fileName: file.name || uploaded.fileName,
+          defaultCv: candidateCvs.length === 0
+        });
+        await loadCandidateCvs();
+      } catch {
+        // The uploaded CV can still be used even if it already exists in the library.
+      }
       setApplySuccess("Đã tải CV lên. Bạn có thể gửi hồ sơ ngay.");
     } catch (uploadError) {
       setApplyError(toUserErrorMessage(uploadError, "Không thể tải CV lên lúc này."));
@@ -212,7 +299,7 @@ export default function JobDetailPage() {
   return (
     <>
       <Head>
-        <title>{job.name} — Jobhunter</title>
+        <title>{`${job.name} — Jobhunter`}</title>
         <meta name="description" content={`${job.name} — ${companyName}. Mức lương ${formatCurrencyVnd(job.salary)}/tháng tại ${formatLocationLabel(job.location)}. Ứng tuyển ngay trên Jobhunter.`} />
       </Head>
       <main className="mx-auto min-h-screen max-w-[1180px] px-3 py-5 sm:px-4 sm:py-6">
@@ -456,6 +543,31 @@ export default function JobDetailPage() {
                 <p className="rounded-lg border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
                   Tài khoản hiện tại chưa được cấp quyền gửi hồ sơ ứng tuyển.
                 </p>
+              ) : checkingApplication ? (
+                <p className="rounded-lg border border-slate-200 bg-white px-3 py-3 text-xs text-slate-600">
+                  Đang kiểm tra hồ sơ đã nộp...
+                </p>
+              ) : appliedResume ? (
+                <div className="grid gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3 text-xs text-emerald-800">
+                  <p className="font-semibold">Bạn đã ứng tuyển công việc này.</p>
+                  <p>Trạng thái hiện tại: {resumeStatusLabel(appliedResume.status)}</p>
+                  {appliedResume.url ? (
+                    <a
+                      href={appliedResume.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex w-fit rounded-md border border-emerald-300 bg-white px-2.5 py-1.5 font-semibold text-emerald-800 hover:bg-emerald-100"
+                    >
+                      Xem CV đã gửi
+                    </a>
+                  ) : null}
+                  <Link
+                    href="/candidate"
+                    className="inline-flex w-fit rounded-md bg-emerald-700 px-2.5 py-1.5 font-semibold text-white hover:bg-emerald-800"
+                  >
+                    Xem lịch sử ứng tuyển
+                  </Link>
+                </div>
               ) : (
                 <form
                   className="grid gap-3 rounded-lg border border-slate-200 bg-white p-3.5"
@@ -467,6 +579,25 @@ export default function JobDetailPage() {
                   <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
                     Tải CV PDF/DOC/DOCX lên hoặc dán liên kết CV dạng http/https để gửi vào tin tuyển dụng này.
                   </div>
+                  {candidateCvs.length > 0 ? (
+                    <label className="grid gap-1.5 text-xs text-slate-600">
+                      Chọn CV đã lưu
+                      <select
+                        value={cvUrl}
+                        onChange={(event) => setCvUrl(event.target.value)}
+                        disabled={uploadingCv || applying}
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                      >
+                        <option value="">Nhập liên kết mới</option>
+                        {candidateCvs.map((candidateCv) => (
+                          <option key={candidateCv.id} value={candidateCv.fileUrl}>
+                            {candidateCv.defaultCv ? "Mặc định - " : ""}
+                            {candidateCv.fileName || candidateCv.fileUrl}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
                   {can("/api/v1/files", "POST") ? (
                     <label className="grid gap-1.5 text-xs text-slate-600">
                       Tải CV từ máy
@@ -523,3 +654,33 @@ export default function JobDetailPage() {
     </>
   );
 }
+
+export const getServerSideProps: GetServerSideProps<JobDetailPageProps> = async ({ params }) => {
+  const rawId = params?.id;
+  const id = Number(Array.isArray(rawId) ? rawId[0] : rawId);
+
+  if (!Number.isFinite(id) || id <= 0) {
+    return {
+      props: {
+        initialJob: null,
+        initialError: "ID công việc không hợp lệ."
+      }
+    };
+  }
+
+  try {
+    return {
+      props: {
+        initialJob: await fetchJobDetail(id),
+        initialError: ""
+      }
+    };
+  } catch (error) {
+    return {
+      props: {
+        initialJob: null,
+        initialError: toUserErrorMessage(error, "Không thể tải chi tiết công việc lúc này.")
+      }
+    };
+  }
+};

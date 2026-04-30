@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 import com.vn.son.jobhunter.domain.Subscriber;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SubscriberRepository extends JpaRepository<Subscriber, Long>,
@@ -13,4 +14,6 @@ public interface SubscriberRepository extends JpaRepository<Subscriber, Long>,
         Subscriber findByEmail(String email);
         boolean existsByEmail(String email);
         List<Subscriber> findByEmailIn(List<String> emails);
+        List<Subscriber> findByUnsubscribedAtIsNull();
+        Optional<Subscriber> findByUnsubscribeToken(String unsubscribeToken);
 }

@@ -1,7 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import CandidateWorkspacePage from "../../pages/candidate";
 import { useAuth } from "../../contexts/auth-context";
-import { fetchCurrentUserResumesWithAuth } from "../../services/auth-rbac-api";
+import {
+  deleteCandidateCvWithAuth,
+  fetchCandidateCvsWithAuth,
+  fetchCurrentUserResumesWithAuth,
+  fetchResumeAuditsWithAuth,
+  setDefaultCandidateCvWithAuth
+} from "../../services/auth-rbac-api";
 import { fetchAllJobs, fetchSavedJobsWithAuth } from "../../services/jobhunter-api";
 import type { Job, ResumeItem } from "../../types/models";
 
@@ -10,7 +16,11 @@ jest.mock("../../contexts/auth-context", () => ({
 }));
 
 jest.mock("../../services/auth-rbac-api", () => ({
-  fetchCurrentUserResumesWithAuth: jest.fn()
+  deleteCandidateCvWithAuth: jest.fn(),
+  fetchCandidateCvsWithAuth: jest.fn(),
+  fetchCurrentUserResumesWithAuth: jest.fn(),
+  fetchResumeAuditsWithAuth: jest.fn(),
+  setDefaultCandidateCvWithAuth: jest.fn()
 }));
 
 jest.mock("../../services/jobhunter-api", () => ({
@@ -71,6 +81,34 @@ describe("CandidateWorkspacePage", () => {
     });
     (fetchAllJobs as jest.Mock).mockResolvedValue([sampleJob]);
     (fetchCurrentUserResumesWithAuth as jest.Mock).mockResolvedValue([sampleResume]);
+    (fetchCandidateCvsWithAuth as jest.Mock).mockResolvedValue([
+      {
+        id: 3,
+        fileUrl: "https://example.com/cv.pdf",
+        fileName: "Candidate-One-CV.pdf",
+        defaultCv: true,
+        createdAt: "2026-04-01T08:00:00.000Z"
+      }
+    ]);
+    (setDefaultCandidateCvWithAuth as jest.Mock).mockResolvedValue({
+      id: 3,
+      fileUrl: "https://example.com/cv.pdf",
+      fileName: "Candidate-One-CV.pdf",
+      defaultCv: true,
+      createdAt: "2026-04-01T08:00:00.000Z"
+    });
+    (deleteCandidateCvWithAuth as jest.Mock).mockResolvedValue(undefined);
+    (fetchResumeAuditsWithAuth as jest.Mock).mockResolvedValue([
+      {
+        id: 1,
+        resumeId: 17,
+        previousStatus: "PENDING",
+        nextStatus: "REVIEWING",
+        note: "Recruiter đã mở CV",
+        actorEmail: "recruiter@example.com",
+        createdAt: "2026-04-02T10:30:00.000Z"
+      }
+    ]);
     (fetchSavedJobsWithAuth as jest.Mock).mockResolvedValue([sampleJob]);
   });
 
@@ -79,7 +117,11 @@ describe("CandidateWorkspacePage", () => {
 
     expect(await screen.findByText("Candidate One", { exact: false })).toBeInTheDocument();
     expect(screen.getAllByText("Senior Frontend Engineer").length).toBeGreaterThan(0);
-    expect(screen.getByText("recruiter@example.com", { exact: false })).toBeInTheDocument();
+    expect(screen.getAllByText("recruiter@example.com", { exact: false }).length).toBeGreaterThanOrEqual(1);
+    expect(await screen.findByText("Recruiter đã mở CV")).toBeInTheDocument();
+    expect(fetchResumeAuditsWithAuth).toHaveBeenCalledWith(17);
     expect(fetchSavedJobsWithAuth).toHaveBeenCalled();
+    expect(fetchCandidateCvsWithAuth).toHaveBeenCalled();
+    expect(screen.getByText("Candidate-One-CV.pdf")).toBeInTheDocument();
   });
 });

@@ -9,11 +9,15 @@ import com.vn.son.jobhunter.repository.SkillRepository;
 import com.vn.son.jobhunter.repository.SubscriberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,11 +29,18 @@ public class SubscriberService {
     private final EmailService emailService;
     private final JobRepository jobRepository;
 
+    @Value("${jobhunter.public-api-url:http://localhost:8080}")
+    private String publicApiUrl;
+
     public boolean isExistsByEmail(String email) {
-        return this.subscriberRepository.existsByEmail(email);
+        return this.subscriberRepository.existsByEmail(normalizeEmail(email));
     }
 
     public Subscriber create(Subscriber subs) {
+        subs.setEmail(normalizeEmail(subs.getEmail()));
+        subs.setName(normalizeText(subs.getName()));
+        subs.setUnsubscribedAt(null);
+        ensureUnsubscribeToken(subs);
         if (subs.getSkills() != null) {
             List<Long> reqSkills = subs.getSkills()
                     .stream().map(Skill::getId)
@@ -43,6 +54,9 @@ public class SubscriberService {
     }
 
     public Subscriber update(Subscriber subsDB, Subscriber subsRequest) {
+        subsDB.setName(normalizeText(subsRequest.getName()));
+        subsDB.setUnsubscribedAt(null);
+        ensureUnsubscribeToken(subsDB);
         if (subsRequest.getSkills() != null) {
             List<Long> reqSkills = subsRequest.getSkills()
                     .stream().map(Skill::getId)
@@ -60,7 +74,7 @@ public class SubscriberService {
     }
 
     public void sendSubscribersEmailJobs() {
-        List<Subscriber> listSubs = this.subscriberRepository.findAll();
+        List<Subscriber> listSubs = this.subscriberRepository.findByUnsubscribedAtIsNull();
         if (listSubs == null || listSubs.isEmpty()) {
             return;
         }
@@ -85,12 +99,12 @@ public class SubscriberService {
                     sub.getEmail(),
                     "Cơ hội việc làm phù hợp đang chờ bạn khám phá",
                     "mail/subscriber-job-digest",
-                    Map.of(
+                    withUnsubscribe(sub, Map.of(
                             "recipientName", sub.getName() == null ? "Bạn" : sub.getName().trim(),
                             "jobs", digestJobs,
                             "digestTitle", "Gợi ý việc làm mới theo kỹ năng bạn đã đăng ký",
                             "digestSummary", "Đội ngũ Jobhunter vừa tổng hợp các vị trí phù hợp để bạn tham khảo và ứng tuyển nhanh."
-                    )
+                    ))
             );
         }
     }
@@ -109,6 +123,59 @@ public class SubscriberService {
     }
 
     public Subscriber findByEmail(String email) {
-        return this.subscriberRepository.findByEmail(email);
+        return this.subscriberRepository.findByEmail(normalizeEmail(email));
+    }
+
+    public boolean unsubscribe(String token) {
+        String normalizedToken = normalizeText(token);
+        if (normalizedToken.isBlank()) {
+            return false;
+        }
+
+        Optional<Subscriber> subscriber = this.subscriberRepository.findByUnsubscribeToken(normalizedToken);
+        if (subscriber.isEmpty()) {
+            return false;
+        }
+
+        Subscriber current = subscriber.get();
+        current.setUnsubscribedAt(Instant.now());
+        this.subscriberRepository.save(current);
+        return true;
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeText(String value) {
+        return value == null ? "" : value.trim();
+    }
+
+    private void ensureUnsubscribeToken(Subscriber subscriber) {
+        if (subscriber.getUnsubscribeToken() == null || subscriber.getUnsubscribeToken().isBlank()) {
+            subscriber.setUnsubscribeToken(UUID.randomUUID().toString().replace("-", ""));
+        }
+    }
+
+    private Map<String, Object> withUnsubscribe(Subscriber subscriber, Map<String, Object> variables) {
+        if (subscriber.getUnsubscribeToken() == null || subscriber.getUnsubscribeToken().isBlank()) {
+            ensureUnsubscribeToken(subscriber);
+            this.subscriberRepository.save(subscriber);
+        }
+        return Map.of(
+                "recipientName", variables.get("recipientName"),
+                "jobs", variables.get("jobs"),
+                "digestTitle", variables.get("digestTitle"),
+                "digestSummary", variables.get("digestSummary"),
+                "unsubscribeUrl", buildUnsubscribeUrl(subscriber)
+        );
+    }
+
+    private String buildUnsubscribeUrl(Subscriber subscriber) {
+        String baseUrl = this.publicApiUrl == null ? "" : this.publicApiUrl.trim().replaceAll("/+$", "");
+        if (baseUrl.isBlank()) {
+            baseUrl = "http://localhost:8080";
+        }
+        return baseUrl + "/api/v1/subscribers/unsubscribe?token=" + subscriber.getUnsubscribeToken();
     }
 }

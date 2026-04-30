@@ -15,6 +15,8 @@ export const STORAGE_BASE_URL = (isServerRuntime ? INTERNAL_STORAGE_BASE_URL : P
 );
 const REFRESH_ENDPOINT = "/api/v1/auth/refresh";
 const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
+const JOBHUNTER_CLIENT_HEADER = "X-Jobhunter-Client";
+const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 type QueryValue = string | number | boolean | null | undefined;
 
@@ -184,6 +186,10 @@ export async function apiRequest<T>(
   query?: Record<string, QueryValue>
 ): Promise<T> {
   const headers = new Headers(options?.headers);
+  const method = (options?.method ?? "GET").toUpperCase();
+  if (UNSAFE_METHODS.has(method) && !headers.has(JOBHUNTER_CLIENT_HEADER)) {
+    headers.set(JOBHUNTER_CLIENT_HEADER, "web");
+  }
   const timeoutController =
     !options?.signal && typeof AbortController !== "undefined" ? new AbortController() : null;
   const timeoutId = timeoutController
@@ -206,7 +212,7 @@ export async function apiRequest<T>(
   const url = withQuery(path, query);
 
   const requestInit: RequestInit = {
-    method: options?.method,
+    method,
     signal: options?.signal ?? timeoutController?.signal,
     body: finalBody,
     credentials: "include",

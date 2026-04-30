@@ -9,6 +9,7 @@ import {
   PaginatedData,
   Skill,
   SkillUpsertPayload,
+  SubscriberPayload,
   UploadFileResponse
 } from "../types/models";
 
@@ -160,6 +161,13 @@ export async function fetchAllCompanies(): Promise<Company[]> {
 
 export async function fetchAllSkills(): Promise<Skill[]> {
   return fetchAllPages<Skill>(`${API_PREFIX}/skills`, 120);
+}
+
+export async function createSubscriber(payload: SubscriberPayload): Promise<void> {
+  await apiRequest(`${API_PREFIX}/subscribers`, {
+    method: "POST",
+    body: payload
+  });
 }
 
 export async function fetchJobDetail(jobId: number): Promise<Job> {

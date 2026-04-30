@@ -143,13 +143,75 @@ export function shortText(value: string, length: number): string {
 
 export function sanitizeRichText(input?: string | null): string {
   if (!input) return "";
-  let safe = input;
-  safe = safe.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "");
-  safe = safe.replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, "");
-  safe = safe.replace(/\son[a-z]+="[^"]*"/gi, "");
-  safe = safe.replace(/\son[a-z]+='[^']*'/gi, "");
-  safe = safe.replace(/javascript:/gi, "");
-  return safe;
+
+  const allowedTags = new Set(["p", "br", "ul", "ol", "li", "strong", "b", "em", "i", "u", "h1", "h2", "h3", "h4", "h5", "h6", "a"]);
+  const voidTags = new Set(["br"]);
+  const tagAliases: Record<string, string> = { b: "strong", i: "em" };
+  const withoutDangerousBlocks = input.replace(
+    /<(script|style|iframe|object|embed)[\s\S]*?>[\s\S]*?<\/\1>/gi,
+    ""
+  );
+  const tagPattern = /<\/?([a-zA-Z0-9]+)([^>]*)>/g;
+  let output = "";
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = tagPattern.exec(withoutDangerousBlocks)) !== null) {
+    output += escapeHtml(withoutDangerousBlocks.slice(cursor, match.index));
+    cursor = match.index + match[0].length;
+
+    const rawTag = match[1].toLowerCase();
+    if (!allowedTags.has(rawTag)) {
+      continue;
+    }
+
+    const tag = tagAliases[rawTag] ?? rawTag;
+    const isClosing = match[0].startsWith("</");
+    if (isClosing) {
+      if (!voidTags.has(tag)) output += `</${tag}>`;
+      continue;
+    }
+
+    if (tag === "a") {
+      const href = sanitizeHref(match[2]);
+      output += href
+        ? `<a href="${escapeAttribute(href)}" target="_blank" rel="noreferrer">`
+        : "<a>";
+      continue;
+    }
+
+    output += voidTags.has(tag) ? `<${tag}>` : `<${tag}>`;
+  }
+
+  output += escapeHtml(withoutDangerousBlocks.slice(cursor));
+  return output;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function escapeAttribute(value: string): string {
+  return escapeHtml(value).replace(/"/g, "&quot;");
+}
+
+function sanitizeHref(attributes: string): string | null {
+  const hrefMatch = attributes.match(/\shref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i);
+  const rawHref = hrefMatch?.[1] ?? hrefMatch?.[2] ?? hrefMatch?.[3] ?? "";
+  if (!rawHref.trim()) return null;
+
+  try {
+    const decodedHref = rawHref.trim().replace(/&amp;/gi, "&");
+    const url = new URL(decodedHref, "https://jobhunter.local");
+    if (["http:", "https:", "mailto:"].includes(url.protocol)) return decodedHref;
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 function normalizeHeading(value: string): string {

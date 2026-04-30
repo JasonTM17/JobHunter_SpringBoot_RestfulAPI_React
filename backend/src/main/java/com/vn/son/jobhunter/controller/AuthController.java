@@ -1,6 +1,7 @@
 package com.vn.son.jobhunter.controller;
 
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +21,12 @@ import com.vn.son.jobhunter.domain.dto.LoginDTO;
 import com.vn.son.jobhunter.domain.dto.RegisterDTO;
 import com.vn.son.jobhunter.domain.res.auth.AuthCapabilityResponse;
 import com.vn.son.jobhunter.domain.dto.auth.EmailPreferenceUpdateDTO;
+import com.vn.son.jobhunter.domain.dto.auth.ForgotPasswordRequest;
+import com.vn.son.jobhunter.domain.dto.auth.ResetPasswordRequest;
 import com.vn.son.jobhunter.domain.res.auth.EmailPreferenceResponse;
+import com.vn.son.jobhunter.domain.res.auth.ForgotPasswordResponse;
 import com.vn.son.jobhunter.domain.res.auth.LoginResponse;
+import com.vn.son.jobhunter.domain.res.auth.ResetPasswordResponse;
 import com.vn.son.jobhunter.domain.res.auth.UserActionCapabilityResponse;
 import com.vn.son.jobhunter.domain.res.user.CreatedUserResponse;
 import com.vn.son.jobhunter.util.constant.GenderEnum;
@@ -29,6 +34,8 @@ import com.vn.son.jobhunter.util.error.IdInvalidException;
 import com.vn.son.jobhunter.util.error.UnauthorizedException;
 import com.vn.son.jobhunter.util.security.SecurityUtils;
 import com.vn.son.jobhunter.service.SecurityService;
+import com.vn.son.jobhunter.service.PasswordResetService;
+import com.vn.son.jobhunter.service.RateLimitService;
 import com.vn.son.jobhunter.service.UserService;
 import com.vn.son.jobhunter.util.annotation.ApiMessage;
 
@@ -46,6 +53,8 @@ public class AuthController {
     private final SecurityService securityService;
     private final UserService userService;
     private final SecurityUtils securityUtils;
+    private final PasswordResetService passwordResetService;
+    private final RateLimitService rateLimitService;
 
     @Value("${son.jwt.access-token-validity-in-seconds}")
     private long accessTokenExpiration;
@@ -66,9 +75,33 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }
 
+    @PostMapping("/forgot-password")
+    @ApiMessage("Gửi hướng dẫn đặt lại mật khẩu")
+    public ResponseEntity<ForgotPasswordResponse> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpRequest
+    ) throws Exception {
+        this.rateLimitService.checkPasswordReset(httpRequest, request.getEmail());
+        return ResponseEntity.ok(this.passwordResetService.requestReset(request.getEmail()));
+    }
+
+    @PostMapping("/reset-password")
+    @ApiMessage("Đặt lại mật khẩu")
+    public ResponseEntity<ResetPasswordResponse> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request,
+            HttpServletRequest httpRequest
+    ) throws Exception {
+        this.rateLimitService.checkPasswordReset(httpRequest, request.getToken());
+        return ResponseEntity.ok(this.passwordResetService.resetPassword(request.getToken(), request.getPassword()));
+    }
+
     @PostMapping(path = "/login")
     @ApiMessage("Đăng nhập bằng email và mật khẩu")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginDTO loginDTO){
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginDTO loginDTO,
+            HttpServletRequest httpRequest
+    ) throws Exception {
+        this.rateLimitService.checkLogin(httpRequest, loginDTO.getUsername());
         UsernamePasswordAuthenticationToken authenticationToken
                 = new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword());
 

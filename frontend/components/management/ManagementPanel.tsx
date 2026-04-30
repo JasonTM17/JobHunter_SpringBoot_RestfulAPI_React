@@ -8,6 +8,7 @@ import {
   JobUpsertPayload,
   Permission,
   ResumeItem,
+  ResumeStatusAudit,
   Role,
   RoleOption,
   Skill,
@@ -34,6 +35,7 @@ type RbacEntity = "users" | "roles" | "permissions";
 type ManagementModule = PublicEntity | RbacEntity;
 type PublicConfirmTarget = { entity: PublicEntity; id: number; name: string } | null;
 type ManagementTab = "public-crud" | "rbac";
+const MANAGEMENT_PAGE_SIZE = 8;
 
 const ENTITY_LABEL: Record<PublicEntity, string> = {
   jobs: "việc làm",
@@ -41,6 +43,86 @@ const ENTITY_LABEL: Record<PublicEntity, string> = {
   skills: "kỹ năng",
   resumes: "hồ sơ ứng tuyển"
 };
+
+interface ManagementPaginationProps {
+  label: string;
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function pageSlice<T>(items: T[], page: number, pageSize: number): T[] {
+  const start = Math.max(0, (page - 1) * pageSize);
+  return items.slice(start, start + pageSize);
+}
+
+function ManagementPagination({
+  label,
+  page,
+  pageSize,
+  totalItems,
+  totalPages,
+  onPageChange
+}: ManagementPaginationProps) {
+  if (totalPages <= 1) return null;
+
+  const start = (page - 1) * pageSize + 1;
+  const end = Math.min(totalItems, page * pageSize);
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1).filter(
+    (pageNumber) => pageNumber === 1 || pageNumber === totalPages || Math.abs(pageNumber - page) <= 1
+  );
+
+  return (
+    <nav
+      aria-label={`Phân trang ${label}`}
+      className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3"
+    >
+      <p className="text-xs text-slate-500">
+        Hiển thị {start}-{end} / {totalItems} {label}
+      </p>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+          disabled={page <= 1}
+          className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Trước
+        </button>
+        {pageNumbers.map((pageNumber, index) => {
+          const previous = pageNumbers[index - 1];
+          const showGap = previous && pageNumber - previous > 1;
+          return (
+            <span key={pageNumber} className="flex items-center gap-1.5">
+              {showGap ? <span className="text-xs text-slate-400">...</span> : null}
+              <button
+                type="button"
+                onClick={() => onPageChange(pageNumber)}
+                className={
+                  pageNumber === page
+                    ? "rounded-md bg-slate-900 px-2.5 py-1 text-xs font-bold text-white"
+                    : "rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                }
+              >
+                {pageNumber}
+              </button>
+            </span>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+          disabled={page >= totalPages}
+          className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Sau
+        </button>
+      </div>
+    </nav>
+  );
+}
 
 interface ManagementPanelProps {
   jobs: Job[];
@@ -50,6 +132,7 @@ interface ManagementPanelProps {
   users: UserListItem[];
   roles: Role[];
   permissions: Permission[];
+  resumeAuditsById?: Record<number, ResumeStatusAudit[]>;
   userCapabilities: Record<number, UserActionCapability>;
   createAssignableRoles: RoleOption[];
   rbacLoading: boolean;
@@ -65,7 +148,7 @@ interface ManagementPanelProps {
   onCreateSkill: (payload: SkillUpsertPayload) => Promise<void>;
   onUpdateSkill: (payload: SkillUpsertPayload) => Promise<void>;
   onDeleteSkill: (skillId: number) => Promise<void>;
-  onUpdateResumeStatus: (resume: ResumeItem, status: string) => Promise<void>;
+  onUpdateResumeStatus: (resume: ResumeItem, status: string, note?: string) => Promise<void>;
   onDeleteResume: (resumeId: number) => Promise<void>;
   onUploadCompanyLogo: (file: File) => Promise<UploadFileResponse>;
   onCreateUser: (payload: UserCreatePayload) => Promise<void>;
@@ -83,6 +166,7 @@ export default function ManagementPanel({
   users,
   roles,
   permissions,
+  resumeAuditsById,
   userCapabilities,
   createAssignableRoles,
   rbacLoading,
@@ -141,6 +225,9 @@ export default function ManagementPanel({
   const [jobSearch, setJobSearch] = useState("");
   const [showInactiveJobs, setShowInactiveJobs] = useState(false);
   const [companySearch, setCompanySearch] = useState("");
+  const [jobPage, setJobPage] = useState(1);
+  const [companyPage, setCompanyPage] = useState(1);
+  const [skillPage, setSkillPage] = useState(1);
 
   const filteredJobs = useMemo(
     () =>
@@ -163,6 +250,36 @@ export default function ManagementPanel({
       ),
     [companies, companySearch]
   );
+
+  const jobTotalPages = Math.max(1, Math.ceil(filteredJobs.length / MANAGEMENT_PAGE_SIZE));
+  const companyTotalPages = Math.max(1, Math.ceil(filteredCompanies.length / MANAGEMENT_PAGE_SIZE));
+  const skillTotalPages = Math.max(1, Math.ceil(skills.length / MANAGEMENT_PAGE_SIZE));
+  const pagedJobs = useMemo(() => pageSlice(filteredJobs, jobPage, MANAGEMENT_PAGE_SIZE), [filteredJobs, jobPage]);
+  const pagedCompanies = useMemo(
+    () => pageSlice(filteredCompanies, companyPage, MANAGEMENT_PAGE_SIZE),
+    [filteredCompanies, companyPage]
+  );
+  const pagedSkills = useMemo(() => pageSlice(skills, skillPage, MANAGEMENT_PAGE_SIZE), [skills, skillPage]);
+
+  useEffect(() => {
+    setJobPage(1);
+  }, [jobSearch, showInactiveJobs]);
+
+  useEffect(() => {
+    setCompanyPage(1);
+  }, [companySearch]);
+
+  useEffect(() => {
+    setJobPage((current) => Math.min(current, jobTotalPages));
+  }, [jobTotalPages]);
+
+  useEffect(() => {
+    setCompanyPage((current) => Math.min(current, companyTotalPages));
+  }, [companyTotalPages]);
+
+  useEffect(() => {
+    setSkillPage((current) => Math.min(current, skillTotalPages));
+  }, [skillTotalPages]);
 
   const canCreateJob = can("/api/v1/jobs", "POST");
   const canUpdateJob = can("/api/v1/jobs", "PUT");
@@ -484,7 +601,7 @@ export default function ManagementPanel({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
-                      {filteredJobs.map((job) => (
+                      {pagedJobs.map((job) => (
                         <tr key={job.id} className={!job.active ? "opacity-50" : ""}>
                           <td className="px-3 py-2">
                             <p className="font-semibold text-slate-900">{job.name}</p>
@@ -532,6 +649,14 @@ export default function ManagementPanel({
                       ))}
                     </tbody>
                   </table>
+                  <ManagementPagination
+                    label="việc làm"
+                    page={jobPage}
+                    pageSize={MANAGEMENT_PAGE_SIZE}
+                    totalItems={filteredJobs.length}
+                    totalPages={jobTotalPages}
+                    onPageChange={setJobPage}
+                  />
                 </div>
               )}
             </section>
@@ -566,7 +691,7 @@ export default function ManagementPanel({
                 </div>
               ) : (
                 <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
-                  {filteredCompanies.map((company) => (
+                  {pagedCompanies.map((company) => (
                     <article key={company.id} className="rounded-lg border border-slate-200 bg-white p-3">
                       <div className="flex items-start gap-3">
                         <CompanyLogo name={company.name} logo={company.logo} size="md" />
@@ -600,6 +725,14 @@ export default function ManagementPanel({
                   ))}
                 </div>
               )}
+              <ManagementPagination
+                label="công ty"
+                page={companyPage}
+                pageSize={MANAGEMENT_PAGE_SIZE}
+                totalItems={filteredCompanies.length}
+                totalPages={companyTotalPages}
+                onPageChange={setCompanyPage}
+              />
             </section>
           ) : null}
 
@@ -621,7 +754,7 @@ export default function ManagementPanel({
                 <EmptyState title="Chưa có kỹ năng" description="Bạn có thể tạo kỹ năng mới." />
               ) : (
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {skills.map((skill) => (
+                  {pagedSkills.map((skill) => (
                     <article
                       key={skill.id}
                       className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2"
@@ -651,6 +784,14 @@ export default function ManagementPanel({
                   ))}
                 </div>
               )}
+              <ManagementPagination
+                label="kỹ năng"
+                page={skillPage}
+                pageSize={MANAGEMENT_PAGE_SIZE}
+                totalItems={skills.length}
+                totalPages={skillTotalPages}
+                onPageChange={setSkillPage}
+              />
             </section>
           ) : null}
 
@@ -661,9 +802,10 @@ export default function ManagementPanel({
               canReadResumes={canReadResumes}
               canUpdateResume={canUpdateResumes}
               canDeleteResume={canDeleteResumes}
-              onUpdateResumeStatus={(resume, nextStatus) =>
+              auditsByResumeId={resumeAuditsById}
+              onUpdateResumeStatus={(resume, nextStatus, note) =>
                 runAction(() =>
-                  onUpdateResumeStatus(resume, nextStatus)
+                  onUpdateResumeStatus(resume, nextStatus, note)
                 )
               }
               onDeleteResume={(resumeId) => runAction(() => onDeleteResume(resumeId))}

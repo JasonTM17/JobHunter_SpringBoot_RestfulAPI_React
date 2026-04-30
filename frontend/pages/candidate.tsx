@@ -9,9 +9,15 @@ import EmptyState from "../components/common/EmptyState";
 import ErrorState from "../components/common/ErrorState";
 import LoadingState from "../components/common/LoadingState";
 import { useAuth } from "../contexts/auth-context";
-import { fetchCurrentUserResumesWithAuth } from "../services/auth-rbac-api";
+import {
+  deleteCandidateCvWithAuth,
+  fetchCandidateCvsWithAuth,
+  fetchCurrentUserResumesWithAuth,
+  fetchResumeAuditsWithAuth,
+  setDefaultCandidateCvWithAuth
+} from "../services/auth-rbac-api";
 import { fetchAllJobs, fetchSavedJobsWithAuth, unsaveJobWithAuth } from "../services/jobhunter-api";
-import { Job, ResumeItem } from "../types/models";
+import { CandidateCv, Job, ResumeItem, ResumeStatusAudit } from "../types/models";
 import { bookmarkScopeFromAccount, getBookmarks, removeBookmark, saveBookmarks } from "../utils/bookmarks";
 import { toUserErrorMessage } from "../utils/error-message";
 import { formatCurrencyVnd, formatDateVi, shortText, stripHtml } from "../utils/format";
@@ -34,6 +40,11 @@ function statusClass(status: string): string {
   return "border-amber-200 bg-amber-50 text-amber-700";
 }
 
+function auditSummary(audit: ResumeStatusAudit): string {
+  const from = audit.previousStatus ? statusLabel(String(audit.previousStatus)) : "Mới";
+  return `${from} -> ${statusLabel(String(audit.nextStatus))}`;
+}
+
 export default function CandidateWorkspacePage() {
   const router = useRouter();
   const { status, currentUser, roleName, canAccessManagement } = useAuth();
@@ -41,7 +52,9 @@ export default function CandidateWorkspacePage() {
   const [error, setError] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [resumes, setResumes] = useState<ResumeItem[]>([]);
+  const [resumeAuditsById, setResumeAuditsById] = useState<Record<number, ResumeStatusAudit[]>>({});
   const [savedJobs, setSavedJobs] = useState<Job[]>([]);
+  const [candidateCvs, setCandidateCvs] = useState<CandidateCv[]>([]);
 
   const loginHref = useMemo(() => `/login?next=${encodeURIComponent(router.asPath || "/candidate")}`, [router.asPath]);
   const isAllowed = canAccessCandidateWorkspace(roleName, canAccessManagement);
@@ -58,13 +71,16 @@ export default function CandidateWorkspacePage() {
     setLoading(true);
     setError("");
     try {
-      const [jobData, resumeData, savedJobData] = await Promise.all([
+      const [jobData, resumeData, savedJobData, candidateCvData] = await Promise.all([
         fetchAllJobs(),
         fetchCurrentUserResumesWithAuth(),
-        fetchSavedJobsWithAuth().catch(() => null)
+        fetchSavedJobsWithAuth().catch(() => null),
+        fetchCandidateCvsWithAuth().catch(() => [])
       ]);
       setJobs(jobData.filter((item) => item.active));
       setResumes(resumeData);
+      setCandidateCvs(candidateCvData);
+      void loadResumeAudits(resumeData);
 
       if (savedJobData) {
         const savedIds = savedJobData.map((job) => job.id);
@@ -78,6 +94,62 @@ export default function CandidateWorkspacePage() {
       setError(toUserErrorMessage(loadError, "Không thể tải dữ liệu ứng viên lúc này."));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadResumeAudits(resumeData: ResumeItem[]) {
+    if (!resumeData.length) {
+      setResumeAuditsById({});
+      return;
+    }
+
+    const results = await Promise.allSettled(
+      resumeData.map(async (resume) => {
+        const audits = await fetchResumeAuditsWithAuth(resume.id);
+        return [resume.id, audits] as const;
+      })
+    );
+
+    const nextAudits: Record<number, ResumeStatusAudit[]> = {};
+    results.forEach((result) => {
+      if (result.status === "fulfilled") {
+        const [resumeId, audits] = result.value;
+        nextAudits[resumeId] = audits;
+      }
+    });
+    setResumeAuditsById(nextAudits);
+  }
+
+  async function handleSetDefaultCv(cvId: number) {
+    try {
+      const updated = await setDefaultCandidateCvWithAuth(cvId);
+      setCandidateCvs((current) =>
+        current.map((candidateCv) => ({
+          ...candidateCv,
+          defaultCv: candidateCv.id === updated.id
+        }))
+      );
+    } catch (actionError) {
+      setError(toUserErrorMessage(actionError, "Không thể cập nhật CV mặc định lúc này."));
+    }
+  }
+
+  async function handleDeleteCv(cvId: number) {
+    try {
+      await deleteCandidateCvWithAuth(cvId);
+      setCandidateCvs((current) => {
+        const deletedCv = current.find((candidateCv) => candidateCv.id === cvId);
+        const remaining = current.filter((candidateCv) => candidateCv.id !== cvId);
+        if (!deletedCv?.defaultCv || remaining.some((candidateCv) => candidateCv.defaultCv)) {
+          return remaining;
+        }
+        return remaining.map((candidateCv, index) => ({
+          ...candidateCv,
+          defaultCv: index === 0
+        }));
+      });
+    } catch (actionError) {
+      setError(toUserErrorMessage(actionError, "Không thể xóa CV lúc này."));
     }
   }
 
@@ -278,6 +350,82 @@ export default function CandidateWorkspacePage() {
         </section>
       )}
 
+      <section className="mt-4 rounded-lg border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Thư viện CV</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Lưu lại các CV đã upload để ứng tuyển nhanh hơn ở những tin tiếp theo.
+            </p>
+          </div>
+          <Link
+            href="/"
+            className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100"
+          >
+            Tìm việc để ứng tuyển
+          </Link>
+        </div>
+
+        {candidateCvs.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            Chưa có CV nào trong thư viện. Khi bạn upload CV ở trang chi tiết việc làm, Jobhunter sẽ tự động lưu vào đây.
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {candidateCvs.map((candidateCv) => (
+              <article
+                key={candidateCv.id}
+                data-testid={`candidate-cv-card-${candidateCv.id}`}
+                className="rounded-lg border border-slate-200 bg-slate-50 p-3.5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-bold text-slate-900">{candidateCv.fileName || "CV"}</h3>
+                    <p className="mt-1 text-xs text-slate-500">Thêm ngày {formatDateVi(candidateCv.createdAt)}</p>
+                  </div>
+                  {candidateCv.defaultCv ? (
+                    <span
+                      data-testid={`candidate-cv-default-${candidateCv.id}`}
+                      className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700"
+                    >
+                      Mặc định
+                    </span>
+                  ) : null}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={candidateCv.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  >
+                    Xem CV
+                  </a>
+                  {!candidateCv.defaultCv ? (
+                    <button
+                      type="button"
+                      data-testid={`candidate-cv-set-default-${candidateCv.id}`}
+                      onClick={() => void handleSetDefaultCv(candidateCv.id)}
+                      className="rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                    >
+                      Đặt mặc định
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    data-testid={`candidate-cv-delete-${candidateCv.id}`}
+                    onClick={() => void handleDeleteCv(candidateCv.id)}
+                    className="rounded-md border border-rose-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                  >
+                    Xóa
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
       <section className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_360px]">
         <article className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft sm:p-6">
           <h2 className="text-lg font-bold text-slate-900">Hồ sơ ứng tuyển gần đây</h2>
@@ -296,7 +444,11 @@ export default function CandidateWorkspacePage() {
             </div>
           ) : (
             <div className="mt-4 grid gap-2.5">
-              {latestApplications.slice(0, 8).map((item) => (
+              {latestApplications.slice(0, 8).map((item) => {
+                const audits = resumeAuditsById[item.id] ?? [];
+                const latestAudit = audits[0];
+
+                return (
                 <article key={item.id} className="rounded-lg border border-slate-200 bg-slate-50 p-3.5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -311,6 +463,14 @@ export default function CandidateWorkspacePage() {
                     <p>Ngày nộp: {formatDateVi(item.createdDate)}</p>
                     <p>Cập nhật cuối: {formatDateVi(item.lastModifiedDate)}</p>
                     <p>Người xử lý gần nhất: {item.lastModifiedBy || "Hệ thống"}</p>
+                    {latestAudit ? (
+                      <div className="mt-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-slate-600">
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">Cập nhật pipeline gần nhất</p>
+                        <p className="mt-1 font-semibold text-slate-800">{auditSummary(latestAudit)}</p>
+                        <p>{latestAudit.actorEmail || "Hệ thống"} - {formatDateVi(latestAudit.createdAt)}</p>
+                        {latestAudit.note ? <p className="mt-1 text-slate-700">{latestAudit.note}</p> : null}
+                      </div>
+                    ) : null}
                     {item.url ? (
                       <a
                         href={item.url}
@@ -323,7 +483,8 @@ export default function CandidateWorkspacePage() {
                     ) : null}
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
           )}
         </article>
