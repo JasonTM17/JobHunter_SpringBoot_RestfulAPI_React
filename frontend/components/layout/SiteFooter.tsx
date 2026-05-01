@@ -100,10 +100,7 @@ export default function SiteFooter() {
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <div className="lg:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2.5" aria-label="Jobhunter trang chủ">
-              <span className="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
-                <img src="/favicon.svg" alt="" className="h-full w-full object-cover" width={40} height={40} />
-              </span>
-              <span className="text-base font-extrabold text-slate-900">Jobhunter</span>
+              <img src="/logo-full.svg" alt="Jobhunter" className="h-11 w-auto" width={236} height={56} />
             </Link>
             <p className="mt-3 text-[13px] leading-relaxed text-slate-500">
               Nền tảng tuyển dụng IT tập trung vào dữ liệu rõ ràng, ứng tuyển nhanh và workspace vận hành cho candidate, recruiter, admin.

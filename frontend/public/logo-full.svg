@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 236 56" role="img" aria-label="Jobhunter">
+  <defs>
+    <linearGradient id="jh-red" x1="9" y1="8" x2="47" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ef4444"/>
+      <stop offset="1" stop-color="#b51d1a"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="4" width="48" height="48" rx="11" fill="#111827"/>
+  <path d="M17 20h19a4 4 0 0 1 4 4v15a4 4 0 0 1-4 4H17a4 4 0 0 1-4-4V24a4 4 0 0 1 4-4Z" fill="#ffffff"/>
+  <path d="M21 20v-3.5A3.5 3.5 0 0 1 24.5 13h6A3.5 3.5 0 0 1 34 16.5V20" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M13 29h27v10a4 4 0 0 1-4 4H17a4 4 0 0 1-4-4V29Z" fill="url(#jh-red)"/>
+  <circle cx="30" cy="30" r="7.5" fill="#111827" stroke="#ffffff" stroke-width="3"/>
+  <path d="M35.5 35.5 43 43" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M15 41c8.5-.4 18-3.5 27-14" fill="none" stroke="#111827" stroke-width="3" stroke-linecap="round"/>
+  <path d="M39.5 27H45v5.5" fill="none" stroke="#111827" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="61" y="31" fill="#111827" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="24" font-weight="850">Job</text>
+  <text x="104" y="31" fill="#b51d1a" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="24" font-weight="850">hunter</text>
+  <text x="62" y="45" fill="#64748b" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="9" font-weight="800">IT RECRUITMENT PLATFORM</text>
+</svg>

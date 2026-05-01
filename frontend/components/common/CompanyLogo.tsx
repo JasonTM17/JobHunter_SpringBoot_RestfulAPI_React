@@ -46,7 +46,7 @@ export default function CompanyLogo({
       >
         <img
           src={src}
-          alt={name ?? "Logo công ty"}
+          alt={name ?? "Company logo"}
           className={`h-full w-full object-contain ${imagePaddingClass}`}
           onError={() => setBroken(true)}
         />
@@ -57,7 +57,7 @@ export default function CompanyLogo({
   return (
     <div
       className={`${rootSize} ${roundedClass} grid place-items-center border border-rose-200 bg-gradient-to-br from-rose-100 to-rose-200 text-xs font-bold text-rose-800 ${className}`}
-      aria-label="Logo mặc định"
+      aria-label="Default company logo"
     >
       {getInitials(name)}
     </div>
