@@ -1,25 +1,25 @@
 # Production Runbook
 
-## Mục tiêu
+## Purpose
 
-Runbook này dùng để chuẩn bị, deploy và kiểm tra Jobhunter ở mức production MVP. Mặc định hệ thống chạy single-node Docker trước; nếu scale nhiều instance cần bổ sung Redis/session/rate-limit shared store.
+This runbook prepares, deploys, and verifies Jobhunter as a production MVP. The default target is a single-node Docker deployment. Multi-instance deployments should add shared Redis/session/rate-limit storage and stronger observability.
 
-## Pre-flight checklist
+## Pre-flight Checklist
 
-- Java 21, Node 22 và Docker đang sẵn sàng.
-- `.env` được tạo từ `.env.example`, không commit secret thật.
-- `JWT_BASE64_SECRET` là secret mạnh, base64 đủ dài cho HS512.
-- `DB_PASSWORD` và `JOBHUNTER_BOOTSTRAP_ADMIN_PASSWORD` đã đổi khỏi mặc định.
-- `JOBHUNTER_SEED_ENABLED=false` sau khi seed/demo data không còn cần thiết.
-- `JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED=false` sau khi đã tạo admin thật.
-- `PASSWORD_RESET_DEV_TOKEN_ENABLED=false` trong production.
+- Java 21, Node 22, and Docker are available.
+- `.env` is created from `.env.example` and real secrets are not committed.
+- `JWT_BASE64_SECRET` is strong and long enough for HS512.
+- `DB_PASSWORD` and `JOBHUNTER_BOOTSTRAP_ADMIN_PASSWORD` are changed from defaults.
+- `JOBHUNTER_SEED_ENABLED=false` when demo seed data is no longer needed.
+- `JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED=false` after a real admin account exists.
+- `PASSWORD_RESET_DEV_TOKEN_ENABLED=false` in production.
 - `JOBHUNTER_PROD_GUARD_ENABLED=true`.
 - `JOBHUNTER_UNSAFE_METHOD_HEADER_ENABLED=true`.
 - `JOBHUNTER_RATE_LIMIT_ENABLED=true`.
-- `CORS_ALLOWED_ORIGINS` chỉ chứa frontend origin hợp lệ.
-- Swagger chỉ bật khi có chủ đích.
+- `CORS_ALLOWED_ORIGINS` contains only trusted frontend origins.
+- Swagger is enabled only with explicit intent.
 
-## Build và test trước deploy
+## Build And Test Before Deploy
 
 Backend:
 
@@ -46,7 +46,7 @@ Smoke:
 npm run smoke:local -- --browser=true
 ```
 
-## Docker deploy local/server
+## Docker Deploy
 
 ```powershell
 Copy-Item .env.example .env
@@ -55,76 +55,76 @@ docker compose logs -f backend
 docker compose logs -f frontend
 ```
 
-Kiểm tra:
+Verify:
 
 - `GET http://localhost:8080/actuator/health`
 - `GET http://localhost:3001`
 - `GET http://localhost:3001/jobs/1`
 
-## Production guard
+## Production Guard
 
-Khi `SPRING_PROFILES_ACTIVE=prod`, backend sẽ fail-fast nếu còn cấu hình nguy hiểm. Nếu backend không start, đọc message trong log và sửa env thay vì tắt guard.
+With `SPRING_PROFILES_ACTIVE=prod`, the backend fails fast when risky settings remain enabled. If the backend does not start, read the log message and fix the environment instead of disabling the guard.
 
-Các nhóm thường bị guard chặn:
+Common blocked settings:
 
-- JWT default hoặc quá yếu.
-- Cookie secure tắt.
-- Password reset dev token bật.
-- Seed/bootstrap admin bật.
-- Swagger bật ngoài chủ đích.
+- Default or weak JWT secret.
+- Insecure cookie settings.
+- Password reset dev token enabled.
+- Seed or bootstrap admin enabled.
+- Swagger enabled without intent.
 
-## Unsafe method header
+## Unsafe Method Header
 
-Các request unsafe dưới `/api/**` cần:
+Unsafe requests under `/api/**` require:
 
 ```http
 X-Jobhunter-Client: web
 ```
 
-Frontend đã tự thêm. Nếu dùng Postman hoặc client khác, thêm header này khi gọi `POST/PUT/PATCH/DELETE`.
+The frontend adds this automatically. When using Postman or another client, add this header for `POST/PUT/PATCH/DELETE`.
 
-## Database và migration
+## Database And Migrations
 
-- Flyway chạy khi backend start.
-- Backup database trước khi chạy migration production.
-- Không sửa migration đã phát hành nếu DB production đã chạy.
-- Nếu cần sửa dữ liệu, tạo migration mới có rollback plan.
+- Flyway runs when the backend starts.
+- Back up the database before production migrations.
+- Do not edit released migrations after they have run in production.
+- Use a new migration for data fixes and keep a rollback plan.
 
-## Monitoring tối thiểu
+## Minimum Monitoring
 
-Kiểm tra định kỳ:
+Check regularly:
 
 - `/actuator/health`
 - Backend logs
 - Frontend server logs
-- Tỷ lệ 401/403/429/500
-- Lỗi upload CV
-- Lỗi gửi email/reset password
-- Dung lượng storage upload
+- Rates of 401/403/429/500 responses
+- CV upload failures
+- Email/reset password failures
+- Upload storage usage
 
 ## Rollback
 
-1. Ghi nhận image tag hoặc commit đang chạy trước deploy.
-2. Nếu deploy lỗi, quay lại image tag trước đó.
-3. Nếu migration đã chạy và không backward-compatible, dùng backup/rollback script đã chuẩn bị.
-4. Chạy lại smoke sau rollback.
+1. Record the current image tag or commit before deploy.
+2. If deployment fails, roll back to the previous image tag.
+3. If a non-backward-compatible migration has run, use the prepared backup or rollback script.
+4. Run smoke checks again after rollback.
 
-## Smoke sau deploy
+## Post-deploy Smoke
 
-Luồng cần kiểm tra thủ công hoặc bằng Browser Use:
+Verify manually or with browser automation:
 
-- Home render job cards, sort và About.
-- Job detail load đúng.
-- Candidate login và apply CV.
-- Candidate workspace thấy history và CV library.
-- Recruiter đổi trạng thái resume kèm note.
-- Admin mở users management.
-- Mobile 390px không horizontal overflow.
+- Home renders job cards, sorting, and About.
+- Job detail loads correctly.
+- Candidate can log in and apply with a CV.
+- Candidate workspace shows history and CV library.
+- Recruiter can update resume status with a note.
+- Admin can open users management.
+- Mobile 390px has no horizontal overflow.
 
-## Khi scale sau MVP
+## Scaling After MVP
 
-- Chuyển rate limit sang Redis.
-- Tách storage upload sang object storage.
-- Thêm observability tập trung: logs, traces, metrics.
-- Thêm migration dry-run trong CI/CD.
-- Thêm audit destructive action cho toàn bộ admin operations.
+- Move rate limiting to Redis.
+- Move uploads to object storage.
+- Add centralized logs, traces, and metrics.
+- Add migration dry-run checks in CI/CD.
+- Expand destructive-action audit coverage across admin operations.

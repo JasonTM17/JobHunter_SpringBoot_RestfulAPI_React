@@ -1,49 +1,49 @@
 # About Jobhunter
 
-## Tầm nhìn
+## Vision
 
-Jobhunter là production MVP cho một nền tảng tuyển dụng IT tại Việt Nam. Sản phẩm tập trung vào ba việc: giúp ứng viên tìm và so sánh việc làm nhanh hơn, giúp recruiter xử lý hồ sơ có kỷ luật hơn, và giúp admin vận hành dữ liệu tuyển dụng an toàn hơn.
+Jobhunter is a production MVP for an IT recruitment platform in Vietnam. It focuses on three practical outcomes: helping candidates find and compare jobs faster, helping recruiters handle applications with more structure, and helping administrators operate recruitment data safely.
 
-## Người dùng chính
+## Primary Users
 
-- Ứng viên IT: tìm việc theo kỹ năng, thành phố, cấp độ, mức lương; lưu việc; ứng tuyển bằng CV URL hoặc file upload; theo dõi trạng thái hồ sơ.
-- Recruiter: quản lý job theo công ty, xem pipeline hồ sơ, lọc theo job/status, đổi trạng thái kèm ghi chú audit.
-- Admin: quản lý users, companies, jobs, skills, roles, permissions và xử lý lỗi vận hành như 403/404/409 rõ ràng hơn.
+- IT candidates: search by skill, city, level, salary, and keyword; save jobs; apply using a CV URL or uploaded CV; track application status.
+- Recruiters: manage company jobs, review the resume pipeline, filter by job/status, update application status, and leave audit notes.
+- Administrators: manage users, companies, jobs, skills, roles, permissions, and common operational error states.
 
-## Giá trị sản phẩm
+## Product Value
 
-- Search-first: người dùng vào trang là có thể tìm việc ngay, không đi qua landing page marketing dài.
-- Dữ liệu rõ: job card hiển thị lương, kỹ năng, công ty, cấp độ, địa điểm, deadline và CTA rõ.
-- Quy trình ứng tuyển thật: candidate có saved jobs theo tài khoản, CV library, apply history và trạng thái hồ sơ.
-- Vận hành có scope: recruiter chỉ thao tác trong phạm vi company, admin có quyền rộng hơn, candidate chỉ xem dữ liệu của mình.
-- Chất lượng có kiểm chứng: unit test, Jest, E2E desktop/mobile, visual regression, smoke local và browser QA.
+- Search-first experience: users can start job discovery immediately without a long marketing landing page.
+- Dense but scannable job data: salary, skills, company, level, location, deadline, and CTAs are visible where users need them.
+- Real application workflow: account-scoped saved jobs, CV library, application history, and status tracking.
+- Scoped operations: recruiters operate inside their company scope, candidates only see their own data, and admins have broader oversight.
+- Verified quality: backend tests, frontend type checks, Jest, desktop/mobile E2E, visual regression, smoke checks, and production audit.
 
-## Phạm vi MVP
+## MVP Scope
 
-Đã có:
+Included:
 
-- Public home/job board/job detail.
-- Auth, forgot/reset password.
-- Candidate saved jobs, apply CV, CV library, application history.
-- Recruiter resume pipeline và status audit note.
-- Admin workspace cho dữ liệu vận hành chính.
-- Subscriber/newsletter, email preference và unsubscribe token.
-- Security hardening MVP: production guard, unsafe method header, rate limit, upload validation, sanitizer allowlist.
+- Public home, job board, and job detail.
+- Login, registration, forgot password, and reset password.
+- Candidate saved jobs, CV apply, CV library, and application history.
+- Recruiter resume pipeline and status audit notes.
+- Admin workspace for core operational data.
+- Subscriber/newsletter flow, email preferences, and unsubscribe token foundation.
+- MVP security hardening: production guard, unsafe-method header, rate limit, upload validation, and rich-text sanitizer.
 
-Chưa coi là hoàn chỉnh enterprise:
+Not enterprise-complete yet:
 
-- Rate limit hiện là in-memory single-node, chưa dùng Redis.
-- Email recommendation phụ thuộc SMTP runtime.
-- Management server-side pagination sâu hơn vẫn là hướng nâng cấp tiếp theo nếu dataset lớn.
-- Audit destructive action có thể mở rộng thêm cho job/company/skill/user ở pha sau.
+- Rate limiting is in-memory and single-node; Redis should be used for multi-instance deployments.
+- Email recommendations depend on runtime SMTP configuration.
+- Management server-side pagination can be expanded further for very large datasets.
+- Destructive-action audit can be extended to every admin operation in a later phase.
 
-## Nguyên tắc thiết kế
+## Design Principles
 
-- Giao diện ưu tiên scan nhanh, mật độ thông tin cao, ít trang trí thừa.
-- Brand Jobhunter giữ màu đỏ-trắng nhưng cân bằng bằng slate/white/emerald, không để toàn trang bị đỏ quá nặng.
-- Workflow chính phải dùng được ở mobile 390px, tablet 768px và desktop 1366px.
-- Không sao chép logo, asset hoặc copy độc quyền từ website tham chiếu.
+- Prioritize fast scanning, dense information, and low-friction workflows.
+- Keep Jobhunter's red-white brand balanced with slate, white, and emerald so the UI does not feel overly red.
+- Main workflows must remain usable at 390px mobile, 768px tablet, and 1366px desktop.
+- Do not copy proprietary logos, assets, or copy from reference sites.
 
-## Định vị release hiện tại
+## Current Release Positioning
 
-Release hiện tại phù hợp để demo production MVP, chạy local/Docker, trình bày đồ án/thực tập, và làm nền tảng phát triển tiếp thành sản phẩm tuyển dụng IT hoàn chỉnh hơn.
+The current release is suitable for a production MVP demo, local or Docker execution, portfolio presentation, internship/project review, and further development into a more complete IT recruitment platform.

@@ -1,26 +1,26 @@
-# Jobhunter - Production MVP tuyển dụng IT
+# Jobhunter - Production MVP for IT Recruitment
 
-Jobhunter là nền tảng tuyển dụng công nghệ fullstack dành cho ứng viên, recruiter và admin. Dự án dùng Spring Boot, Next.js, MySQL, Flyway, Docker và bộ kiểm thử tự động để mô phỏng một sản phẩm tuyển dụng IT có thể vận hành thật ở quy mô MVP.
+Jobhunter is a full-stack IT recruitment platform for candidates, recruiters, and administrators. It is built with Spring Boot, Next.js, MySQL, Flyway, Docker, RBAC, E2E tests, visual regression, and production-oriented hardening.
 
-## Tài liệu chính
+## Core Documentation
 
-- [About sản phẩm](docs/ABOUT.md)
-- [Release notes](docs/RELEASE_NOTES.md)
-- [Production runbook](docs/PRODUCTION_RUNBOOK.md)
-- [E2E và QA guide](docs/E2E_QA.md)
-- [Frontend guide](frontend/README.md)
-- [Backend guide](backend/README.md)
+- [Product About](docs/ABOUT.md)
+- [Release Notes](docs/RELEASE_NOTES.md)
+- [Production Runbook](docs/PRODUCTION_RUNBOOK.md)
+- [E2E and QA Guide](docs/E2E_QA.md)
+- [Frontend Guide](frontend/README.md)
+- [Backend Guide](backend/README.md)
 
-## Trạng thái hiện tại
+## Current Product State
 
-- Public job board theo phong cách search-first: lọc, sort, quick detail, job detail, top employers, content hub, subscriber và About.
-- Candidate workspace: saved jobs theo tài khoản, apply bằng URL hoặc upload CV, thư viện CV, lịch sử ứng tuyển và audit trạng thái hồ sơ.
-- Recruiter workspace: pipeline hồ sơ theo công ty, filter theo trạng thái/job, đổi trạng thái kèm ghi chú audit.
-- Admin workspace: quản lý users, companies, jobs, skills, roles/permissions theo capability hiện có.
-- Auth: login/register, forgot/reset password, HttpOnly cookie, RBAC và preference nhận email.
-- Hardening MVP: production startup guard, unsafe-method client header, rate limit in-memory, sanitizer allowlist, upload validation, smoke/E2E/visual regression.
+- Public job board with search, filters, sorting, quick detail, job detail, top employers, content hub, subscriber flow, and About section.
+- Candidate workspace with account-scoped saved jobs, CV URL/upload apply flow, CV library, application history, and resume status audit timeline.
+- Recruiter workspace with company-scoped resume pipeline, status filters, status update notes, and audit history.
+- Admin workspace for users, companies, jobs, skills, roles, and permissions.
+- Auth flows for login, registration, forgot/reset password, HttpOnly cookie auth, RBAC, and email preferences.
+- MVP hardening: production startup guard, unsafe-method client header, in-memory rate limits, allowlist rich-text sanitizer, upload validation, smoke tests, E2E, and visual regression.
 
-## Kiến trúc
+## Architecture
 
 ```text
 Browser
@@ -38,15 +38,15 @@ Spring Boot 4 + Java 21 + Spring Security + JPA
 MySQL 8.4
 ```
 
-Docker Compose cung cấp stack local gồm frontend, backend, MySQL và Redis tùy chọn. Backend expose Actuator health/metrics và Swagger UI khi được bật.
+Docker Compose provides a local stack with frontend, backend, MySQL, and optional Redis. The backend exposes Actuator health/metrics and Swagger UI when explicitly enabled.
 
-## Chạy local nhanh
+## Quick Local Run
 
-Yêu cầu:
+Requirements:
 
 - Java 21
 - Node.js 22
-- Docker Desktop nếu chạy bằng Compose
+- Docker Desktop for Compose-based runs
 
 Backend:
 
@@ -63,7 +63,7 @@ npm install
 npm run dev
 ```
 
-URL mặc định:
+Default URLs:
 
 - Frontend dev: `http://localhost:3010`
 - Frontend Docker: `http://localhost:3001`
@@ -71,16 +71,16 @@ URL mặc định:
 - API prefix: `http://localhost:8080/api/v1`
 - Swagger: `http://localhost:8080/swagger-ui.html`
 
-Nếu đổi port backend, cập nhật `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_STORAGE_BASE_URL` và `CORS_ALLOWED_ORIGINS`.
+If the backend port changes, update `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_STORAGE_BASE_URL`, and `CORS_ALLOWED_ORIGINS`.
 
-## Chạy bằng Docker Compose
+## Docker Compose
 
 ```powershell
 Copy-Item .env.example .env
 docker compose up --build
 ```
 
-Các biến quan trọng:
+Important environment variables:
 
 - `FRONTEND_PORT`
 - `BACKEND_PORT`
@@ -94,7 +94,7 @@ Các biến quan trọng:
 - `JOBHUNTER_UNSAFE_METHOD_HEADER_ENABLED`
 - `JOBHUNTER_RATE_LIMIT_ENABLED`
 
-## Quality gates
+## Quality Gates
 
 Backend:
 
@@ -115,56 +115,58 @@ npm run test:visual
 npm audit --omit=dev --audit-level=high
 ```
 
-Smoke local sau khi backend và frontend đang chạy:
+Smoke from the repository root after backend and frontend are running:
 
 ```powershell
 npm run smoke:local -- --browser=true
 ```
 
-Gate gần nhất đã pass ngày 2026-04-30:
+Latest verified gates on 2026-05-01:
 
 - Backend `.\gradlew.bat test`
-- Frontend lint, Jest, build
+- Frontend `npm run lint`
+- Frontend Jest 61/61
+- Frontend production build
 - Playwright E2E 16/16
-- Playwright visual 4/4
-- Smoke local 11/11
+- Playwright visual regression 4/4
 - Production audit 0 high vulnerabilities
-- Browser QA localhost không có console error
+- GitHub Actions CI green on `master`
+- GitHub Actions CD green on `master` and `v1.0.1`
 
-## Bảo mật production
+## Production Security
 
-Khi chạy profile `prod`, backend có startup guard để fail-fast nếu còn cấu hình nguy hiểm như JWT mặc định, cookie secure tắt, reset password dev token bật, seed/bootstrap admin/swagger bật không chủ đích.
+When `SPRING_PROFILES_ACTIVE=prod`, the backend fails fast if unsafe production settings remain enabled: default JWT secret, insecure cookies, password reset dev tokens, seed/bootstrap admin, or Swagger without intent.
 
-Unsafe `POST/PUT/PATCH/DELETE` dưới `/api/**` yêu cầu header:
+Unsafe `POST/PUT/PATCH/DELETE` calls under `/api/**` require:
 
 ```http
 X-Jobhunter-Client: web
 ```
 
-Frontend API client tự thêm header này. Có thể tắt bằng env khi cần tích hợp API external, nhưng production MVP nên giữ bật.
+The frontend API client adds this header automatically. It can be disabled by environment variable for external API integrations, but the production MVP should keep it enabled.
 
-## Database migrations
+## Database Migrations
 
-Flyway scripts nằm tại:
+Flyway scripts live in:
 
 ```text
 backend/src/main/resources/db/migration/
 ```
 
-Quy tắc:
+Rules:
 
-- Tạo migration mới cho thay đổi schema.
-- Không sửa migration đã phát hành nếu production đã chạy.
-- Dùng `SON_JPA_DDL_AUTO=none` trong production.
+- Add a new migration for schema changes.
+- Do not edit released migrations after a production database has run them.
+- Use `SON_JPA_DDL_AUTO=none` in production.
 
-## Quy trình release
+## Release Process
 
-1. Cập nhật [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md).
-2. Chạy đủ quality gates.
-3. Chạy smoke local với browser DOM check.
-4. Kiểm tra env production theo [docs/PRODUCTION_RUNBOOK.md](docs/PRODUCTION_RUNBOOK.md).
-5. Tag Docker image hoặc Git tag theo convention của dự án.
-6. Sau deploy, kiểm tra `/actuator/health`, public home, job detail, login, candidate apply, recruiter pipeline và admin workspace.
+1. Update [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md).
+2. Run all quality gates.
+3. Run local smoke with browser DOM checks.
+4. Review production environment settings using [docs/PRODUCTION_RUNBOOK.md](docs/PRODUCTION_RUNBOOK.md).
+5. Create the Git tag following the project version convention.
+6. After deploy, verify `/actuator/health`, public home, job detail, login, candidate apply, recruiter pipeline, and admin workspace.
 
 ## License
 

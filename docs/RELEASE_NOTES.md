@@ -1,15 +1,40 @@
 # Release Notes
 
-## v1.0.1-ci-hardening - 2026-04-30
+## v1.0.2-cd-verification - 2026-05-01
 
-### Tổng quan
+### Summary
 
-Patch release này sửa các lỗi phát hiện sau khi publish `v1.0.0` trên GitHub Actions.
+This patch hardens the release workflow after the production MVP became green in CI. The CD workflow now keeps a real Docker build verification path for release tags even when Docker Hub credentials are not configured.
 
 ### Fixes
 
-- Sửa Docker smoke trên fresh MySQL volume: database bootstrap chủ động đảm bảo Flyway migration đã chạy trước khi seed dữ liệu.
-- Làm visual regression ổn định hơn trên Linux runner bằng ngưỡng diff riêng cho CI, tránh fail vì khác biệt font/render giữa hệ điều hành.
+- Keeps `CD - Docker Hub Publish` readable with clean ASCII workflow names and labels.
+- Runs tag Docker build verification when Docker Hub publishing is intentionally skipped because secrets are missing.
+- Updates Docker image metadata to match the current stack: Spring Boot backend and Next.js 16 frontend.
+- Prevents a release tag from showing a fully green workflow while both publish and build verification jobs are skipped.
+
+### Verification
+
+- Backend `.\gradlew.bat test`
+- Frontend `npm run lint`
+- Frontend `npm test -- --runInBand`: 61/61
+- Frontend `npm run build`
+- Frontend `npm run test:e2e`: 16/16
+- Frontend `npm run test:visual`: 4/4
+- Frontend `npm audit --omit=dev --audit-level=high`: 0 vulnerabilities
+- GitHub Actions CI/CD checked on `master` and release tag.
+
+## v1.0.1-ci-hardening - 2026-04-30
+
+### Summary
+
+This patch fixed the GitHub Actions issues discovered after publishing `v1.0.0`.
+
+### Fixes
+
+- Fixed Docker smoke on a fresh MySQL volume by ensuring Flyway migrations run before demo seed/bootstrap data.
+- Stabilized mobile visual regression on Linux runners with a CI-specific tolerance.
+- Made the salary-sort visual test deterministic by loading the sorted URL directly.
 
 ### Verification
 
@@ -20,102 +45,60 @@ Patch release này sửa các lỗi phát hiện sau khi publish `v1.0.0` trên 
 - Frontend `npm run test:e2e`: 16/16
 - Frontend `npm run test:visual`: 4/4
 - Frontend `npm audit --omit=dev --audit-level=high`: 0 vulnerabilities
-- Root `npm run smoke:local -- --browser=true`: 11/11
+- Root `npm run smoke:local -- --browser=true`: 11/11 in CI smoke.
 
 ## v1.0.0-production-mvp - 2026-04-30
 
-### Tổng quan
+### Summary
 
-Release này đưa Jobhunter lên trạng thái production MVP: public job board hoàn chỉnh, candidate apply thật hơn, recruiter pipeline có audit, admin workspace vận hành được, bảo mật production được siết lại và có bộ kiểm thử E2E/visual/smoke ổn định.
+This release brings Jobhunter to a production MVP state: a complete public job board, candidate CV apply flows, recruiter pipeline with audit notes, admin workspace, production security hardening, and stable E2E/visual/smoke coverage.
 
-### Điểm nổi bật
+### Highlights
 
-- Refactor UI theo hướng job board chuyên nghiệp: đỏ-trắng cân bằng, search-first, job card dày thông tin, quick detail, content hub và About.
-- Job detail có layout 2 cột, apply panel sticky, upload/URL CV, trạng thái apply trùng và link về candidate workspace.
-- Candidate workspace có saved jobs theo account, application history, CV library, default CV và audit timeline.
-- Recruiter pipeline có filter, status update, note và resume status audit.
-- Admin/recruiter management có filter/pagination UI, mobile management E2E và destructive confirm rõ hơn.
-- Subscriber có unsubscribe token, reactivation flow và email preference.
-- Forgot/reset password dùng token một lần, dev token chỉ dùng khi cấu hình cho phép.
-- Next.js đã lên `16.2.4`, production audit hết high vulnerabilities.
+- Refactored the UI into a professional IT recruitment job board: search-first home, dense job cards, quick detail, content hub, and About section.
+- Added a two-column job detail layout with sticky apply panel, CV upload/URL support, duplicate-apply state, and candidate workspace link.
+- Added account-scoped saved jobs, application history, CV library, default CV, and resume status audit timeline for candidates.
+- Added recruiter pipeline filtering, status updates, notes, and resume status audit history.
+- Improved admin and recruiter management with filter/pagination UI, mobile E2E coverage, and clearer destructive confirmation.
+- Added subscriber unsubscribe tokens, reactivation flow, and email preference foundations.
+- Added forgot/reset password tokens, with dev-only token display controlled by configuration.
+- Updated Next.js to `16.2.4` and cleared high production audit findings.
 
 ### Backend
 
-- Thêm production startup guard cho profile `prod`.
-- Thêm unsafe-method header guard: `X-Jobhunter-Client: web`.
-- Thêm rate limit in-memory cho login, forgot/reset và AI chat.
-- Thêm upload validation cho CV/document: extension, content type, magic header cơ bản và max size.
-- Thêm resume status audit và endpoint đọc timeline theo scope quyền.
-- Thêm candidate CV library APIs.
-- Thêm subscriber unsubscribe token và endpoint unsubscribe.
-- Mở rộng test cho security hardening, password reset, resume audit, saved jobs, subscriber và candidate CV.
+- Added production startup guard for `prod` profile.
+- Added unsafe-method header guard: `X-Jobhunter-Client: web`.
+- Added in-memory MVP rate limiting for login, forgot/reset password, and AI chat.
+- Added CV/document upload validation for extension, content type, magic header, and max size.
+- Added resume status audit storage and scoped audit timeline endpoint.
+- Added candidate CV library APIs.
+- Added subscriber unsubscribe token and endpoint.
+- Expanded tests for security hardening, password reset, resume audit, saved jobs, subscriber flows, and candidate CV library.
 
 ### Frontend
 
-- API client tự thêm unsafe-method header.
-- Rich text sanitizer chuyển sang allowlist.
-- Home tách thành các component/hook chính, có About section chuyên nghiệp hơn.
-- Job board có sort thật: latest, salary desc, deadline asc.
-- Candidate apply load CV library và lưu CV upload vào backend.
-- Candidate workspace hiển thị CV library và audit trạng thái hồ sơ.
-- E2E bao phủ desktop/mobile cho public, candidate, recruiter và admin.
+- API client automatically sends the unsafe-method guard header.
+- Rich text rendering uses an allowlist sanitizer.
+- Home page was split into clearer sections and hooks, including a stronger About section.
+- Job board supports real sorting: latest, salary descending, and deadline ascending.
+- Candidate apply flow loads CV library and can save uploaded CVs to the backend.
+- Candidate workspace displays CV library and resume audit status history.
+- E2E covers public, candidate, recruiter, and admin journeys across desktop and mobile.
 
-### Tài liệu
+### Documentation
 
-- README root được viết lại sạch hơn.
-- Thêm `docs/ABOUT.md`.
-- Thêm `docs/RELEASE_NOTES.md`.
-- Thêm `docs/PRODUCTION_RUNBOOK.md`.
-- Thêm `docs/E2E_QA.md`.
-- Frontend README được cập nhật theo module, API convention và quality gates.
+- Rewrote the root README for production MVP positioning.
+- Added `docs/ABOUT.md`.
+- Added `docs/RELEASE_NOTES.md`.
+- Added `docs/PRODUCTION_RUNBOOK.md`.
+- Added `docs/E2E_QA.md`.
+- Updated `frontend/README.md` with modules, API conventions, and quality gates.
 
-### Migration
+### Migrations
 
-Các migration mới:
+New migrations:
 
 - `V3__resume_audits_and_password_reset.sql`
 - `V4__subscriber_unsubscribe_and_candidate_cvs.sql`
 
-Nếu đã có database production thật, không sửa migration cũ đã chạy. Tạo migration mới hoặc repair có kiểm soát theo runbook.
-
-### Env mới hoặc đáng chú ý
-
-- `JOBHUNTER_PROD_GUARD_ENABLED`
-- `JOBHUNTER_UNSAFE_METHOD_HEADER_ENABLED`
-- `JOBHUNTER_RATE_LIMIT_ENABLED`
-- `JOBHUNTER_RATE_LIMIT_*`
-- `JOBHUNTER_PUBLIC_API_URL`
-- `PASSWORD_RESET_TTL_MINUTES`
-- `PASSWORD_RESET_DEV_TOKEN_ENABLED`
-
-### Verification
-
-Đã pass ngày 2026-04-30:
-
-- Backend `.\gradlew.bat test`
-- Frontend `npm run lint`
-- Frontend `npm test -- --runInBand`
-- Frontend `npm run build`
-- Frontend `npm run test:e2e`: 16/16
-- Frontend `npm run test:visual`: 4/4
-- Frontend `npm audit --omit=dev --audit-level=high`: 0 vulnerabilities
-- Root `npm run smoke:local -- --browser=true`: 11/11
-- Browser Use QA localhost: home, About, job cards, job detail, console error 0
-
-### Known limitations
-
-- Rate limit in-memory phù hợp MVP single-node. Khi scale nhiều instance nên chuyển sang Redis.
-- Email gửi thật cần SMTP hợp lệ.
-- Management API server-side pagination sâu hơn nên tiếp tục mở rộng nếu dữ liệu lớn.
-- Audit destructive action cho job/company/skill/user có thể làm thêm ở release sau.
-
-## Release checklist
-
-1. Cập nhật release notes.
-2. Chạy đủ quality gates.
-3. Chạy smoke local có browser DOM check.
-4. Kiểm tra env production và guard.
-5. Build Docker image.
-6. Deploy.
-7. Kiểm tra health, public home, job detail, login, candidate apply, recruiter pipeline, admin users.
-8. Ghi nhận rollback point.
+For a real production database, do not edit migrations that have already run. Add a new migration or use a controlled Flyway repair process from the production runbook.
