@@ -1,10 +1,10 @@
-# E2E và QA Guide
+# E2E And QA Guide
 
-## Mục tiêu
+## Goal
 
-Bộ E2E/QA của Jobhunter kiểm tra các hành trình người dùng quan trọng nhất trước mỗi release: guest tìm việc, candidate ứng tuyển, recruiter xử lý pipeline, admin vận hành dữ liệu và responsive mobile.
+Jobhunter E2E and QA coverage checks the most important user journeys before release: guest job discovery, candidate application, recruiter pipeline management, admin operations, and responsive mobile behavior.
 
-## Lệnh chạy
+## Commands
 
 Frontend unit/integration:
 
@@ -29,39 +29,39 @@ cd frontend
 npm run test:visual
 ```
 
-Smoke local từ root repo:
+Smoke from the repository root:
 
 ```powershell
 npm run smoke:local -- --browser=true
 ```
 
-## E2E coverage hiện tại
+## Current E2E Coverage
 
 Public job discovery:
 
-- Guest mở home.
-- Sort/filter job board.
-- Mở job detail.
-- Kiểm tra mobile không horizontal overflow.
+- Guest opens home.
+- Guest sorts and filters the job board.
+- Guest opens job detail.
+- Mobile job board has no horizontal overflow.
 
-Auth và candidate:
+Auth and candidate:
 
-- Visitor register và được chuyển về login.
-- Visitor request và submit password reset ở dev mode.
-- Candidate login.
-- Candidate apply bằng CV URL.
-- Candidate thấy application history.
-- Candidate thấy CV library.
-- Candidate đặt CV mặc định.
-- Candidate xóa CV và UI promote CV mặc định còn lại.
+- Visitor registers and lands on login.
+- Visitor requests and submits password reset in dev mode.
+- Candidate logs in.
+- Candidate applies with CV URL.
+- Candidate sees application history.
+- Candidate sees CV library.
+- Candidate sets a default CV.
+- Candidate deletes CVs and the UI promotes the remaining default.
 
 Recruiter/admin:
 
-- Recruiter mở resume pipeline.
-- Recruiter filter hồ sơ.
-- Recruiter đổi status kèm audit note.
-- Admin mở users management.
-- Desktop và mobile đều được chạy, không còn skip mobile management.
+- Recruiter opens the resume pipeline.
+- Recruiter filters resumes.
+- Recruiter updates status with an audit note.
+- Admin opens users management.
+- Desktop and mobile are both covered; mobile management is no longer skipped.
 
 Visual:
 
@@ -77,43 +77,43 @@ Smoke browser:
 - Skills API.
 - Job detail API.
 - Frontend job detail route.
-- DOM job board có cards, sort và About.
-- DOM job detail có heading.
-- Mobile DOM không overflow ngang.
-- Auth/support routes load được.
+- DOM job board has cards, sort, and About.
+- DOM job detail has heading.
+- Mobile DOM has no horizontal overflow.
+- Auth/support routes load.
 
-## Dữ liệu mock
+## Mock Data
 
-E2E dùng mock API tại:
+E2E mock API data lives at:
 
 ```text
 frontend/e2e-tests/fixtures/jobhunter-e2e.ts
 ```
 
-Visual dùng fixture riêng để snapshot ổn định, không phụ thuộc DB local.
+Visual tests use their own fixture data to keep snapshots stable and independent from a local database.
 
-## Browser QA thủ công
+## Manual Browser QA
 
-Sau khi app đang chạy ở `http://localhost:3010`, kiểm tra nhanh:
+After the app is running at `http://localhost:3010`, verify:
 
-1. Home có job cards, sort control và About.
-2. Sort lương cao cập nhật URL `?sort=salary_desc`.
-3. Job detail `/jobs/1` load heading và apply panel.
-4. `/candidate` hiển thị CV library khi login candidate.
-5. `/?tab=manage&module=resumes` hiển thị pipeline khi login recruiter/admin.
-6. Console không có error.
+1. Home has job cards, sort control, and About.
+2. Salary-desc sort updates the URL to `?sort=salary_desc`.
+3. Job detail `/jobs/1` loads the heading and apply panel.
+4. `/candidate` shows CV library for a logged-in candidate.
+5. `/?tab=manage&module=resumes` shows the pipeline for recruiter/admin users.
+6. Browser console has no unexpected errors.
 
-## Khi E2E fail
+## When E2E Fails
 
-- Nếu fail do selector, kiểm tra lại accessible name hoặc `data-testid`.
-- Nếu fail do route/API mock, cập nhật fixture thay vì chạm backend thật.
-- Nếu fail mobile overflow, kiểm tra width cố định, grid min-width và text wrap.
-- Nếu visual fail có chủ đích, chạy `npm run test:visual:update` sau khi review screenshot.
-- Nếu smoke fail frontend port, truyền rõ `--frontend-url`.
+- If selectors fail, check accessible names or stable `data-testid` attributes.
+- If route/API mock data fails, update fixtures before touching the real backend.
+- If mobile overflow fails, check fixed widths, grid min-width, and text wrapping.
+- If visual changes are intentional, review screenshots and then run `npm run test:visual:update`.
+- If smoke fails because of frontend port, pass an explicit `--frontend-url`.
 
-## Gate release tối thiểu
+## Minimum Release Gate
 
-Trước khi phát hành, yêu cầu pass:
+Before release, pass:
 
 - `.\gradlew.bat test`
 - `npm run lint`

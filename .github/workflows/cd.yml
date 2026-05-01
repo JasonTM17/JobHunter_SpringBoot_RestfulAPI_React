@@ -1,4 +1,4 @@
-name: CD — Docker Hub Publish
+name: CD - Docker Hub Publish
 
 on:
   push:
@@ -7,16 +7,10 @@ on:
       - 'v*.*.*'
 
 env:
-  JAVA_VERSION: '21'
-  NODE_VERSION: '22'
   BACKEND_IMAGE: jobhunter-backend
   FRONTEND_IMAGE: jobhunter-frontend
 
 jobs:
-  # ─────────────────────────────────────────────────────
-  # Gate: avoid failing the whole workflow when Hub secrets are missing
-  # (GitHub forbids using secrets in job-level `if`, so we probe in bash.)
-  # ─────────────────────────────────────────────────────
   docker-hub-check:
     name: Check Docker Hub credentials
     runs-on: ubuntu-latest
@@ -27,7 +21,7 @@ jobs:
     outputs:
       should_publish: ${{ steps.gate.outputs.should_publish }}
     steps:
-      - name: Evaluate secrets
+      - name: Evaluate Docker Hub secrets
         id: gate
         env:
           DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -37,12 +31,9 @@ jobs:
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Docker Hub publish skipped::Add secrets DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD (recommended: Docker Hub access token) under Settings - Secrets and variables - Actions to enable CD push."
+            echo "::notice title=Docker Hub publish skipped::Add DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD in repository Actions secrets to enable image publishing."
           fi
 
-  # ─────────────────────────────────────────────────────
-  # Publish Docker images to Docker Hub
-  # ─────────────────────────────────────────────────────
   publish:
     name: Publish to Docker Hub
     runs-on: ubuntu-latest
@@ -79,7 +70,7 @@ jobs:
             latest=true
           labels: |
             org.opencontainers.image.title=Jobhunter Backend API
-            org.opencontainers.image.description=Jobhunter REST API backend — Spring Boot 3.x với JWT authentication, role-based access control, và đầy đủ CRUD cho jobs, companies, skills, resumes, users, permissions.
+            org.opencontainers.image.description=Jobhunter REST API backend - Spring Boot, JWT authentication, RBAC, Flyway, MySQL, and production MVP workflows.
             org.opencontainers.image.source=https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React
             org.opencontainers.image.licenses=MIT
             org.opencontainers.image.vendor=Jobhunter
@@ -97,12 +88,11 @@ jobs:
             latest=true
           labels: |
             org.opencontainers.image.title=Jobhunter Frontend Web
-            org.opencontainers.image.description=Jobhunter frontend — Next.js 15 với TypeScript, TailwindCSS, role-based routing, job search, AI chatbot assistant, và responsive ITviec-style UI.
+            org.opencontainers.image.description=Jobhunter frontend - Next.js 16, TypeScript, responsive IT recruitment UI, E2E coverage, and visual regression.
             org.opencontainers.image.source=https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React
             org.opencontainers.image.licenses=MIT
             org.opencontainers.image.vendor=Jobhunter
 
-      # ── Backend image ──────────────────────────────────
       - name: Build and push backend
         uses: docker/build-push-action@v6
         with:
@@ -115,7 +105,6 @@ jobs:
           provenance: true
           sbom: true
 
-      # ── Frontend image ──────────────────────────────────
       - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
@@ -138,14 +127,14 @@ jobs:
           echo "Frontend image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FRONTEND_IMAGE }}"
           echo "Tags: ${{ steps.meta-frontend.outputs.tags }}"
 
-  # ─────────────────────────────────────────────────────
-  # Build verification only (no push) on tag push
-  # ─────────────────────────────────────────────────────
   verify-tag-build:
-    name: Verify build on tag push
+    name: Verify tag Docker build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    needs: publish
+    needs: docker-hub-check
+    if: >-
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags/v') &&
+      needs.docker-hub-check.outputs.should_publish != 'true'
 
     steps:
       - name: Checkout
@@ -177,8 +166,8 @@ jobs:
 
       - name: Summary
         run: |
-          echo "## Release summary" >> $GITHUB_STEP_SUMMARY
-          echo "Tag: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "Backend image: ${{ secrets.DOCKERHUB_USERNAME }}/jobhunter-backend:${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "Frontend image: ${{ secrets.DOCKERHUB_USERNAME }}/jobhunter-frontend:${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "Docker Hub: https://hub.docker.com/u/${{ secrets.DOCKERHUB_USERNAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "## Release Docker verification" >> "$GITHUB_STEP_SUMMARY"
+          echo "Tag: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Docker Hub publish: skipped because credentials are not configured" >> "$GITHUB_STEP_SUMMARY"
+          echo "Backend image: jobhunter-backend:verify" >> "$GITHUB_STEP_SUMMARY"
+          echo "Frontend image: jobhunter-frontend:verify" >> "$GITHUB_STEP_SUMMARY"
