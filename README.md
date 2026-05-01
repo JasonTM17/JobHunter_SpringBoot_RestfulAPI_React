@@ -69,6 +69,7 @@ Screenshots below are generated from the local production build with the QA scan
 - [Production Runbook](docs/PRODUCTION_RUNBOOK.md)
 - [Local Production Operations](docs/LOCAL_PRODUCTION_OPERATIONS.md)
 - [E2E and QA Guide](docs/E2E_QA.md)
+- [Final Acceptance](docs/FINAL_ACCEPTANCE.md)
 - [Visual Assets and Product Screenshots](docs/VISUAL_ASSETS.md)
 - [Frontend Guide](frontend/README.md)
 - [Backend Guide](backend/README.md)
