@@ -12,9 +12,18 @@ This patch makes the CD workflow safer after Docker Hub secrets were configured 
 - Skips Docker Hub publication with a clear warning when credentials are missing write scope.
 - Keeps tag release Docker build verification green when publishing is intentionally skipped.
 
-### Required Action For Real Docker Hub Publish
+### Docker Hub Publish Status
 
-Create a Docker Hub access token with Read & Write permission and update the `DOCKERHUB_PASSWORD` GitHub Actions secret. Then rerun the release CD workflow.
+Docker Hub secrets are configured and image publication has been verified on the rerun of the `v1.0.3` release workflow.
+
+Published images:
+
+- `nguyenson1710/jobhunter-backend:1.0.3`
+- `nguyenson1710/jobhunter-frontend:1.0.3`
+- `nguyenson1710/jobhunter-backend:latest`
+- `nguyenson1710/jobhunter-frontend:latest`
+
+If a future token is rotated, it must keep Docker Hub Read & Write permission for both image repositories.
 
 ## v1.0.2-cd-verification - 2026-05-01
 
