@@ -14,6 +14,13 @@
     "smoke:local": "node scripts/smoke-local.mjs",
     "docker:build": "docker compose build backend frontend",
     "docker:build-images": "powershell -ExecutionPolicy Bypass -File scripts/docker-build-images.ps1",
-    "docker:push-images": "powershell -ExecutionPolicy Bypass -File scripts/docker-push-images.ps1"
+    "docker:push-images": "powershell -ExecutionPolicy Bypass -File scripts/docker-push-images.ps1",
+    "prod:local": "docker compose -f docker-compose.yml -f docker-compose.observability.yml -f docker-compose.backup.yml up -d --build",
+    "prod:logs": "docker compose -f docker-compose.yml -f docker-compose.observability.yml -f docker-compose.backup.yml logs -f",
+    "prod:down": "docker compose -f docker-compose.yml -f docker-compose.observability.yml -f docker-compose.backup.yml down",
+    "staging:up": "docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d --build",
+    "staging:down": "docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml down",
+    "mysql:backup": "powershell -ExecutionPolicy Bypass -File scripts/mysql-backup-now.ps1",
+    "mysql:restore": "powershell -ExecutionPolicy Bypass -File scripts/mysql-restore.ps1"
   }
 }

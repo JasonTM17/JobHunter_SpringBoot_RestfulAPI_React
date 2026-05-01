@@ -1,5 +1,5 @@
 param(
-    # Để trống = build local: jobhunter-backend:tag và jobhunter-frontend:tag
+    # Leave empty to build local images: jobhunter-backend:tag and jobhunter-frontend:tag.
     [string]$DockerhubUsername = "",
 
     [string]$ImageTag = "latest",
@@ -19,6 +19,18 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $backendContext = Join-Path $repoRoot "backend"
 $frontendContext = Join-Path $repoRoot "frontend"
 
+function Invoke-Docker {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$Arguments
+    )
+
+    docker @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "docker $($Arguments -join ' ') failed with exit code $LASTEXITCODE"
+    }
+}
+
 if ([string]::IsNullOrWhiteSpace($DockerhubUsername)) {
     $backendImage = "jobhunter-backend:$ImageTag"
     $frontendImage = "jobhunter-frontend:$ImageTag"
@@ -34,13 +46,13 @@ if ($NoCache) {
 }
 
 Write-Host "Building backend image: $backendImage"
-docker build @commonBuildArgs `
+Invoke-Docker build @commonBuildArgs `
     -f (Join-Path $backendContext "Dockerfile") `
     -t $backendImage `
     $backendContext
 
 Write-Host "Building frontend image: $frontendImage"
-docker build @commonBuildArgs `
+Invoke-Docker build @commonBuildArgs `
     -f (Join-Path $frontendContext "Dockerfile") `
     --build-arg "NEXT_PUBLIC_API_BASE_URL=$NextPublicApiBaseUrl" `
     --build-arg "NEXT_PUBLIC_STORAGE_BASE_URL=$NextPublicStorageBaseUrl" `
@@ -60,10 +72,10 @@ if ($AlsoTagLatest -and $ImageTag -ne "latest") {
     }
 
     Write-Host "Tagging backend image: $backendImage -> $backendLatest"
-    docker tag $backendImage $backendLatest
+    Invoke-Docker tag $backendImage $backendLatest
 
     Write-Host "Tagging frontend image: $frontendImage -> $frontendLatest"
-    docker tag $frontendImage $frontendLatest
+    Invoke-Docker tag $frontendImage $frontendLatest
 }
 
 Write-Host "Build completed."

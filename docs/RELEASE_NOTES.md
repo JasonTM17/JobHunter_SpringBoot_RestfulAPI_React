@@ -1,5 +1,40 @@
 # Release Notes
 
+## v1.0.4-local-production-ops - 2026-05-01
+
+### Summary
+
+This release upgrades Jobhunter from a green production MVP into a portfolio-grade local production system. It adds staging, monitoring, alerts, log aggregation, OpenTelemetry collection, frontend client error reporting, and scheduled MySQL backup/restore without requiring a public domain.
+
+### Operations
+
+- Added `docker-compose.observability.yml` with Prometheus, Blackbox Exporter, Alertmanager, a local alert webhook, Loki, Promtail, OpenTelemetry Collector, and Grafana.
+- Added backend health and frontend uptime alert rules, plus JVM memory and 5xx-rate alerts.
+- Added a provisioned Grafana dashboard for health, JVM memory, HTTP request rate, and local alert log visibility.
+- Added `docker-compose.backup.yml` with a scheduled MySQL backup sidecar and restore profile.
+- Added one-command backup/restore scripts for Windows local operation.
+- Added `docker-compose.staging.yml` and `.env.staging.example` for a separate staging environment before local production.
+
+### Telemetry
+
+- Added backend OpenTelemetry export support through Micrometer tracing and OTLP exporter.
+- Added frontend `ClientErrorReporter` and `/api/client-errors` endpoint for structured client error logs.
+- Wired Docker Compose environment variables for local production and staging trace/resource metadata.
+
+### Documentation
+
+- Added `docs/LOCAL_PRODUCTION_OPERATIONS.md`.
+- Updated README, About, Production Runbook, Backend guide, Frontend guide, E2E QA guide, and environment examples.
+
+### Docker Hub
+
+Release images:
+
+- `nguyenson1710/jobhunter-backend:1.0.4`
+- `nguyenson1710/jobhunter-frontend:1.0.4`
+- `nguyenson1710/jobhunter-backend:latest`
+- `nguyenson1710/jobhunter-frontend:latest`
+
 ## v1.0.3-dockerhub-preflight - 2026-05-01
 
 ### Summary

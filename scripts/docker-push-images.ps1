@@ -7,25 +7,48 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Invoke-Docker {
+    param(
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]$Arguments
+    )
+
+    docker @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "docker $($Arguments -join ' ') failed with exit code $LASTEXITCODE"
+    }
+}
+
 if ($ImageTags.Count -eq 0) {
     throw "ImageTags cannot be empty."
 }
 
-foreach ($tag in $ImageTags) {
+$normalizedImageTags = @(
+    $ImageTags |
+        ForEach-Object { $_ -split "," } |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+)
+
+if ($normalizedImageTags.Count -eq 0) {
+    throw "ImageTags cannot be empty."
+}
+
+foreach ($tag in $normalizedImageTags) {
     $backendImage = "$DockerhubUsername/jobhunter-backend:$tag"
     $frontendImage = "$DockerhubUsername/jobhunter-frontend:$tag"
 
     Write-Host "Checking local image: $backendImage"
-    docker image inspect $backendImage | Out-Null
+    Invoke-Docker image inspect $backendImage | Out-Null
 
     Write-Host "Checking local image: $frontendImage"
-    docker image inspect $frontendImage | Out-Null
+    Invoke-Docker image inspect $frontendImage | Out-Null
 
     Write-Host "Pushing backend image: $backendImage"
-    docker push $backendImage
+    Invoke-Docker push $backendImage
 
     Write-Host "Pushing frontend image: $frontendImage"
-    docker push $frontendImage
+    Invoke-Docker push $frontendImage
 }
 
 Write-Host "Push completed."

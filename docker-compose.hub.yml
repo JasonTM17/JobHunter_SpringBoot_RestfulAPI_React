@@ -37,27 +37,27 @@ services:
       - path: ./.env
         required: false
     environment:
-      # Spring profile — dev,docker enables Flyway + seed + verbose logging.
+      # Spring profile - dev,docker enables Flyway + seed + verbose logging.
       # Override in .env to 'prod' for production (requires JWT_BASE64_SECRET + CORS_ALLOWED_ORIGINS).
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev,docker}
       SERVER_PORT: 8080
 
-      # Database — use compose service name for internal connectivity.
+      # Database - use compose service name for internal connectivity.
       DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-jobhunter}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&allowPublicKeyRetrieval=true&useSSL=false
       DB_USERNAME: ${MYSQL_USER:-jobhunter}
       DB_PASSWORD: ${MYSQL_PASSWORD:-jobhunter}
 
-      # Flyway — enabled for MySQL; Hibernate ddl-auto=none lets Flyway own schema.
+      # Flyway - enabled for MySQL; Hibernate ddl-auto=none lets Flyway own schema.
       FLYWAY_ENABLED: ${FLYWAY_ENABLED:-true}
       SON_JPA_DDL_AUTO: ${SON_JPA_DDL_AUTO:-none}
 
-      # Admin bootstrap — MUST be set in .env for production.
+      # Admin bootstrap - MUST be set in .env for production.
       JOBHUNTER_BOOTSTRAP_ADMIN_EMAIL: ${JOBHUNTER_BOOTSTRAP_ADMIN_EMAIL}
       JOBHUNTER_BOOTSTRAP_ADMIN_PASSWORD: ${JOBHUNTER_BOOTSTRAP_ADMIN_PASSWORD}
       JOBHUNTER_BOOTSTRAP_ADMIN_NAME: ${JOBHUNTER_BOOTSTRAP_ADMIN_NAME:-Super Admin}
       JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED: ${JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED:-true}
 
-      # JWT + CORS — for local Docker, defaults allow http://localhost:3001. Override in .env for production.
+      # JWT + CORS - for local Docker, defaults allow http://localhost:3001. Override in .env for production.
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001}
       JWT_BASE64_SECRET: ${JWT_BASE64_SECRET:?JWT_BASE64_SECRET must be set in .env}
       JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-900}
@@ -65,7 +65,7 @@ services:
       JWT_COOKIE_SECURE: ${JWT_COOKIE_SECURE:-false}
       JWT_COOKIE_SAME_SITE: ${JWT_COOKIE_SAME_SITE:-Lax}
 
-      # Seed — disabled in production unless explicitly enabled.
+      # Seed - disabled in production unless explicitly enabled.
       JOBHUNTER_SEED_ENABLED: ${JOBHUNTER_SEED_ENABLED:-false}
 
       # Upload / storage.
@@ -76,10 +76,10 @@ services:
 
       # Mail.
       MAIL_ENABLED: ${MAIL_ENABLED:-false}
-      MAIL_TEMPLATE_PORTAL_URL: ${MAIL_TEMPLATE_PORTAL_URL:-https://your-domain.com}
+      MAIL_TEMPLATE_PORTAL_URL: ${MAIL_TEMPLATE_PORTAL_URL:-http://localhost:3001}
       MANAGEMENT_HEALTH_MAIL_ENABLED: ${MANAGEMENT_HEALTH_MAIL_ENABLED:-false}
 
-      # Scheduler — disabled by default in production.
+      # Scheduler - disabled by default in production.
       JOBHUNTER_SCHEDULER_ENABLED: ${JOBHUNTER_SCHEDULER_ENABLED:-false}
       JOBHUNTER_MAIL_CRON_ENABLED: ${JOBHUNTER_MAIL_CRON_ENABLED:-false}
       JOBHUNTER_WEEKLY_RECOMMENDATION_ENABLED: ${JOBHUNTER_WEEKLY_RECOMMENDATION_ENABLED:-false}
@@ -89,6 +89,13 @@ services:
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:-health,info,prometheus,metrics}
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: ${MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS:-never}
       MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: ${MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED:-true}
+      MANAGEMENT_TRACING_ENABLED: ${MANAGEMENT_TRACING_ENABLED:-false}
+      MANAGEMENT_TRACING_SAMPLING_PROBABILITY: ${MANAGEMENT_TRACING_SAMPLING_PROBABILITY:-0.10}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-jobhunter-backend}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-http://otel-collector:4318/v1/traces}
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:-http://otel-collector:4318/v1/metrics}
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_RESOURCE_ATTRIBUTES:-deployment.environment=local-production,service.namespace=jobhunter}
     depends_on:
       db:
         condition: service_healthy
@@ -119,6 +126,9 @@ services:
       NEXT_PUBLIC_STORAGE_BASE_URL: ${NEXT_PUBLIC_STORAGE_BASE_URL:-http://localhost:8080}
       INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8080}
       INTERNAL_STORAGE_BASE_URL: ${INTERNAL_STORAGE_BASE_URL:-http://backend:8080}
+      NEXT_PUBLIC_CLIENT_ERROR_REPORTING_ENABLED: ${NEXT_PUBLIC_CLIENT_ERROR_REPORTING_ENABLED:-true}
+      OTEL_SERVICE_NAME: ${OTEL_FRONTEND_SERVICE_NAME:-jobhunter-frontend}
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_FRONTEND_RESOURCE_ATTRIBUTES:-deployment.environment=local-production,service.namespace=jobhunter}
       NODE_ENV: production
     depends_on:
       backend:

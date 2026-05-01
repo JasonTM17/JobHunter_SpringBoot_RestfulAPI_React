@@ -1,0 +1,56 @@
+services:
+  db:
+    container_name: jobhunter-staging-db
+    ports:
+      - "${DB_PORT:-3317}:3306"
+    volumes:
+      - jobhunter-staging-db-data:/var/lib/mysql
+
+  backend:
+    container_name: jobhunter-staging-backend
+    image: ${BACKEND_IMAGE:-jobhunter-backend:staging}
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-staging,docker}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3101,http://127.0.0.1:3101}
+      MAIL_TEMPLATE_PORTAL_URL: ${MAIL_TEMPLATE_PORTAL_URL:-http://localhost:3101}
+      JOBHUNTER_PUBLIC_API_URL: ${JOBHUNTER_PUBLIC_API_URL:-http://localhost:8180}
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:-health,info,prometheus,metrics}
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: ${MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS:-always}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-jobhunter-backend-staging}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_RESOURCE_ATTRIBUTES:-deployment.environment=staging,service.namespace=jobhunter}
+    ports:
+      - "${BACKEND_PORT:-8180}:8080"
+    volumes:
+      - jobhunter-staging-backend-storage:/app/storage
+      - jobhunter-staging-backend-logs:/app/logs
+
+  frontend:
+    container_name: jobhunter-staging-frontend
+    image: ${FRONTEND_IMAGE:-jobhunter-frontend:staging}
+    build:
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8180}
+        NEXT_PUBLIC_STORAGE_BASE_URL: ${NEXT_PUBLIC_STORAGE_BASE_URL:-http://localhost:8180}
+        INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8080}
+        INTERNAL_STORAGE_BASE_URL: ${INTERNAL_STORAGE_BASE_URL:-http://backend:8080}
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8180}
+      NEXT_PUBLIC_STORAGE_BASE_URL: ${NEXT_PUBLIC_STORAGE_BASE_URL:-http://localhost:8180}
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend:8080}
+      INTERNAL_STORAGE_BASE_URL: ${INTERNAL_STORAGE_BASE_URL:-http://backend:8080}
+      NEXT_PUBLIC_APP_ENV: staging
+      OTEL_SERVICE_NAME: ${OTEL_FRONTEND_SERVICE_NAME:-jobhunter-frontend-staging}
+      OTEL_RESOURCE_ATTRIBUTES: ${OTEL_FRONTEND_RESOURCE_ATTRIBUTES:-deployment.environment=staging,service.namespace=jobhunter}
+    ports:
+      - "${FRONTEND_PORT:-3101}:3000"
+
+networks:
+  jobhunter-net:
+    name: jobhunter-staging-net
+
+volumes:
+  jobhunter-staging-db-data:
+  jobhunter-staging-backend-storage:
+  jobhunter-staging-backend-logs:
+

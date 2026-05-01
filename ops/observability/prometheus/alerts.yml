@@ -1,0 +1,46 @@
+groups:
+  - name: jobhunter-availability
+    rules:
+      - alert: JobhunterBackendHealthDown
+        expr: probe_success{instance="http://backend:8080/actuator/health"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Jobhunter backend health endpoint is down"
+          description: "Blackbox probe cannot reach http://backend:8080/actuator/health for more than 1 minute."
+
+      - alert: JobhunterFrontendDown
+        expr: probe_success{instance="http://frontend:3000/"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          service: frontend
+        annotations:
+          summary: "Jobhunter frontend is not responding"
+          description: "Blackbox probe cannot reach the local production frontend for more than 2 minutes."
+
+      - alert: JobhunterBackendHigh5xxRate
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) > 0
+        for: 2m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "Jobhunter backend is returning 5xx responses"
+          description: "At least one backend 5xx response was observed in the last 5 minutes."
+
+  - name: jobhunter-runtime
+    rules:
+      - alert: JobhunterBackendJvmMemoryHigh
+        expr: |
+          sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "Jobhunter backend heap usage is high"
+          description: "Backend JVM heap usage has been above 85% for 5 minutes."
+
