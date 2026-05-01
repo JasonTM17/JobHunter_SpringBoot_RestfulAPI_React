@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="frontend/public/logo-full.svg" alt="Jobhunter" width="280" />
+</p>
+
 # Jobhunter
 
 [![CI](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/ci.yml)
@@ -7,6 +11,8 @@
 Production-ready IT recruitment platform built with Spring Boot, Next.js, MySQL, Docker, RBAC, CI/CD, E2E testing, visual regression, and local production observability.
 
 Jobhunter is designed as a polished portfolio project: it demonstrates product thinking, full-stack delivery, production hardening, release discipline, and practical operations without requiring a public domain.
+
+The visual identity uses a custom Jobhunter logo mark and generated demo-company brand images owned by this repository, so the UI no longer depends on third-party brand assets for the portfolio demo.
 
 ## Product Scope
 
@@ -40,6 +46,22 @@ Local production operations
   -> MySQL backup sidecar
 ```
 
+## Product Screenshots
+
+Screenshots below are generated from the local production build with the QA scanner, not static mockups.
+
+| Public job board | Job detail and apply panel |
+| --- | --- |
+| ![Jobhunter public home with IT job board, search, employers, and content hub](docs/assets/screenshots/jobhunter-home.jpg) | ![Jobhunter job detail page with salary, job description, company snapshot, and apply panel](docs/assets/screenshots/jobhunter-job-detail.jpg) |
+
+| Candidate workspace | Recruiter pipeline |
+| --- | --- |
+| ![Jobhunter candidate workspace with saved jobs, CV library, and application history](docs/assets/screenshots/jobhunter-candidate-workspace.jpg) | ![Jobhunter recruiter resume pipeline with filters, status workflow, and audit timeline](docs/assets/screenshots/jobhunter-recruiter-pipeline.jpg) |
+
+| Admin users | AI assistant and mobile |
+| --- | --- |
+| ![Jobhunter admin users management screen](docs/assets/screenshots/jobhunter-admin-users.jpg) | ![Jobhunter AI assistant page](docs/assets/screenshots/jobhunter-chatbot.jpg) |
+
 ## Documentation
 
 - [Product About](docs/ABOUT.md)
@@ -47,6 +69,7 @@ Local production operations
 - [Production Runbook](docs/PRODUCTION_RUNBOOK.md)
 - [Local Production Operations](docs/LOCAL_PRODUCTION_OPERATIONS.md)
 - [E2E and QA Guide](docs/E2E_QA.md)
+- [Visual Assets and Product Screenshots](docs/VISUAL_ASSETS.md)
 - [Frontend Guide](frontend/README.md)
 - [Backend Guide](backend/README.md)
 
@@ -170,11 +193,18 @@ Smoke after backend/frontend are running:
 npm run smoke:local -- --browser=true
 ```
 
+Deep local production QA with security header checks, API health, unsafe-method guard, chatbot, desktop/mobile routes, authenticated workspaces, and screenshot capture:
+
+```powershell
+npm run qa:local -- --frontend-url=http://localhost:3001 --api-base-url=http://localhost:8080/api/v1 --screenshots
+```
+
 Latest verified gate set for `v1.0.5`:
 
 - Backend tests pass.
 - Frontend lint, Jest, production build, E2E, visual regression, and production audit pass.
 - Local production smoke passes 11/11.
+- Local production QA scanner passes 3/3 with screenshots generated under `docs/assets/screenshots`.
 - Staging health smoke passes.
 - GitHub Actions CI/CD are green.
 - Docker Hub and GitHub Packages publish versioned backend/frontend images.
