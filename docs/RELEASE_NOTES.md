@@ -1,5 +1,29 @@
 # Release Notes
 
+## Unreleased
+
+### Summary
+
+This update tightens local production QA and improves the repository documentation with real product screenshots captured from the running Docker stack.
+
+### Fixes
+
+- Added missing RBAC seed permissions for account-scoped saved jobs, candidate CV library, and resume audit timeline.
+- Granted recruiter accounts saved-job permissions so management pages can share the same account shell without 403 noise.
+- Added `X-Jobhunter-Client` to CORS allowed headers for unsafe-method protected API calls.
+- Fixed rendered storage URLs so browser-visible images use `NEXT_PUBLIC_STORAGE_BASE_URL` instead of Docker-internal hostnames.
+- Added stable floating chatbot `data-testid` contracts and updated QA to avoid matching employer names that contain `AI`.
+- Replaced missing/default employer images with generated repository-owned demo-company brand assets.
+- Redesigned the Jobhunter logo mark and full logo for header, footer, favicon, and auth surfaces.
+
+### QA And Documentation
+
+- Added `npm run qa:local` for local production security/runtime QA.
+- QA now checks security headers, backend health, jobs API, AI status, unsafe-method guard, public routes, chatbot, mobile overflow, authenticated workspaces, console errors, and unexpected HTTP errors.
+- Added real screenshots under `docs/assets/screenshots` and embedded them in README/About documentation.
+- Added `scripts/generate-demo-company-logos.py` so demo company images can be regenerated consistently.
+- Added `docs/VISUAL_ASSETS.md` to document brand assets, generated company images, and screenshot refresh workflow.
+
 ## v1.0.5-github-packages-and-docs - 2026-05-01
 
 ### Summary

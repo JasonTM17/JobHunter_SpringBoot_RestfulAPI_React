@@ -35,6 +35,14 @@ Smoke from the repository root:
 npm run smoke:local -- --browser=true
 ```
 
+Local production QA scanner from the repository root:
+
+```powershell
+npm run qa:local -- --frontend-url=http://localhost:3001 --api-base-url=http://localhost:8080/api/v1 --screenshots
+```
+
+The QA scanner verifies frontend security headers, backend health, public API health, unsafe-method header rejection, public routes, floating chatbot behavior, mobile overflow, authenticated candidate/recruiter/admin workspaces, unexpected console errors, unexpected HTTP 4xx/5xx responses, and screenshot capture to `docs/assets/screenshots`.
+
 ## Current E2E Coverage
 
 Public job discovery:
@@ -82,6 +90,15 @@ Smoke browser:
 - Mobile DOM has no horizontal overflow.
 - Auth/support routes load.
 
+Local production QA scanner:
+
+- Security headers are present on the Next.js frontend.
+- Backend `/actuator/health`, public jobs, AI status, and unsafe-method guard respond as expected.
+- Public routes load with no mojibake, no horizontal overflow, no unexpected console errors, and no unexpected HTTP errors.
+- Floating chatbot opens from the home page and exposes the message textarea through stable `data-testid` selectors.
+- Candidate, recruiter, and admin authenticated workspaces render successfully.
+- Product screenshots are regenerated from the real local production stack.
+
 ## Mock Data
 
 E2E mock API data lives at:
@@ -94,7 +111,7 @@ Visual tests use their own fixture data to keep snapshots stable and independent
 
 ## Manual Browser QA
 
-After the app is running at `http://localhost:3010`, verify:
+After the app is running at `http://localhost:3010` in dev or `http://localhost:3001` in local production, verify:
 
 1. Home has job cards, sort control, and About.
 2. Salary-desc sort updates the URL to `?sort=salary_desc`.
@@ -123,6 +140,7 @@ Before release, pass:
 - `npm run test:visual`
 - `npm audit --omit=dev --audit-level=high`
 - `npm run smoke:local -- --browser=true`
+- `npm run qa:local -- --frontend-url=http://localhost:3001 --api-base-url=http://localhost:8080/api/v1 --screenshots`
 
 ## Operations QA
 
