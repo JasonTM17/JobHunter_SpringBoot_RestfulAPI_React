@@ -187,7 +187,7 @@ public class GlobalException {
         return buildErrorResponse(
                 HttpStatus.TOO_MANY_REQUESTS,
                 "RATE_LIMITED",
-                sanitizeClientMessage(ex.getMessage(), "QuÃ¡ nhiá»u yÃªu cáº§u. Vui lÃ²ng thá»­ láº¡i sau Ã­t phÃºt.")
+                sanitizeClientMessage(ex.getMessage(), "Quá nhiều yêu cầu. Vui lòng thử lại sau ít phút.")
         );
     }
 

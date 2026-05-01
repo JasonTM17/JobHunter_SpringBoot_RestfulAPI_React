@@ -89,6 +89,17 @@ public class DatabaseInitializer implements CommandLineRunner {
             arr.add(new Permission("Delete a resume", "/api/v1/resumes/{id}", "DELETE", "RESUMES"));
             arr.add(new Permission("Get a resume by id", "/api/v1/resumes/{id}", "GET", "RESUMES"));
             arr.add(new Permission("Get resumes with pagination", "/api/v1/resumes", "GET", "RESUMES"));
+            arr.add(new Permission("Get resumes by current user", "/api/v1/resumes/by-user", "POST", "RESUMES"));
+            arr.add(new Permission("Get resume audits", "/api/v1/resumes/{id}/audits", "GET", "RESUMES"));
+
+            arr.add(new Permission("Get saved jobs", "/api/v1/saved-jobs", "GET", "SAVED_JOBS"));
+            arr.add(new Permission("Save a job", "/api/v1/saved-jobs/{jobId}", "POST", "SAVED_JOBS"));
+            arr.add(new Permission("Remove a saved job", "/api/v1/saved-jobs/{jobId}", "DELETE", "SAVED_JOBS"));
+
+            arr.add(new Permission("Get candidate CV library", "/api/v1/candidate/cvs", "GET", "CANDIDATE_CVS"));
+            arr.add(new Permission("Create candidate CV", "/api/v1/candidate/cvs", "POST", "CANDIDATE_CVS"));
+            arr.add(new Permission("Set default candidate CV", "/api/v1/candidate/cvs/{id}/default", "PATCH", "CANDIDATE_CVS"));
+            arr.add(new Permission("Delete candidate CV", "/api/v1/candidate/cvs/{id}", "DELETE", "CANDIDATE_CVS"));
 
             arr.add(new Permission("Create a role", "/api/v1/roles", "POST", "ROLES"));
             arr.add(new Permission("Update a role", "/api/v1/roles", "PUT", "ROLES"));
@@ -124,6 +135,7 @@ public class DatabaseInitializer implements CommandLineRunner {
         ensureFilePermissionsAreCorrect();
         ensureUserPermissionsAreCorrect();
         ensureSkillPermissionsAreCorrect();
+        ensureCandidateWorkspacePermissionsAreCorrect();
         ensureEmailPermissionsAreCorrect();
         ensureSuperAdminBootstrap();
         this.recruitmentDemoDataSeeder.seedDemoData();
@@ -320,6 +332,66 @@ public class DatabaseInitializer implements CommandLineRunner {
                 "/api/v1/resumes/{id}/status",
                 "PATCH",
                 "RESUMES"
+        );
+    }
+
+    private void ensureCandidateWorkspacePermissionsAreCorrect() {
+        List<Permission> permissions = this.permissionRepository.findAll();
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Get resume audits",
+                "/api/v1/resumes/{id}/audits",
+                "GET",
+                "RESUMES"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Get saved jobs",
+                "/api/v1/saved-jobs",
+                "GET",
+                "SAVED_JOBS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Save a job",
+                "/api/v1/saved-jobs/{jobId}",
+                "POST",
+                "SAVED_JOBS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Remove a saved job",
+                "/api/v1/saved-jobs/{jobId}",
+                "DELETE",
+                "SAVED_JOBS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Get candidate CV library",
+                "/api/v1/candidate/cvs",
+                "GET",
+                "CANDIDATE_CVS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Create candidate CV",
+                "/api/v1/candidate/cvs",
+                "POST",
+                "CANDIDATE_CVS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Set default candidate CV",
+                "/api/v1/candidate/cvs/{id}/default",
+                "PATCH",
+                "CANDIDATE_CVS"
+        );
+        ensurePermissionByNameAndContract(
+                permissions,
+                "Delete candidate CV",
+                "/api/v1/candidate/cvs/{id}",
+                "DELETE",
+                "CANDIDATE_CVS"
         );
     }
 

@@ -209,6 +209,7 @@ export default function FloatingChatWidget() {
             <div className="grid grid-cols-[1fr,auto] gap-2">
               <textarea
                 className="min-h-[56px] resize-none rounded-md border border-slate-300 p-2 text-sm focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-200 disabled:cursor-not-allowed disabled:bg-slate-100"
+                data-testid="floating-chat-input"
                 disabled={inputDisabled}
                 onChange={(event) => handleInputChange(event.target.value)}
                 onKeyDown={onKeyDown}
@@ -233,6 +234,7 @@ export default function FloatingChatWidget() {
       ) : (
         <button
           className="flex h-11 w-11 items-center justify-center rounded-full bg-[#b51d1a] text-white shadow-lg shadow-rose-500/30 transition hover:scale-105 sm:h-12 sm:w-12"
+          data-testid="floating-chat-button"
           onClick={() => setOpen(true)}
           type="button"
           aria-label="Mở trợ lý AI"
