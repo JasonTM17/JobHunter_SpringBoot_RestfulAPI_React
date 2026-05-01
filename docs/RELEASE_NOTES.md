@@ -4,13 +4,14 @@
 
 ### Summary
 
-This patch makes the CD workflow safer after Docker Hub secrets were configured with a token that can log in but cannot push images. The workflow now checks Docker Hub `pull,push` scope before attempting image publication.
+This patch makes the CD workflow safer and verifies Docker Hub image publication for the production MVP. The workflow checks Docker Hub `pull,push` scope before attempting publication and has been rerun successfully after credentials were granted Read & Write permission.
 
 ### Fixes
 
 - Adds Docker Hub push-scope preflight for `jobhunter-backend` and `jobhunter-frontend`.
 - Skips Docker Hub publication with a clear warning when credentials are missing write scope.
 - Keeps tag release Docker build verification green when publishing is intentionally skipped.
+- Publishes backend and frontend release images after Docker Hub credentials are valid.
 
 ### Docker Hub Publish Status
 

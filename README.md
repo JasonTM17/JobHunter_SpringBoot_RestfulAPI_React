@@ -1,5 +1,9 @@
 # Jobhunter - Production MVP for IT Recruitment
 
+[![CI](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/ci.yml)
+[![CD](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/cd.yml/badge.svg?branch=master)](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/cd.yml)
+[![Release](https://img.shields.io/github/v/release/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React?label=release)](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/releases)
+
 Jobhunter is a full-stack IT recruitment platform for candidates, recruiters, and administrators. It is built with Spring Boot, Next.js, MySQL, Flyway, Docker, RBAC, E2E tests, visual regression, and production-oriented hardening.
 
 ## Core Documentation
@@ -13,6 +17,10 @@ Jobhunter is a full-stack IT recruitment platform for candidates, recruiters, an
 
 ## Current Product State
 
+- Current release: `v1.0.3`
+- CI status: green on `master`
+- CD status: green on `master` and release tags
+- Docker Hub publish: verified for backend and frontend images
 - Public job board with search, filters, sorting, quick detail, job detail, top employers, content hub, subscriber flow, and About section.
 - Candidate workspace with account-scoped saved jobs, CV URL/upload apply flow, CV library, application history, and resume status audit timeline.
 - Recruiter workspace with company-scoped resume pipeline, status filters, status update notes, and audit history.
@@ -94,6 +102,26 @@ Important environment variables:
 - `JOBHUNTER_UNSAFE_METHOD_HEADER_ENABLED`
 - `JOBHUNTER_RATE_LIMIT_ENABLED`
 
+## Published Docker Images
+
+Release images are published to Docker Hub:
+
+```text
+nguyenson1710/jobhunter-backend:1.0.3
+nguyenson1710/jobhunter-frontend:1.0.3
+nguyenson1710/jobhunter-backend:latest
+nguyenson1710/jobhunter-frontend:latest
+```
+
+Quick pull:
+
+```powershell
+docker pull nguyenson1710/jobhunter-backend:1.0.3
+docker pull nguyenson1710/jobhunter-frontend:1.0.3
+```
+
+Use versioned tags for controlled releases and `latest` only for local smoke or demo environments.
+
 ## Quality Gates
 
 Backend:
@@ -121,7 +149,7 @@ Smoke from the repository root after backend and frontend are running:
 npm run smoke:local -- --browser=true
 ```
 
-Latest verified gates on 2026-05-01:
+Latest verified gates on 2026-05-01 for `v1.0.3`:
 
 - Backend `.\gradlew.bat test`
 - Frontend `npm run lint`
@@ -131,7 +159,8 @@ Latest verified gates on 2026-05-01:
 - Playwright visual regression 4/4
 - Production audit 0 high vulnerabilities
 - GitHub Actions CI green on `master`
-- GitHub Actions CD green on `master` and `v1.0.1`
+- GitHub Actions CD green on `master` and `v1.0.3`
+- Docker Hub backend/frontend images published successfully
 
 ## Production Security
 
@@ -165,8 +194,9 @@ Rules:
 2. Run all quality gates.
 3. Run local smoke with browser DOM checks.
 4. Review production environment settings using [docs/PRODUCTION_RUNBOOK.md](docs/PRODUCTION_RUNBOOK.md).
-5. Create the Git tag following the project version convention.
-6. After deploy, verify `/actuator/health`, public home, job detail, login, candidate apply, recruiter pipeline, and admin workspace.
+5. Confirm Docker Hub secrets have Read & Write permission if image publishing is expected.
+6. Create the Git tag following the project version convention.
+7. After deploy, verify `/actuator/health`, public home, job detail, login, candidate apply, recruiter pipeline, admin workspace, and Docker Hub image tags.
 
 ## License
 

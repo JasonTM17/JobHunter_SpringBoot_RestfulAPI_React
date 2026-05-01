@@ -48,6 +48,8 @@ npm run smoke:local -- --browser=true
 
 ## Docker Deploy
 
+Build locally from source:
+
 ```powershell
 Copy-Item .env.example .env
 docker compose up --build -d
@@ -55,11 +57,34 @@ docker compose logs -f backend
 docker compose logs -f frontend
 ```
 
+Pull release images from Docker Hub:
+
+```powershell
+docker pull nguyenson1710/jobhunter-backend:1.0.3
+docker pull nguyenson1710/jobhunter-frontend:1.0.3
+```
+
+For a controlled deployment, pin versioned image tags such as `1.0.3`. Use `latest` only when the environment intentionally tracks the newest successful `master` build.
+
 Verify:
 
 - `GET http://localhost:8080/actuator/health`
 - `GET http://localhost:3001`
 - `GET http://localhost:3001/jobs/1`
+
+## CD And Docker Hub
+
+GitHub Actions publishes Docker images when these repository secrets are configured:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_PASSWORD`
+
+`DOCKERHUB_PASSWORD` should be a Docker Hub access token, not the account password. The token must have Read & Write permission for:
+
+- `nguyenson1710/jobhunter-backend`
+- `nguyenson1710/jobhunter-frontend`
+
+The CD workflow includes a preflight check for Docker Hub `pull,push` scope. If the token is missing or under-scoped, release tags still run Docker build verification instead of silently pretending to publish.
 
 ## Production Guard
 
@@ -108,6 +133,11 @@ Check regularly:
 2. If deployment fails, roll back to the previous image tag.
 3. If a non-backward-compatible migration has run, use the prepared backup or rollback script.
 4. Run smoke checks again after rollback.
+
+Recommended rollback image tags:
+
+- `nguyenson1710/jobhunter-backend:<previous-version>`
+- `nguyenson1710/jobhunter-frontend:<previous-version>`
 
 ## Post-deploy Smoke
 
