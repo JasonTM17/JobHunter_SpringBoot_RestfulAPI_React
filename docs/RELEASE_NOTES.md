@@ -1,5 +1,34 @@
 # Release Notes
 
+## v1.0.5-github-packages-and-docs - 2026-05-01
+
+### Summary
+
+This release polishes the GitHub repository presentation. It adds GitHub Container Registry publication so the repository has real GitHub Packages, refreshes the README/About documentation for portfolio review, and verifies that the official GitHub contributors API only reports the primary author.
+
+### Repository Presentation
+
+- Renames the CD workflow to `CD - Container Publish`.
+- Keeps Docker Hub publication with credential preflight.
+- Adds GitHub Packages publication to GHCR for backend and frontend images.
+- Documents Docker Hub and GHCR pull commands in the README and runbook.
+- Rewrites the About document into a clearer product, engineering, operations, and portfolio positioning brief.
+
+### GitHub Packages
+
+Published package targets:
+
+- `ghcr.io/jasontm17/jobhunter-backend:1.0.5`
+- `ghcr.io/jasontm17/jobhunter-frontend:1.0.5`
+- `ghcr.io/jasontm17/jobhunter-backend:latest`
+- `ghcr.io/jasontm17/jobhunter-frontend:latest`
+
+### Contributor Verification
+
+- Local `git shortlog -sne --all` reports only `Nguyen Son <jasonbmt06@gmail.com>`.
+- GitHub contributors API reports only `JasonTM17`.
+- If the GitHub sidebar still shows an older contributor immediately after the rewrite, it is a GitHub UI/cache delay rather than a remaining local or API-level contributor source.
+
 ## v1.0.4-local-production-ops - 2026-05-01
 
 ### Summary

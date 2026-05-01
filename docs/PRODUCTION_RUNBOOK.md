@@ -60,11 +60,14 @@ docker compose logs -f frontend
 Pull release images from Docker Hub:
 
 ```powershell
-docker pull nguyenson1710/jobhunter-backend:1.0.4
-docker pull nguyenson1710/jobhunter-frontend:1.0.4
+docker pull nguyenson1710/jobhunter-backend:1.0.5
+docker pull nguyenson1710/jobhunter-frontend:1.0.5
+
+docker pull ghcr.io/jasontm17/jobhunter-backend:1.0.5
+docker pull ghcr.io/jasontm17/jobhunter-frontend:1.0.5
 ```
 
-For a controlled deployment, pin versioned image tags such as `1.0.4`. Use `latest` only when the environment intentionally tracks the newest successful `master` build.
+For a controlled deployment, pin versioned image tags such as `1.0.5`. Use `latest` only when the environment intentionally tracks the newest successful `master` build.
 
 Verify:
 
@@ -74,7 +77,7 @@ Verify:
 
 ## CD And Docker Hub
 
-GitHub Actions publishes Docker images when these repository secrets are configured:
+GitHub Actions publishes Docker Hub images when these repository secrets are configured:
 
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_PASSWORD`
@@ -85,6 +88,13 @@ GitHub Actions publishes Docker images when these repository secrets are configu
 - `nguyenson1710/jobhunter-frontend`
 
 The CD workflow includes a preflight check for Docker Hub `pull,push` scope. If the token is missing or under-scoped, release tags still run Docker build verification instead of silently pretending to publish.
+
+The same CD workflow also publishes GitHub Packages to GitHub Container Registry with the repository `GITHUB_TOKEN`:
+
+- `ghcr.io/jasontm17/jobhunter-backend`
+- `ghcr.io/jasontm17/jobhunter-frontend`
+
+These GHCR packages are linked to the repository so the GitHub sidebar can show production artifacts under Packages.
 
 ## Production Guard
 

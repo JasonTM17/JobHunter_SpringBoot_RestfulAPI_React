@@ -1,4 +1,4 @@
-name: CD - Docker Hub Publish
+name: CD - Container Publish
 
 on:
   push:
@@ -9,6 +9,11 @@ on:
 env:
   BACKEND_IMAGE: jobhunter-backend
   FRONTEND_IMAGE: jobhunter-frontend
+  GHCR_NAMESPACE: jasontm17
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   docker-hub-check:
@@ -55,7 +60,7 @@ jobs:
             echo "reason=credentials valid for Docker Hub pull,push" >> "$GITHUB_OUTPUT"
           fi
 
-  publish:
+  publish-docker-hub:
     name: Publish to Docker Hub
     runs-on: ubuntu-latest
     needs: docker-hub-check
@@ -147,6 +152,96 @@ jobs:
         run: |
           echo "Frontend image: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.FRONTEND_IMAGE }}"
           echo "Tags: ${{ steps.meta-frontend.outputs.tags }}"
+
+  publish-ghcr:
+    name: Publish to GitHub Packages
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' ||
+       startsWith(github.ref, 'refs/tags/v'))
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: GHCR metadata (backend)
+        id: ghcr-meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ env.GHCR_NAMESPACE }}/${{ env.BACKEND_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix=
+          flavor: |
+            latest=true
+          labels: |
+            org.opencontainers.image.title=Jobhunter Backend API
+            org.opencontainers.image.description=Spring Boot API for the Jobhunter IT recruitment platform with JWT auth, RBAC, Flyway migrations, MySQL, Actuator metrics, and local production observability.
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.vendor=Jobhunter
+
+      - name: GHCR metadata (frontend)
+        id: ghcr-meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ env.GHCR_NAMESPACE }}/${{ env.FRONTEND_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix=
+          flavor: |
+            latest=true
+          labels: |
+            org.opencontainers.image.title=Jobhunter Frontend Web
+            org.opencontainers.image.description=Next.js frontend for the Jobhunter IT recruitment platform with responsive job search, candidate/recruiter/admin workspaces, E2E coverage, and visual regression.
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.vendor=Jobhunter
+
+      - name: Build and push backend to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.ghcr-meta-backend.outputs.tags }}
+          labels: ${{ steps.ghcr-meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      - name: Build and push frontend to GHCR
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ steps.ghcr-meta-frontend.outputs.tags }}
+          labels: ${{ steps.ghcr-meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
+
+      - name: GHCR summary
+        run: |
+          echo "## GitHub Packages" >> "$GITHUB_STEP_SUMMARY"
+          echo "Backend tags:" >> "$GITHUB_STEP_SUMMARY"
+          echo '${{ steps.ghcr-meta-backend.outputs.tags }}' >> "$GITHUB_STEP_SUMMARY"
+          echo "Frontend tags:" >> "$GITHUB_STEP_SUMMARY"
+          echo '${{ steps.ghcr-meta-frontend.outputs.tags }}' >> "$GITHUB_STEP_SUMMARY"
 
   verify-tag-build:
     name: Verify tag Docker build

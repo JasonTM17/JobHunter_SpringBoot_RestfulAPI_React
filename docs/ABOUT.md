@@ -1,58 +1,51 @@
 # About Jobhunter
 
-## Vision
+## Executive Summary
 
-Jobhunter is a production MVP for an IT recruitment platform in Vietnam. It focuses on three practical outcomes: helping candidates find and compare jobs faster, helping recruiters handle applications with more structure, and helping administrators operate recruitment data safely.
+Jobhunter is a production MVP for an IT recruitment platform. It is built to show a complete product loop: job discovery, candidate applications, recruiter review, admin operations, release automation, and local production observability.
 
-## Primary Users
+The project is intentionally portfolio-ready. It does not stop at CRUD screens; it includes role-aware workflows, production guardrails, test coverage, release artifacts, container packages, and an operations stack that can run locally without a public domain.
 
-- IT candidates: search by skill, city, level, salary, and keyword; save jobs; apply using a CV URL or uploaded CV; track application status.
-- Recruiters: manage company jobs, review the resume pipeline, filter by job/status, update application status, and leave audit notes.
-- Administrators: manage users, companies, jobs, skills, roles, permissions, and common operational error states.
+## Product Users
 
-## Product Value
+- Candidates search jobs, compare salary and skills, save opportunities, apply with CVs, manage a CV library, and track resume status.
+- Recruiters manage applications inside their company scope, filter pipelines, update statuses, and leave audit notes.
+- Administrators manage operational data across users, companies, jobs, skills, roles, and permissions.
 
-- Search-first experience: users can start job discovery immediately without a long marketing landing page.
-- Dense but scannable job data: salary, skills, company, level, location, deadline, and CTAs are visible where users need them.
-- Real application workflow: account-scoped saved jobs, CV library, application history, and status tracking.
-- Scoped operations: recruiters operate inside their company scope, candidates only see their own data, and admins have broader oversight.
-- Verified quality: backend tests, frontend type checks, Jest, desktop/mobile E2E, visual regression, smoke checks, production audit, and local production observability.
+## Product Capabilities
 
-## MVP Scope
+- Search-first public job board with city, skill, level, salary, sort, pagination, job detail, top employers, content hub, subscriber flow, and About section.
+- Candidate workspace with account-scoped saved jobs, CV URL/upload application, CV library, application history, and status timeline.
+- Recruiter workspace with resume pipeline, filters, status updates, audit notes, and company-scoped permissions.
+- Admin workspace with operational management screens, pagination/filter patterns, destructive-action confirmation, and clear error states.
+- Auth and account flows with login, register, forgot/reset password, HttpOnly cookie auth, RBAC, and email preferences.
 
-Included:
+## Engineering Maturity
 
-- Public home, job board, and job detail.
-- Login, registration, forgot password, and reset password.
-- Candidate saved jobs, CV apply, CV library, and application history.
-- Recruiter resume pipeline and status audit notes.
-- Admin workspace for core operational data.
-- Subscriber/newsletter flow, email preferences, and unsubscribe token foundation.
-- MVP security hardening: production guard, unsafe-method header, rate limit, upload validation, and rich-text sanitizer.
+- Backend: Spring Boot 4, Java 21, Spring Security, JPA, Flyway, MySQL 8.4, Actuator, Prometheus metrics, Micrometer tracing.
+- Frontend: Next.js 16, React 19, TypeScript, TailwindCSS, Jest, Testing Library, Playwright E2E, visual regression.
+- Security: production startup guard, unsafe-method client header, in-memory MVP rate limiting, allowlist rich-text sanitizer, upload validation, scoped resume access, and conflict-safe delete behavior.
+- Delivery: GitHub Actions CI/CD, GitHub Releases, Docker Hub images, GitHub Container Registry packages, smoke tests, audit checks, and versioned release notes.
 
-Not enterprise-complete yet:
+## Operations Maturity
 
-- Rate limiting is in-memory and single-node; Redis should be used for multi-instance deployments.
-- Observability is local-first: Prometheus, Loki, Grafana, Alertmanager, and OpenTelemetry run through Docker Compose without a public domain.
-- Email recommendations depend on runtime SMTP configuration.
-- Management server-side pagination can be expanded further for very large datasets.
-- Destructive-action audit can be extended to every admin operation in a later phase.
+- Local production stack: Prometheus, Blackbox Exporter, Alertmanager, local alert webhook, Loki, Promtail, Grafana, OpenTelemetry Collector.
+- Staging stack: separate Docker Compose override, ports, network, and volumes for release-candidate checks before local production.
+- Data protection: scheduled MySQL backups, manual backup script, restore script, Git-ignored backup folder, and restore rehearsal guidance.
+- Observability: backend health/metrics/traces, frontend client error reporting, structured JSON error logs, dashboard provisioning, and local alert log output.
 
-## Design Principles
+## Portfolio Positioning
 
-- Prioritize fast scanning, dense information, and low-friction workflows.
-- Keep Jobhunter's red-white brand balanced with slate, white, and emerald so the UI does not feel overly red.
-- Main workflows must remain usable at 390px mobile, 768px tablet, and 1366px desktop.
-- Do not copy proprietary logos, assets, or copy from reference sites.
+Jobhunter is suitable for:
 
-## Current Release Positioning
+- Full-stack portfolio review.
+- Internship or job interview demonstration.
+- Local product demo without a public domain.
+- Foundation for a real recruitment product after external email, object storage, Redis rate limiting, and hosted observability are added.
 
-The current `v1.0.4` release is suitable for a production MVP demo, local or Docker execution, portfolio presentation, internship/project review, and further development into a more complete IT recruitment platform.
+## Known Boundaries
 
-## Operational Maturity
-
-- CI validates backend tests, frontend type checks, Jest, build, E2E, visual regression, and smoke checks.
-- CD publishes versioned Docker images for backend and frontend when Docker Hub credentials are valid.
-- Release tags are documented and traceable through GitHub Releases.
-- Docker Hub images are available for controlled demos and repeatable deployments.
-- Local production operations include staging, uptime alerts, log aggregation, OpenTelemetry collection, frontend client error capture, and scheduled MySQL backup/restore.
+- In-memory rate limiting is appropriate for a single-node MVP; use Redis before multi-instance deployment.
+- Local observability is intentionally self-hosted through Docker Compose; a hosted deployment should use managed log/trace/alert storage.
+- Email flows depend on runtime SMTP configuration.
+- More destructive admin operations can be expanded into a broader audit ledger later.
