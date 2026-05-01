@@ -46,4 +46,11 @@ Not enterprise-complete yet:
 
 ## Current Release Positioning
 
-The current release is suitable for a production MVP demo, local or Docker execution, portfolio presentation, internship/project review, and further development into a more complete IT recruitment platform.
+The current `v1.0.3` release is suitable for a production MVP demo, local or Docker execution, portfolio presentation, internship/project review, and further development into a more complete IT recruitment platform.
+
+## Operational Maturity
+
+- CI validates backend tests, frontend type checks, Jest, build, E2E, visual regression, and smoke checks.
+- CD publishes versioned Docker images for backend and frontend when Docker Hub credentials are valid.
+- Release tags are documented and traceable through GitHub Releases.
+- Docker Hub images are available for controlled demos and repeatable deployments.
