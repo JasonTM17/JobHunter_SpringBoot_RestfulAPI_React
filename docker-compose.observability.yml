@@ -1,0 +1,149 @@
+services:
+  prometheus:
+    image: prom/prometheus:v3.0.1
+    container_name: jobhunter-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}
+      - --web.enable-lifecycle
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./ops/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./ops/observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - jobhunter-prometheus-data:/prometheus
+    depends_on:
+      backend:
+        condition: service_healthy
+      blackbox:
+        condition: service_started
+      alertmanager:
+        condition: service_started
+    networks:
+      - jobhunter-net
+
+  blackbox:
+    image: prom/blackbox-exporter:v0.25.0
+    container_name: jobhunter-blackbox
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/blackbox_exporter/config.yml
+    volumes:
+      - ./ops/observability/blackbox/config.yml:/etc/blackbox_exporter/config.yml:ro
+    networks:
+      - jobhunter-net
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: jobhunter-alertmanager
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ./ops/observability/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - jobhunter-alertmanager-data:/alertmanager
+    networks:
+      - jobhunter-net
+
+  alert-webhook:
+    image: python:3.13-alpine
+    container_name: jobhunter-alert-webhook
+    restart: unless-stopped
+    command: ["python", "-u", "/app/server.py"]
+    environment:
+      ALERT_LOG_FILE: /alerts/alerts.log
+    ports:
+      - "${ALERT_WEBHOOK_PORT:-9094}:8080"
+    volumes:
+      - ./ops/alert-webhook/server.py:/app/server.py:ro
+      - ./logs/alerts:/alerts
+    networks:
+      - jobhunter-net
+
+  loki:
+    image: grafana/loki:3.2.1
+    container_name: jobhunter-loki
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/loki/config.yml
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./ops/observability/loki/config.yml:/etc/loki/config.yml:ro
+      - jobhunter-loki-data:/loki
+    networks:
+      - jobhunter-net
+
+  promtail:
+    image: grafana/promtail:3.2.1
+    container_name: jobhunter-promtail
+    restart: unless-stopped
+    command:
+      - -config.file=/etc/promtail/config.yml
+    volumes:
+      - ./ops/observability/promtail/config.yml:/etc/promtail/config.yml:ro
+      - jobhunter-backend-logs:/var/log/jobhunter/backend:ro
+      - ./logs/alerts:/var/log/jobhunter/alerts:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - jobhunter-promtail-data:/tmp
+    depends_on:
+      loki:
+        condition: service_started
+    networks:
+      - jobhunter-net
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.116.1
+    container_name: jobhunter-otel-collector
+    restart: unless-stopped
+    command:
+      - --config=/etc/otelcol-contrib/config.yml
+    ports:
+      - "${OTEL_COLLECTOR_GRPC_PORT:-4317}:4317"
+      - "${OTEL_COLLECTOR_HTTP_PORT:-4318}:4318"
+      - "${OTEL_COLLECTOR_HEALTH_PORT:-13133}:13133"
+    volumes:
+      - ./ops/observability/otel-collector/config.yml:/etc/otelcol-contrib/config.yml:ro
+    depends_on:
+      prometheus:
+        condition: service_started
+      loki:
+        condition: service_started
+    networks:
+      - jobhunter-net
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: jobhunter-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-jobhunter}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "${GRAFANA_PORT:-3002}:3000"
+    volumes:
+      - jobhunter-grafana-data:/var/lib/grafana
+      - ./ops/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./ops/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      prometheus:
+        condition: service_started
+      loki:
+        condition: service_started
+    networks:
+      - jobhunter-net
+
+volumes:
+  jobhunter-prometheus-data:
+  jobhunter-alertmanager-data:
+  jobhunter-loki-data:
+  jobhunter-promtail-data:
+  jobhunter-grafana-data:
+

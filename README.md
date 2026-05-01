@@ -11,13 +11,14 @@ Jobhunter is a full-stack IT recruitment platform for candidates, recruiters, an
 - [Product About](docs/ABOUT.md)
 - [Release Notes](docs/RELEASE_NOTES.md)
 - [Production Runbook](docs/PRODUCTION_RUNBOOK.md)
+- [Local Production Operations](docs/LOCAL_PRODUCTION_OPERATIONS.md)
 - [E2E and QA Guide](docs/E2E_QA.md)
 - [Frontend Guide](frontend/README.md)
 - [Backend Guide](backend/README.md)
 
 ## Current Product State
 
-- Current release: `v1.0.3`
+- Current release: `v1.0.4`
 - CI status: green on `master`
 - CD status: green on `master` and release tags
 - Docker Hub publish: verified for backend and frontend images
@@ -27,6 +28,7 @@ Jobhunter is a full-stack IT recruitment platform for candidates, recruiters, an
 - Admin workspace for users, companies, jobs, skills, roles, and permissions.
 - Auth flows for login, registration, forgot/reset password, HttpOnly cookie auth, RBAC, and email preferences.
 - MVP hardening: production startup guard, unsafe-method client header, in-memory rate limits, allowlist rich-text sanitizer, upload validation, smoke tests, E2E, and visual regression.
+- Local production operations: staging environment, uptime checks, Prometheus alerts, Loki log aggregation, Grafana dashboard, OpenTelemetry collector, frontend client error reporting, and scheduled MySQL backup/restore.
 
 ## Architecture
 
@@ -44,6 +46,10 @@ Spring Boot 4 + Java 21 + Spring Security + JPA
   | Flyway migrations
   v
 MySQL 8.4
+  |
+  | Operations
+  v
+Prometheus + Alertmanager + Loki + Grafana + OpenTelemetry
 ```
 
 Docker Compose provides a local stack with frontend, backend, MySQL, and optional Redis. The backend exposes Actuator health/metrics and Swagger UI when explicitly enabled.
@@ -107,8 +113,8 @@ Important environment variables:
 Release images are published to Docker Hub:
 
 ```text
-nguyenson1710/jobhunter-backend:1.0.3
-nguyenson1710/jobhunter-frontend:1.0.3
+nguyenson1710/jobhunter-backend:1.0.4
+nguyenson1710/jobhunter-frontend:1.0.4
 nguyenson1710/jobhunter-backend:latest
 nguyenson1710/jobhunter-frontend:latest
 ```
@@ -116,8 +122,8 @@ nguyenson1710/jobhunter-frontend:latest
 Quick pull:
 
 ```powershell
-docker pull nguyenson1710/jobhunter-backend:1.0.3
-docker pull nguyenson1710/jobhunter-frontend:1.0.3
+docker pull nguyenson1710/jobhunter-backend:1.0.4
+docker pull nguyenson1710/jobhunter-frontend:1.0.4
 ```
 
 Use versioned tags for controlled releases and `latest` only for local smoke or demo environments.
@@ -149,7 +155,7 @@ Smoke from the repository root after backend and frontend are running:
 npm run smoke:local -- --browser=true
 ```
 
-Latest verified gates on 2026-05-01 for `v1.0.3`:
+Latest verified gates on 2026-05-01 for `v1.0.4`:
 
 - Backend `.\gradlew.bat test`
 - Frontend `npm run lint`
@@ -161,6 +167,39 @@ Latest verified gates on 2026-05-01 for `v1.0.3`:
 - GitHub Actions CI green on `master`
 - GitHub Actions CD green on `master` and `v1.0.3`
 - Docker Hub backend/frontend images published successfully
+
+## Local Production Operations
+
+Run the portfolio-grade local production stack:
+
+```powershell
+npm run prod:local
+```
+
+This starts the app with monitoring, alerts, log aggregation, OpenTelemetry collection, Grafana dashboards, and scheduled MySQL backups.
+
+Key local operations URLs:
+
+- Grafana: `http://localhost:3002`
+- Prometheus: `http://localhost:9090`
+- Alertmanager: `http://localhost:9093`
+- Backend health: `http://localhost:8080/actuator/health`
+
+Run staging before production:
+
+```powershell
+Copy-Item .env.staging.example .env.staging
+npm run staging:up
+```
+
+Backup and restore:
+
+```powershell
+npm run mysql:backup
+npm run mysql:restore -- -BackupFile .\backups\mysql\<backup-file>.sql.gz
+```
+
+Full guide: [docs/LOCAL_PRODUCTION_OPERATIONS.md](docs/LOCAL_PRODUCTION_OPERATIONS.md).
 
 ## Production Security
 

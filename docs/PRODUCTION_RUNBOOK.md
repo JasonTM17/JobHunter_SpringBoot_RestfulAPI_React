@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This runbook prepares, deploys, and verifies Jobhunter as a production MVP. The default target is a single-node Docker deployment. Multi-instance deployments should add shared Redis/session/rate-limit storage and stronger observability.
+This runbook prepares, deploys, and verifies Jobhunter as a production MVP. The default target is a single-node Docker deployment. Multi-instance deployments should add shared Redis/session/rate-limit storage. Local production observability is documented in [Local Production Operations](LOCAL_PRODUCTION_OPERATIONS.md).
 
 ## Pre-flight Checklist
 
@@ -60,11 +60,11 @@ docker compose logs -f frontend
 Pull release images from Docker Hub:
 
 ```powershell
-docker pull nguyenson1710/jobhunter-backend:1.0.3
-docker pull nguyenson1710/jobhunter-frontend:1.0.3
+docker pull nguyenson1710/jobhunter-backend:1.0.4
+docker pull nguyenson1710/jobhunter-frontend:1.0.4
 ```
 
-For a controlled deployment, pin versioned image tags such as `1.0.3`. Use `latest` only when the environment intentionally tracks the newest successful `master` build.
+For a controlled deployment, pin versioned image tags such as `1.0.4`. Use `latest` only when the environment intentionally tracks the newest successful `master` build.
 
 Verify:
 
@@ -117,15 +117,53 @@ The frontend adds this automatically. When using Postman or another client, add 
 
 ## Minimum Monitoring
 
+The local production Compose stack now provides uptime checks, alerts, Loki logs, Grafana dashboards, and OpenTelemetry collection:
+
+```powershell
+npm run prod:local
+```
+
 Check regularly:
 
-- `/actuator/health`
-- Backend logs
-- Frontend server logs
-- Rates of 401/403/429/500 responses
-- CV upload failures
-- Email/reset password failures
-- Upload storage usage
+- `http://localhost:8080/actuator/health`
+- `http://localhost:9090` for Prometheus targets and rules
+- `http://localhost:9093` for Alertmanager state
+- `http://localhost:3002` for Grafana dashboard and Loki log search
+- `logs/alerts/alerts.log` for local alert webhook output
+- Rates of 401/403/429/500 responses, CV upload failures, email/reset failures, and upload storage usage
+
+## Backup And Restore
+
+Scheduled MySQL backup is available through the Compose backup sidecar and writes to `backups/mysql`.
+
+Run on demand:
+
+```powershell
+npm run mysql:backup
+```
+
+Restore:
+
+```powershell
+npm run mysql:restore -- -BackupFile .\backups\mysql\<backup-file>.sql.gz
+```
+
+Always test restores in staging first.
+
+## Staging
+
+Create and run staging before local production changes:
+
+```powershell
+Copy-Item .env.staging.example .env.staging
+npm run staging:up
+```
+
+Staging uses separate ports and volumes:
+
+- Frontend: `http://localhost:3101`
+- Backend: `http://localhost:8180`
+- MySQL host port: `3317`
 
 ## Rollback
 
@@ -155,6 +193,6 @@ Verify manually or with browser automation:
 
 - Move rate limiting to Redis.
 - Move uploads to object storage.
-- Add centralized logs, traces, and metrics.
+- Move centralized logs, traces, and metrics from the local Compose stack to a managed production provider if the app is deployed publicly.
 - Add migration dry-run checks in CI/CD.
 - Expand destructive-action audit coverage across admin operations.

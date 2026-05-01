@@ -58,6 +58,7 @@ Additional scripts:
 - Guest saved jobs fall back to `localStorage`.
 - Authenticated saved jobs and candidate CV library are synchronized with the backend account.
 - Backend rich text is sanitized with an allowlist before rendering.
+- Frontend runtime errors are captured by `ClientErrorReporter`, posted to `/api/client-errors`, logged as structured JSON, and collected by Loki in the local production stack.
 
 ## Quality Gates
 

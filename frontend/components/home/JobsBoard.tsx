@@ -27,6 +27,7 @@ interface JobsBoardProps {
   jobs: Job[];
   totalItems: number;
   sortMode: string;
+  filtersReady?: boolean;
   selectedJobId: number | null;
   selectedJob: Job | null;
   currentPage: number;
@@ -66,6 +67,7 @@ export default function JobsBoard({
   jobs,
   totalItems,
   sortMode,
+  filtersReady = true,
   selectedJobId,
   selectedJob,
   currentPage,
@@ -134,8 +136,9 @@ export default function JobsBoard({
                 id="jobs-sort-select"
                 data-testid="jobs-sort-select"
                 value={sortMode}
+                disabled={!filtersReady}
                 onChange={(event) => onSortModeChange(event.target.value)}
-                className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm outline-none transition focus:border-[#b51d1a] focus:ring-2 focus:ring-rose-100"
+                className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm outline-none transition disabled:cursor-not-allowed disabled:opacity-60 focus:border-[#b51d1a] focus:ring-2 focus:ring-rose-100"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>

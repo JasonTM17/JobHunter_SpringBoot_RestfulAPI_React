@@ -16,7 +16,7 @@ Jobhunter is a production MVP for an IT recruitment platform in Vietnam. It focu
 - Dense but scannable job data: salary, skills, company, level, location, deadline, and CTAs are visible where users need them.
 - Real application workflow: account-scoped saved jobs, CV library, application history, and status tracking.
 - Scoped operations: recruiters operate inside their company scope, candidates only see their own data, and admins have broader oversight.
-- Verified quality: backend tests, frontend type checks, Jest, desktop/mobile E2E, visual regression, smoke checks, and production audit.
+- Verified quality: backend tests, frontend type checks, Jest, desktop/mobile E2E, visual regression, smoke checks, production audit, and local production observability.
 
 ## MVP Scope
 
@@ -33,6 +33,7 @@ Included:
 Not enterprise-complete yet:
 
 - Rate limiting is in-memory and single-node; Redis should be used for multi-instance deployments.
+- Observability is local-first: Prometheus, Loki, Grafana, Alertmanager, and OpenTelemetry run through Docker Compose without a public domain.
 - Email recommendations depend on runtime SMTP configuration.
 - Management server-side pagination can be expanded further for very large datasets.
 - Destructive-action audit can be extended to every admin operation in a later phase.
@@ -46,7 +47,7 @@ Not enterprise-complete yet:
 
 ## Current Release Positioning
 
-The current `v1.0.3` release is suitable for a production MVP demo, local or Docker execution, portfolio presentation, internship/project review, and further development into a more complete IT recruitment platform.
+The current `v1.0.4` release is suitable for a production MVP demo, local or Docker execution, portfolio presentation, internship/project review, and further development into a more complete IT recruitment platform.
 
 ## Operational Maturity
 
@@ -54,3 +55,4 @@ The current `v1.0.3` release is suitable for a production MVP demo, local or Doc
 - CD publishes versioned Docker images for backend and frontend when Docker Hub credentials are valid.
 - Release tags are documented and traceable through GitHub Releases.
 - Docker Hub images are available for controlled demos and repeatable deployments.
+- Local production operations include staging, uptime alerts, log aggregation, OpenTelemetry collection, frontend client error capture, and scheduled MySQL backup/restore.

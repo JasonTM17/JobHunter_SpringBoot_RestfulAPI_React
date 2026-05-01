@@ -3,6 +3,7 @@ import Head from "next/head";
 import ErrorBoundary from "../components/common/ErrorBoundary";
 import AppHeader from "../components/layout/AppHeader";
 import SiteFooter from "../components/layout/SiteFooter";
+import ClientErrorReporter from "../components/observability/ClientErrorReporter";
 import { AuthProvider } from "../contexts/auth-context";
 import "../styles/globals.css";
 
@@ -14,6 +15,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <title>Jobhunter</title>
       </Head>
+      <ClientErrorReporter />
       <div className="min-h-screen flex flex-col">
         <AppHeader />
         <div className="flex-1">

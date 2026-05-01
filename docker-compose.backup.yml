@@ -1,0 +1,52 @@
+services:
+  mysql-backup:
+    image: mysql:8.4
+    container_name: jobhunter-mysql-backup
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jobhunter}
+      MYSQL_USER: ${MYSQL_USER:-jobhunter}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jobhunter}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_BACKUP_INTERVAL_SECONDS: ${MYSQL_BACKUP_INTERVAL_SECONDS:-86400}
+      MYSQL_BACKUP_RETENTION_DAYS: ${MYSQL_BACKUP_RETENTION_DAYS:-14}
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    command: ["sh", "/scripts/backup-mysql.sh", "--loop"]
+    volumes:
+      - ./ops/backup:/scripts:ro
+      - ./backups/mysql:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - jobhunter-net
+
+  mysql-restore:
+    image: mysql:8.4
+    profiles: ["restore"]
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jobhunter}
+      MYSQL_USER: ${MYSQL_USER:-jobhunter}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jobhunter}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      TZ: ${TZ:-Asia/Ho_Chi_Minh}
+    entrypoint: ["sh", "/scripts/restore-mysql.sh"]
+    volumes:
+      - ./ops/backup:/scripts:ro
+      - ./backups/mysql:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - jobhunter-net
+

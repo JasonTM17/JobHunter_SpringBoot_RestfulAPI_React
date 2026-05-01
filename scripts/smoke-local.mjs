@@ -186,7 +186,8 @@ if (browserSmokeEnabled) {
       await page.goto(`${frontendUrl}/`, { waitUntil: "domcontentloaded", timeout: TIMEOUT_MS });
       await page.waitForSelector('[data-testid="home-page"]', { timeout: TIMEOUT_MS });
       await page.waitForFunction(
-        () => !document.body.innerText.includes("Đang tải dữ liệu tuyển dụng..."),
+        () => !document.body.innerText.includes("Dang tai du lieu tuyen dung...")
+          && !document.body.innerText.includes("Đang tải dữ liệu tuyển dụng..."),
         null,
         { timeout: TIMEOUT_MS }
       );
@@ -195,10 +196,15 @@ if (browserSmokeEnabled) {
       const jobCardCount = await page.locator('[data-testid="job-card"]').count();
       assert(jobCardCount > 0, "Home rendered no job cards");
       assert(await page.locator('[data-testid="jobs-sort-select"]').count() === 1, "Sort select is missing");
+      await page.waitForSelector('[data-testid="jobs-sort-select"]:not([disabled])', { timeout: TIMEOUT_MS });
       assert(await page.locator('[data-testid="about-section"]').count() === 1, "About section is missing");
 
       await page.locator('[data-testid="jobs-sort-select"]').selectOption("salary_desc");
-      await page.waitForURL((url) => url.searchParams.get("sort") === "salary_desc", { timeout: TIMEOUT_MS });
+      await page.waitForFunction(
+        () => new URL(window.location.href).searchParams.get("sort") === "salary_desc",
+        null,
+        { timeout: TIMEOUT_MS }
+      );
 
       const horizontalOverflow = await page.locator("body").evaluate(() =>
         Math.max(0, document.documentElement.scrollWidth - document.documentElement.clientWidth)

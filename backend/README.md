@@ -174,6 +174,9 @@ Recommendation runtime tuning:
     - `JOBHUNTER_LOG_MAX_HISTORY`
     - `JOBHUNTER_LOG_TOTAL_SIZE_CAP`
     - `JOBHUNTER_LOG_CLEAN_HISTORY_ON_START`
+- `staging` profile (`application-staging.properties`):
+  - Uses INFO-level application logs and detailed health for release-candidate checks.
+  - Enables tracing by default for the local OpenTelemetry Collector.
 
 Recommended prod start:
 ```powershell
@@ -232,3 +235,24 @@ Test task already disables runtime seed and scheduler:
 - Swagger URLs in docker:
   - `http://localhost:8080/swagger-ui.html`
   - `http://localhost:8080/v3/api-docs`
+
+## Local observability
+
+The Docker operations stack adds Prometheus, Alertmanager, Loki, Grafana, and OpenTelemetry Collector:
+
+```powershell
+npm run prod:local
+```
+
+Backend tracing is controlled by:
+
+- `MANAGEMENT_TRACING_ENABLED`
+- `MANAGEMENT_TRACING_SAMPLING_PROBABILITY`
+- `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`
+- `OTEL_RESOURCE_ATTRIBUTES`
+
+The backend also exposes Prometheus metrics at:
+
+```text
+GET /actuator/prometheus
+```

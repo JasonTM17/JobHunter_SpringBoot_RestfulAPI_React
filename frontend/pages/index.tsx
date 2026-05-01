@@ -141,6 +141,16 @@ interface HomePageProps {
   initialCompanies: Company[];
   initialSkills: Skill[];
   initialError: string;
+  initialFilters: {
+    keyword: string;
+    location: string;
+    level: string;
+    skill: string;
+    salaryMin: string;
+    salaryMax: string;
+    sortMode: string;
+    currentPage: number;
+  };
 }
 
 export default function HomePage({
@@ -150,7 +160,8 @@ export default function HomePage({
   initialBrowseTotalPages,
   initialCompanies,
   initialSkills,
-  initialError
+  initialError,
+  initialFilters
 }: HomePageProps) {
   const router = useRouter();
   const {
@@ -184,15 +195,15 @@ export default function HomePage({
   const [rbacLoaded, setRbacLoaded] = useState(false);
   const [rbacError, setRbacError] = useState("");
 
-  const [keyword, setKeyword] = useState("");
-  const [location, setLocation] = useState("ALL");
-  const [level, setLevel] = useState("ALL");
-  const [skill, setSkill] = useState("ALL");
-  const [salaryMin, setSalaryMin] = useState("");
-  const [salaryMax, setSalaryMax] = useState("");
-  const [sortMode, setSortMode] = useState(DEFAULT_JOB_SORT);
-  const [filtersHydrated, setFiltersHydrated] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [keyword, setKeyword] = useState(initialFilters.keyword);
+  const [location, setLocation] = useState(initialFilters.location);
+  const [level, setLevel] = useState(initialFilters.level);
+  const [skill, setSkill] = useState(initialFilters.skill);
+  const [salaryMin, setSalaryMin] = useState(initialFilters.salaryMin);
+  const [salaryMax, setSalaryMax] = useState(initialFilters.salaryMax);
+  const [sortMode, setSortMode] = useState(initialFilters.sortMode);
+  const [filtersHydrated, setFiltersHydrated] = useState(true);
+  const [currentPage, setCurrentPage] = useState(initialFilters.currentPage);
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [savedJobIds, setSavedJobIds] = useState<number[]>([]);
   const [savingJobIds, setSavingJobIds] = useState<number[]>([]);
@@ -679,7 +690,7 @@ export default function HomePage({
   );
 
   useEffect(() => {
-    if (!router.isReady) return;
+    if (!router.isReady || filtersHydrated) return;
     setKeyword(queryValue("q"));
     setLocation(queryValue("location") || "ALL");
     setLevel(queryValue("level") || "ALL");
@@ -691,7 +702,7 @@ export default function HomePage({
     const nextPage = Number(queryValue("page") || "1");
     setCurrentPage(Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1);
     setFiltersHydrated(true);
-  }, [router.isReady]);
+  }, [router.isReady, filtersHydrated]);
 
   useEffect(() => {
     if (!router.isReady || !filtersHydrated || tab !== "browse") return;
@@ -1047,6 +1058,7 @@ export default function HomePage({
             jobs={browseJobs}
             totalItems={browseTotalItems}
             sortMode={sortMode}
+            filtersReady={filtersHydrated && authStatus !== "loading"}
             selectedJobId={selectedJobId}
             selectedJob={selectedJob}
             currentPage={currentPage}
@@ -1278,7 +1290,17 @@ export const getServerSideProps: GetServerSideProps<HomePageProps> = async ({ qu
       initialBrowseTotalPages,
       initialCompanies,
       initialSkills,
-      initialError: messages.join(" ")
+      initialError: messages.join(" "),
+      initialFilters: {
+        keyword: queryStringValue(query.q),
+        location: queryStringValue(query.location) || "ALL",
+        level: queryStringValue(query.level) || "ALL",
+        skill: queryStringValue(query.skill) || "ALL",
+        salaryMin: queryStringValue(query.salaryMin).replace(/[^\d]/g, ""),
+        salaryMax: queryStringValue(query.salaryMax).replace(/[^\d]/g, ""),
+        sortMode: requestedSort,
+        currentPage: requestedPage
+      }
     }
   };
 };

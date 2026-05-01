@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { reportClientError } from "../../lib/client-error-reporting";
 
 interface Props {
   children: ReactNode;
@@ -23,6 +24,13 @@ export default class ErrorBoundary extends Component<Props, State> {
     if (typeof console !== "undefined") {
       console.error("[ErrorBoundary]", error, errorInfo.componentStack);
     }
+    void reportClientError({
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack ?? undefined,
+      source: "error-boundary",
+    });
   }
 
   render() {
@@ -30,9 +38,9 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <main className="mx-auto flex min-h-[60vh] max-w-lg flex-col items-center justify-center px-4 py-12">
           <p className="text-6xl font-black text-slate-300">Oops</p>
-          <h1 className="mt-4 text-xl font-bold text-slate-800">Đã xảy ra lỗi không mong muốn</h1>
+          <h1 className="mt-4 text-xl font-bold text-slate-800">Something went wrong</h1>
           <p className="mt-2 text-center text-sm text-slate-600">
-            Trình duyệt gặp sự cố khi tải trang. Bạn vui lòng thử tải lại hoặc quay về trang chủ.
+            The browser hit an unexpected issue while loading this page. Try reloading or return to the home page.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <button
@@ -40,19 +48,19 @@ export default class ErrorBoundary extends Component<Props, State> {
               onClick={() => this.setState({ hasError: false })}
               className="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
-              Thử tải lại
+              Try again
             </button>
             <Link
               href="/"
               className="rounded-md bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
-              Về trang chủ
+              Go home
             </Link>
             <Link
               href="/500"
               className="rounded-md border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
             >
-              Trang lỗi hệ thống
+              System error page
             </Link>
           </div>
         </main>
@@ -62,3 +70,4 @@ export default class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+

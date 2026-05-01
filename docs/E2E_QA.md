@@ -123,3 +123,13 @@ Before release, pass:
 - `npm run test:visual`
 - `npm audit --omit=dev --audit-level=high`
 - `npm run smoke:local -- --browser=true`
+
+## Operations QA
+
+For local production operations, also verify:
+
+- `docker compose -f docker-compose.yml -f docker-compose.observability.yml -f docker-compose.backup.yml config --quiet`
+- `docker compose --env-file .env.staging.example -f docker-compose.yml -f docker-compose.staging.yml config --quiet`
+- `npm run prod:local` starts Grafana, Prometheus, Alertmanager, Loki, OpenTelemetry Collector, and MySQL backup sidecar.
+- Backend health alert fires after stopping the backend container and is written to `logs/alerts/alerts.log`.
+- `npm run mysql:backup` creates a compressed SQL dump under `backups/mysql`.
