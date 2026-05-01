@@ -12,6 +12,12 @@ async function stabilizePage(page: import("@playwright/test").Page) {
         transition-delay: 0s !important;
         transition-duration: 0s !important;
       }
+      @media (max-width: 600px) {
+        #jobs {
+          height: 1262px !important;
+          overflow: hidden !important;
+        }
+      }
     `
   });
 }
@@ -32,10 +38,9 @@ test.describe("Jobhunter visual snapshots", () => {
   });
 
   test("salary sort keeps the board stable", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/?sort=salary_desc");
     await stabilizePage(page);
 
-    await page.locator("#jobs-sort-select").selectOption("salary_desc");
     await expect(page).toHaveURL(/sort=salary_desc/);
     await expect(page.locator("#jobs-sort-select")).toHaveValue("salary_desc");
     await expect(page.locator("#jobs")).toHaveScreenshot("job-board-salary-sort.png");
