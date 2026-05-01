@@ -20,6 +20,7 @@ jobs:
        startsWith(github.ref, 'refs/tags/v'))
     outputs:
       should_publish: ${{ steps.gate.outputs.should_publish }}
+      reason: ${{ steps.gate.outputs.reason }}
     steps:
       - name: Evaluate Docker Hub secrets
         id: gate
@@ -27,11 +28,31 @@ jobs:
           DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
           DH_PASS: ${{ secrets.DOCKERHUB_PASSWORD }}
         run: |
-          if [ -n "$DH_USER" ] && [ -n "$DH_PASS" ]; then
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-          else
+          if [ -z "$DH_USER" ] || [ -z "$DH_PASS" ]; then
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "reason=missing Docker Hub credentials" >> "$GITHUB_OUTPUT"
             echo "::notice title=Docker Hub publish skipped::Add DOCKERHUB_USERNAME and DOCKERHUB_PASSWORD in repository Actions secrets to enable image publishing."
+            exit 0
+          fi
+
+          missing_scope=false
+          for image in "$BACKEND_IMAGE" "$FRONTEND_IMAGE"; do
+            scope="repository:${DH_USER}/${image}:pull,push"
+            status="$(curl --silent --show-error --output /tmp/dockerhub-token.json --write-out "%{http_code}" \
+              --user "${DH_USER}:${DH_PASS}" \
+              "https://auth.docker.io/token?service=registry.docker.io&scope=${scope}" || true)"
+            if [ "$status" != "200" ]; then
+              missing_scope=true
+              echo "::warning title=Docker Hub publish skipped::Credentials are present but do not have pull,push scope for ${DH_USER}/${image}. Create a Docker Hub access token with Read & Write permission."
+            fi
+          done
+
+          if [ "$missing_scope" = "true" ]; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "reason=credentials missing Docker Hub pull,push scope" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            echo "reason=credentials valid for Docker Hub pull,push" >> "$GITHUB_OUTPUT"
           fi
 
   publish:
@@ -165,9 +186,11 @@ jobs:
         run: docker images | grep jobhunter
 
       - name: Summary
+        env:
+          PUBLISH_REASON: ${{ needs.docker-hub-check.outputs.reason }}
         run: |
           echo "## Release Docker verification" >> "$GITHUB_STEP_SUMMARY"
           echo "Tag: ${{ github.ref_name }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Docker Hub publish: skipped because credentials are not configured" >> "$GITHUB_STEP_SUMMARY"
+          echo "Docker Hub publish: skipped because ${PUBLISH_REASON:-credentials are not configured}" >> "$GITHUB_STEP_SUMMARY"
           echo "Backend image: jobhunter-backend:verify" >> "$GITHUB_STEP_SUMMARY"
           echo "Frontend image: jobhunter-frontend:verify" >> "$GITHUB_STEP_SUMMARY"
