@@ -177,7 +177,7 @@ Defaults:
 
 - Interval: `MYSQL_BACKUP_INTERVAL_SECONDS=86400`
 - Retention: `MYSQL_BACKUP_RETENTION_DAYS=14`
-- Output: `backups/mysql/jobhunter_YYYYmmdd_HHMMSS.sql.gz`
+- Output: `backups/mysql/jobhunter-YYYYmmddTHHMMSSZ.sql.gz`
 
 Run a backup immediately:
 
@@ -188,7 +188,7 @@ npm run mysql:backup
 Restore from a backup:
 
 ```powershell
-npm run mysql:restore -- -BackupFile .\backups\mysql\jobhunter_YYYYmmdd_HHMMSS.sql.gz
+npm run mysql:restore -- -BackupFile .\backups\mysql\jobhunter-YYYYmmddTHHMMSSZ.sql.gz
 ```
 
 Backup files are ignored by Git. Keep a copy outside the project folder before destructive database tests.
@@ -216,7 +216,13 @@ npm run smoke:local -- --browser=true
 Then build and push images through Docker Desktop:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts/docker-build-images.ps1 -DockerhubUsername nguyenson1710 -ImageTag 1.0.4 -AlsoTagLatest
-powershell -ExecutionPolicy Bypass -File scripts/docker-push-images.ps1 -DockerhubUsername nguyenson1710 -ImageTags 1.0.4,latest
+powershell -ExecutionPolicy Bypass -File scripts/docker-build-images.ps1 -DockerhubUsername nguyenson1710 -ImageTag 1.0.5 -AlsoTagLatest
+powershell -ExecutionPolicy Bypass -File scripts/docker-push-images.ps1 -DockerhubUsername nguyenson1710 -ImageTags 1.0.5,latest
 ```
 
+GitHub Packages are published by CI/CD to GitHub Container Registry:
+
+```powershell
+docker pull ghcr.io/jasontm17/jobhunter-backend:1.0.5
+docker pull ghcr.io/jasontm17/jobhunter-frontend:1.0.5
+```

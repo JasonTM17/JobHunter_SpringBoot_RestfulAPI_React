@@ -1,12 +1,46 @@
-# Jobhunter - Production MVP for IT Recruitment
+# Jobhunter
 
 [![CI](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/ci.yml)
 [![CD](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/cd.yml/badge.svg?branch=master)](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/actions/workflows/cd.yml)
 [![Release](https://img.shields.io/github/v/release/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React?label=release)](https://github.com/JasonTM17/JobHunter_SpringBoot_RestfulAPI_React/releases)
 
-Jobhunter is a full-stack IT recruitment platform for candidates, recruiters, and administrators. It is built with Spring Boot, Next.js, MySQL, Flyway, Docker, RBAC, E2E tests, visual regression, and production-oriented hardening.
+Production-ready IT recruitment platform built with Spring Boot, Next.js, MySQL, Docker, RBAC, CI/CD, E2E testing, visual regression, and local production observability.
 
-## Core Documentation
+Jobhunter is designed as a polished portfolio project: it demonstrates product thinking, full-stack delivery, production hardening, release discipline, and practical operations without requiring a public domain.
+
+## Product Scope
+
+- Public job board with keyword, city, level, skill, salary, sorting, job detail, top employers, content hub, subscriber flow, and professional About content.
+- Candidate workspace with account-scoped saved jobs, CV URL/upload apply flow, CV library, application history, and resume status timeline.
+- Recruiter workspace with company-scoped pipeline, filters, status updates, notes, and audit history.
+- Admin workspace for users, companies, jobs, skills, roles, and permissions.
+- Auth flows for login, registration, forgot/reset password, HttpOnly cookie auth, RBAC, and email preferences.
+
+## Engineering Highlights
+
+- Spring Boot 4, Java 21, Spring Security, JPA, Flyway, MySQL 8.4.
+- Next.js 16, React 19, TypeScript, TailwindCSS, responsive pages router UI.
+- Production guard for unsafe prod settings, unsafe-method client header, MVP rate limiting, rich-text sanitizer, and upload validation.
+- Prometheus metrics, Blackbox uptime checks, Alertmanager alerts, Loki logs, Grafana dashboard, OpenTelemetry collector, and frontend client error capture.
+- Staging Compose environment, scheduled MySQL backup/restore, Docker Hub images, GitHub Container Registry packages, GitHub Releases, CI and CD.
+
+## Architecture
+
+```text
+Browser
+  -> Next.js frontend
+  -> Spring Boot REST API
+  -> MySQL + Flyway
+
+Local production operations
+  -> Prometheus + Blackbox Exporter
+  -> Alertmanager + local alert webhook
+  -> Promtail + Loki + Grafana
+  -> OpenTelemetry Collector
+  -> MySQL backup sidecar
+```
+
+## Documentation
 
 - [Product About](docs/ABOUT.md)
 - [Release Notes](docs/RELEASE_NOTES.md)
@@ -16,117 +50,98 @@ Jobhunter is a full-stack IT recruitment platform for candidates, recruiters, an
 - [Frontend Guide](frontend/README.md)
 - [Backend Guide](backend/README.md)
 
-## Current Product State
-
-- Current release: `v1.0.4`
-- CI status: green on `master`
-- CD status: green on `master` and release tags
-- Docker Hub publish: verified for backend and frontend images
-- Public job board with search, filters, sorting, quick detail, job detail, top employers, content hub, subscriber flow, and About section.
-- Candidate workspace with account-scoped saved jobs, CV URL/upload apply flow, CV library, application history, and resume status audit timeline.
-- Recruiter workspace with company-scoped resume pipeline, status filters, status update notes, and audit history.
-- Admin workspace for users, companies, jobs, skills, roles, and permissions.
-- Auth flows for login, registration, forgot/reset password, HttpOnly cookie auth, RBAC, and email preferences.
-- MVP hardening: production startup guard, unsafe-method client header, in-memory rate limits, allowlist rich-text sanitizer, upload validation, smoke tests, E2E, and visual regression.
-- Local production operations: staging environment, uptime checks, Prometheus alerts, Loki log aggregation, Grafana dashboard, OpenTelemetry collector, frontend client error reporting, and scheduled MySQL backup/restore.
-
-## Architecture
-
-```text
-Browser
-  |
-  | HTTP/REST
-  v
-Next.js 16 + React 19 + TypeScript + TailwindCSS
-  |
-  | /api/v1
-  v
-Spring Boot 4 + Java 21 + Spring Security + JPA
-  |
-  | Flyway migrations
-  v
-MySQL 8.4
-  |
-  | Operations
-  v
-Prometheus + Alertmanager + Loki + Grafana + OpenTelemetry
-```
-
-Docker Compose provides a local stack with frontend, backend, MySQL, and optional Redis. The backend exposes Actuator health/metrics and Swagger UI when explicitly enabled.
-
-## Quick Local Run
+## Quick Start
 
 Requirements:
 
 - Java 21
 - Node.js 22
-- Docker Desktop for Compose-based runs
+- Docker Desktop
 
-Backend:
-
-```powershell
-cd backend
-.\gradlew.bat bootRun
-```
-
-Frontend:
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-Default URLs:
-
-- Frontend dev: `http://localhost:3010`
-- Frontend Docker: `http://localhost:3001`
-- Backend: `http://localhost:8080`
-- API prefix: `http://localhost:8080/api/v1`
-- Swagger: `http://localhost:8080/swagger-ui.html`
-
-If the backend port changes, update `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_STORAGE_BASE_URL`, and `CORS_ALLOWED_ORIGINS`.
-
-## Docker Compose
+Run with Docker Compose:
 
 ```powershell
 Copy-Item .env.example .env
 docker compose up --build
 ```
 
-Important environment variables:
+Local URLs:
 
-- `FRONTEND_PORT`
-- `BACKEND_PORT`
-- `NEXT_PUBLIC_API_BASE_URL`
-- `NEXT_PUBLIC_STORAGE_BASE_URL`
-- `CORS_ALLOWED_ORIGINS`
-- `JWT_BASE64_SECRET`
-- `JOBHUNTER_SEED_ENABLED`
-- `JOBHUNTER_BOOTSTRAP_ADMIN_ENABLED`
-- `JOBHUNTER_PROD_GUARD_ENABLED`
-- `JOBHUNTER_UNSAFE_METHOD_HEADER_ENABLED`
-- `JOBHUNTER_RATE_LIMIT_ENABLED`
+- Frontend: `http://localhost:3001`
+- Backend: `http://localhost:8080`
+- API prefix: `http://localhost:8080/api/v1`
+- Health: `http://localhost:8080/actuator/health`
+- Swagger, when enabled: `http://localhost:8080/swagger-ui.html`
 
-## Published Docker Images
-
-Release images are published to Docker Hub:
-
-```text
-nguyenson1710/jobhunter-backend:1.0.4
-nguyenson1710/jobhunter-frontend:1.0.4
-nguyenson1710/jobhunter-backend:latest
-nguyenson1710/jobhunter-frontend:latest
-```
-
-Quick pull:
+Run local development:
 
 ```powershell
-docker pull nguyenson1710/jobhunter-backend:1.0.4
-docker pull nguyenson1710/jobhunter-frontend:1.0.4
+cd backend
+.\gradlew.bat bootRun
+
+cd ..\frontend
+npm install
+npm run dev
 ```
 
-Use versioned tags for controlled releases and `latest` only for local smoke or demo environments.
+Frontend dev default: `http://localhost:3010`.
+
+## Local Production Stack
+
+Start the portfolio-grade local production stack:
+
+```powershell
+npm run prod:local
+```
+
+This starts the app plus monitoring, alerts, log aggregation, OpenTelemetry collection, Grafana dashboards, and scheduled MySQL backups.
+
+Operations URLs:
+
+- Grafana: `http://localhost:3002`
+- Prometheus: `http://localhost:9090`
+- Alertmanager: `http://localhost:9093`
+- Local alert webhook: `http://localhost:9094/health`
+- Loki: `http://localhost:3100`
+- OpenTelemetry health: `http://localhost:13133`
+
+Run staging before local production changes:
+
+```powershell
+Copy-Item .env.staging.example .env.staging
+npm run staging:up
+```
+
+Staging URLs:
+
+- Frontend: `http://localhost:3101`
+- Backend: `http://localhost:8180`
+- MySQL host port: `3317`
+
+Back up and restore MySQL:
+
+```powershell
+npm run mysql:backup
+npm run mysql:restore -- -BackupFile .\backups\mysql\<backup-file>.sql.gz
+```
+
+## Container Images
+
+Docker Hub:
+
+```powershell
+docker pull nguyenson1710/jobhunter-backend:1.0.5
+docker pull nguyenson1710/jobhunter-frontend:1.0.5
+```
+
+GitHub Container Registry:
+
+```powershell
+docker pull ghcr.io/jasontm17/jobhunter-backend:1.0.5
+docker pull ghcr.io/jasontm17/jobhunter-frontend:1.0.5
+```
+
+Use versioned tags for controlled demos. Use `latest` only for local smoke and intentionally rolling environments.
 
 ## Quality Gates
 
@@ -149,61 +164,24 @@ npm run test:visual
 npm audit --omit=dev --audit-level=high
 ```
 
-Smoke from the repository root after backend and frontend are running:
+Smoke after backend/frontend are running:
 
 ```powershell
 npm run smoke:local -- --browser=true
 ```
 
-Latest verified gates on 2026-05-01 for `v1.0.4`:
+Latest verified gate set for `v1.0.5`:
 
-- Backend `.\gradlew.bat test`
-- Frontend `npm run lint`
-- Frontend Jest 61/61
-- Frontend production build
-- Playwright E2E 16/16
-- Playwright visual regression 4/4
-- Production audit 0 high vulnerabilities
-- GitHub Actions CI green on `master`
-- GitHub Actions CD green on `master` and `v1.0.3`
-- Docker Hub backend/frontend images published successfully
-
-## Local Production Operations
-
-Run the portfolio-grade local production stack:
-
-```powershell
-npm run prod:local
-```
-
-This starts the app with monitoring, alerts, log aggregation, OpenTelemetry collection, Grafana dashboards, and scheduled MySQL backups.
-
-Key local operations URLs:
-
-- Grafana: `http://localhost:3002`
-- Prometheus: `http://localhost:9090`
-- Alertmanager: `http://localhost:9093`
-- Backend health: `http://localhost:8080/actuator/health`
-
-Run staging before production:
-
-```powershell
-Copy-Item .env.staging.example .env.staging
-npm run staging:up
-```
-
-Backup and restore:
-
-```powershell
-npm run mysql:backup
-npm run mysql:restore -- -BackupFile .\backups\mysql\<backup-file>.sql.gz
-```
-
-Full guide: [docs/LOCAL_PRODUCTION_OPERATIONS.md](docs/LOCAL_PRODUCTION_OPERATIONS.md).
+- Backend tests pass.
+- Frontend lint, Jest, production build, E2E, visual regression, and production audit pass.
+- Local production smoke passes 11/11.
+- Staging health smoke passes.
+- GitHub Actions CI/CD are green.
+- Docker Hub and GitHub Packages publish versioned backend/frontend images.
 
 ## Production Security
 
-When `SPRING_PROFILES_ACTIVE=prod`, the backend fails fast if unsafe production settings remain enabled: default JWT secret, insecure cookies, password reset dev tokens, seed/bootstrap admin, or Swagger without intent.
+When `SPRING_PROFILES_ACTIVE=prod`, the backend fails fast if unsafe production settings remain enabled: default JWT secret, insecure cookies, password reset dev tokens, seed/bootstrap admin, or Swagger without explicit intent.
 
 Unsafe `POST/PUT/PATCH/DELETE` calls under `/api/**` require:
 
@@ -211,31 +189,16 @@ Unsafe `POST/PUT/PATCH/DELETE` calls under `/api/**` require:
 X-Jobhunter-Client: web
 ```
 
-The frontend API client adds this header automatically. It can be disabled by environment variable for external API integrations, but the production MVP should keep it enabled.
-
-## Database Migrations
-
-Flyway scripts live in:
-
-```text
-backend/src/main/resources/db/migration/
-```
-
-Rules:
-
-- Add a new migration for schema changes.
-- Do not edit released migrations after a production database has run them.
-- Use `SON_JPA_DDL_AUTO=none` in production.
+The frontend API client sends this automatically.
 
 ## Release Process
 
-1. Update [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md).
-2. Run all quality gates.
-3. Run local smoke with browser DOM checks.
-4. Review production environment settings using [docs/PRODUCTION_RUNBOOK.md](docs/PRODUCTION_RUNBOOK.md).
-5. Confirm Docker Hub secrets have Read & Write permission if image publishing is expected.
-6. Create the Git tag following the project version convention.
-7. After deploy, verify `/actuator/health`, public home, job detail, login, candidate apply, recruiter pipeline, admin workspace, and Docker Hub image tags.
+1. Update release notes and docs.
+2. Run backend, frontend, E2E, visual, audit, and smoke gates.
+3. Verify staging and local production health.
+4. Build and push Docker images.
+5. Tag the release and publish GitHub Release notes.
+6. Confirm Docker Hub, GitHub Packages, CI, CD, home, job detail, candidate, recruiter, and admin flows.
 
 ## License
 
