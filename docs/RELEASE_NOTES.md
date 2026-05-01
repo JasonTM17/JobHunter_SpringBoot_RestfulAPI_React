@@ -1,5 +1,21 @@
 # Release Notes
 
+## v1.0.3-dockerhub-preflight - 2026-05-01
+
+### Summary
+
+This patch makes the CD workflow safer after Docker Hub secrets were configured with a token that can log in but cannot push images. The workflow now checks Docker Hub `pull,push` scope before attempting image publication.
+
+### Fixes
+
+- Adds Docker Hub push-scope preflight for `jobhunter-backend` and `jobhunter-frontend`.
+- Skips Docker Hub publication with a clear warning when credentials are missing write scope.
+- Keeps tag release Docker build verification green when publishing is intentionally skipped.
+
+### Required Action For Real Docker Hub Publish
+
+Create a Docker Hub access token with Read & Write permission and update the `DOCKERHUB_PASSWORD` GitHub Actions secret. Then rerun the release CD workflow.
+
 ## v1.0.2-cd-verification - 2026-05-01
 
 ### Summary
