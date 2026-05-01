@@ -20,7 +20,7 @@ export default function AuthShell({
       <section className="mx-auto grid w-full max-w-6xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-soft lg:min-h-[700px] lg:grid-cols-[1.02fr,0.98fr]">
         <aside className="border-r border-slate-200 bg-slate-50 p-6 text-slate-950 sm:p-8 lg:min-h-[700px] lg:p-10">
           <div className="inline-flex items-center gap-2 rounded-md border border-rose-200 bg-white px-3 py-1 text-xs font-semibold tracking-wide text-[#b51d1a]">
-            <img src="/favicon.svg" alt="Jobhunter" className="h-4 w-4" />
+            <img src="/logo-mark.svg" alt="Jobhunter" className="h-4 w-4" />
             Jobhunter
           </div>
 

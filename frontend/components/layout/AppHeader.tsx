@@ -315,10 +315,7 @@ export default function AppHeader() {
             className="flex shrink-0 items-center gap-2 py-3 sm:gap-2.5"
             aria-label="Jobhunter trang chủ"
           >
-            <span className="relative flex h-9 w-9 shrink-0 overflow-hidden rounded-md border border-rose-100 bg-white shadow-sm sm:h-10 sm:w-10">
-              <img src="/favicon.svg" alt="" className="h-full w-full object-cover" width={40} height={40} />
-            </span>
-            <span className="text-sm font-extrabold text-slate-950 sm:text-base">Jobhunter</span>
+            <img src="/logo-full.svg" alt="Jobhunter" className="h-10 w-auto sm:h-11" width={236} height={56} />
           </Link>
 
           <nav className="hidden items-center gap-2 lg:flex">
