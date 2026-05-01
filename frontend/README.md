@@ -19,7 +19,6 @@ Create `frontend/.env.local`:
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
 NEXT_PUBLIC_STORAGE_BASE_URL=http://localhost:8080
 INTERNAL_API_BASE_URL=http://backend:8080
-INTERNAL_STORAGE_BASE_URL=http://backend:8080
 ```
 
 ## Run Local
@@ -54,6 +53,7 @@ Additional scripts:
 ## API Conventions
 
 - Frontend calls the backend through `services/api-client.ts`.
+- `NEXT_PUBLIC_STORAGE_BASE_URL` is always used for rendered asset URLs so browser images never point at Docker-only hostnames such as `backend`.
 - Unsafe methods automatically include `X-Jobhunter-Client: web`.
 - Guest saved jobs fall back to `localStorage`.
 - Authenticated saved jobs and candidate CV library are synchronized with the backend account.

@@ -123,6 +123,14 @@ public class RecruitmentDemoDataSeeder {
                         "Get a resume by id",
                         "Get resumes with pagination",
                         "Get resumes by current user",
+                        "Get resume audits",
+                        "Get saved jobs",
+                        "Save a job",
+                        "Remove a saved job",
+                        "Get candidate CV library",
+                        "Create candidate CV",
+                        "Set default candidate CV",
+                        "Delete candidate CV",
                         "Create a user",
                         "Update a user",
                         "Delete a user",
@@ -169,6 +177,10 @@ public class RecruitmentDemoDataSeeder {
                         "Update a resume",
                         "Update resume status",
                         "Get a resume by id",
+                        "Get resume audits",
+                        "Get saved jobs",
+                        "Save a job",
+                        "Remove a saved job",
                         "Upload a file",
                         "Download a file"
                 ))
@@ -186,7 +198,15 @@ public class RecruitmentDemoDataSeeder {
                         "Get skills with pagination",
                         "Create a resume",
                         "Upload a file",
-                        "Get resumes by current user"
+                        "Get resumes by current user",
+                        "Get resume audits",
+                        "Get saved jobs",
+                        "Save a job",
+                        "Remove a saved job",
+                        "Get candidate CV library",
+                        "Create candidate CV",
+                        "Set default candidate CV",
+                        "Delete candidate CV"
                 ))
         );
 
