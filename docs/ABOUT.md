@@ -57,7 +57,7 @@ These images are captured from the local production container stack and refreshe
 | Candidate workspace with saved jobs, CV library, application history, and status timeline | ![Candidate workspace](assets/screenshots/jobhunter-candidate-workspace.jpg) |
 | Recruiter resume pipeline with company-scoped workflow and audit notes | ![Recruiter pipeline](assets/screenshots/jobhunter-recruiter-pipeline.jpg) |
 | Admin user management for operational control | ![Admin users management](assets/screenshots/jobhunter-admin-users.jpg) |
-| AI assistant route with graceful unavailable state when no AI provider is configured | ![AI assistant](assets/screenshots/jobhunter-chatbot.jpg) |
+| Gemini-powered AI assistant with job-context prompts and live chat response | ![Gemini AI assistant](assets/screenshots/jobhunter-chatbot.jpg) |
 
 ## Portfolio Positioning
 
