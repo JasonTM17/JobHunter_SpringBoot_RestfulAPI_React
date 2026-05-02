@@ -58,9 +58,9 @@ Screenshots below are generated from the local production build with the QA scan
 | --- | --- |
 | ![Jobhunter candidate workspace with saved jobs, CV library, and application history](docs/assets/screenshots/jobhunter-candidate-workspace.jpg) | ![Jobhunter recruiter resume pipeline with filters, status workflow, and audit timeline](docs/assets/screenshots/jobhunter-recruiter-pipeline.jpg) |
 
-| Admin users | AI assistant and mobile |
+| Admin users | Gemini AI assistant |
 | --- | --- |
-| ![Jobhunter admin users management screen](docs/assets/screenshots/jobhunter-admin-users.jpg) | ![Jobhunter AI assistant page](docs/assets/screenshots/jobhunter-chatbot.jpg) |
+| ![Jobhunter admin users management screen](docs/assets/screenshots/jobhunter-admin-users.jpg) | ![Jobhunter Gemini AI assistant with live chat response](docs/assets/screenshots/jobhunter-chatbot.jpg) |
 
 ## Documentation
 
