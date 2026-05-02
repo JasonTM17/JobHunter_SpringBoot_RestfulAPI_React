@@ -253,7 +253,7 @@ async function runBrowserScan() {
     const publicResults = [];
     publicResults.push(await scanPage(publicPage, "/", "home", "jobhunter-home.jpg"));
     publicResults.push(await scanPage(publicPage, `/jobs/${firstJobId}`, "job detail", "jobhunter-job-detail.jpg"));
-    publicResults.push(await scanPage(publicPage, `/chatbot?jobId=${firstJobId}`, "chatbot", "jobhunter-chatbot.jpg"));
+    publicResults.push(await scanPage(publicPage, `/chatbot?jobId=${firstJobId}`, "chatbot", "jobhunter-gemini-ai-assistant.jpg"));
     publicResults.push(await scanPage(publicPage, "/login", "login", null));
     publicResults.push(await scanPage(publicPage, "/register", "register", null));
     publicResults.push(await scanPage(publicPage, "/forgot-password", "forgot password", null));
