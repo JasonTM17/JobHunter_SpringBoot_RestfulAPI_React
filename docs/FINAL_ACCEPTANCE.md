@@ -1,6 +1,6 @@
 # Jobhunter Final Acceptance
 
-Date: May 1, 2026
+Date: May 2, 2026
 
 Jobhunter is accepted as a production-oriented portfolio MVP. The application is complete for local production demonstration, with public job discovery, candidate CV workflows, recruiter pipeline management, admin operations, observability, backup/restore, staging, CI/CD, Docker publishing, E2E coverage, visual regression, and professional project documentation.
 
@@ -17,7 +17,7 @@ Jobhunter is accepted as a production-oriented portfolio MVP. The application is
 
 ## Final Verification
 
-Commands run locally on May 1, 2026:
+Commands run locally on May 2, 2026:
 
 | Gate | Result |
 | --- | --- |
