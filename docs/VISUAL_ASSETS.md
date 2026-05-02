@@ -49,7 +49,7 @@ The same QA run also checks security headers, backend health, public APIs, unsaf
 | Candidate workspace | ![Candidate workspace](assets/screenshots/jobhunter-candidate-workspace.jpg) |
 | Recruiter pipeline | ![Recruiter pipeline](assets/screenshots/jobhunter-recruiter-pipeline.jpg) |
 | Admin users | ![Admin users](assets/screenshots/jobhunter-admin-users.jpg) |
-| AI assistant | ![AI assistant](assets/screenshots/jobhunter-chatbot.jpg) |
+| Gemini AI assistant | ![Gemini AI assistant](assets/screenshots/jobhunter-gemini-ai-assistant.jpg) |
 
 ## Maintenance Checklist
 

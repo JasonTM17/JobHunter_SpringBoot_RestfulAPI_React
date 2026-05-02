@@ -60,7 +60,7 @@ Screenshots below are generated from the local production build with the QA scan
 
 | Admin users | Gemini AI assistant |
 | --- | --- |
-| ![Jobhunter admin users management screen](docs/assets/screenshots/jobhunter-admin-users.jpg) | ![Jobhunter Gemini AI assistant with live chat response](docs/assets/screenshots/jobhunter-chatbot.jpg) |
+| ![Jobhunter admin users management screen](docs/assets/screenshots/jobhunter-admin-users.jpg) | ![Jobhunter Gemini AI assistant with live chat response](docs/assets/screenshots/jobhunter-gemini-ai-assistant.jpg) |
 
 ## Documentation
 
